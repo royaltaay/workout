@@ -199,12 +199,8 @@ export default function WorkoutViewer() {
   return (
     <div className="mx-auto min-h-screen max-w-lg px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-white">
-          Kettlebell Complex Program
-        </h1>
-        <p className="mt-1 text-xs text-zinc-500">
-          Tempo: {workoutPlan.tempoExplanation}
-        </p>
+        <h1 className="text-2xl font-bold text-white">Dungym</h1>
+        <p className="mt-1 text-sm text-zinc-400">A workout program by Taylor Prince</p>
       </header>
 
       {/* Day selector */}
@@ -279,6 +275,11 @@ export default function WorkoutViewer() {
           </p>
         </div>
       </div>
+
+      {/* Tempo explanation */}
+      <p className="mt-6 text-xs text-zinc-500">
+        Tempo: {workoutPlan.tempoExplanation}
+      </p>
     </div>
   );
 }

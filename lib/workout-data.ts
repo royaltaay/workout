@@ -60,21 +60,21 @@ export const workoutPlan: WorkoutPlan = {
       {
         name: "Single-Arm Swings",
         bell: "Heavy",
-        reps: "10 each arm",
+        reps: "10/arm",
         tempo: "X-0-X-0",
         rpe: "7",
       },
       {
-        name: "Single-Arm Clean → Front Squat → Press",
+        name: "SA Clean → Front Squat → Press",
         bell: "Heavy",
-        reps: "5 each arm",
+        reps: "5/arm",
         tempo: "2-1-X-1",
         rpe: "8",
       },
       {
         name: "Windmill",
         bell: "Light",
-        reps: "5–8 each side",
+        reps: "5–8/side",
         tempo: "3-1-3-1",
         rpe: "6–7",
       },
@@ -98,7 +98,7 @@ export const workoutPlan: WorkoutPlan = {
             },
             {
               name: "Single-Arm KB Row",
-              reps: "8 each arm",
+              reps: "8/arm",
               tempo: "2-1-1-1",
               rpe: "7–8",
             },
@@ -131,7 +131,7 @@ export const workoutPlan: WorkoutPlan = {
             },
             {
               name: "Pallof Press",
-              reps: "10 each side",
+              reps: "10/side",
               tempo: "1-3-1-0",
               rpe: "7",
             },
@@ -142,7 +142,7 @@ export const workoutPlan: WorkoutPlan = {
       finisher: {
         name: "Goblet Cossack Squat",
         sets: 3,
-        reps: "6 each side",
+        reps: "6/side",
         tempo: "3-2-2-0",
         rpe: "7",
         rest: "60 sec",
@@ -157,14 +157,14 @@ export const workoutPlan: WorkoutPlan = {
           rounds: 3,
           exercises: [
             {
-              name: "KB Front Squat",
+              name: "Barbell RDL",
               reps: "8–10",
-              tempo: "3-1-1-1",
+              tempo: "3-1-1-0",
               rpe: "7–8",
             },
             {
               name: "Dead Bug",
-              reps: "8 each side",
+              reps: "8/side",
               tempo: "3-1-3-1",
               rpe: "7",
             },
@@ -175,7 +175,7 @@ export const workoutPlan: WorkoutPlan = {
       finisher: {
         name: "Single-Arm OH Carry",
         sets: 3,
-        reps: "40 yd each arm",
+        reps: "40 yd/arm",
         rpe: "7",
         rest: "60 sec",
       },

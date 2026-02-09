@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   description: "A workout program by Taylor Prince",
   icons: {
     icon: "/icon.png",
+    apple: "/apple-icon.png",
   },
 };
 

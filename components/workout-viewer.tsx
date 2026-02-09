@@ -27,7 +27,7 @@ function Checkbox({
       onClick={onChange}
       className={`mt-1.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
         checked
-          ? "border-white/20 bg-white/10 text-white"
+          ? "border-red-500/50 bg-red-500/20 text-red-400"
           : "border-white/20 text-transparent hover:border-white/40"
       }`}
     >
@@ -199,8 +199,32 @@ export default function WorkoutViewer() {
   return (
     <div className="mx-auto min-h-screen max-w-lg px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Dungym</h1>
-        <p className="mt-1 text-sm text-zinc-400">A workout program by Taylor Prince</p>
+        <div className="mb-3 flex items-center gap-1.5">
+          <svg
+            width="50"
+            height="50"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="shrink-0"
+          >
+            {/* Blade */}
+            <path
+              d="M16 2L14.5 16.5L16 18L17.5 16.5L16 2Z"
+              fill="#d4d4d8"
+            />
+            {/* Crossguard */}
+            <rect x="10" y="17.5" width="12" height="2" rx="1" fill="#a1a1aa" />
+            {/* Grip */}
+            <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
+            {/* Pommel */}
+            <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
+          </svg>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Dungym</h1>
+            <p className="text-sm text-zinc-400">A workout program by Taylor Prince</p>
+          </div>
+        </div>
       </header>
 
       {/* Day selector */}

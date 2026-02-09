@@ -197,7 +197,7 @@ export default function WorkoutViewer() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8">
+    <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
       <div className="flex-1">
         {/* Header */}
         <header className="animate-in mb-6">
@@ -225,10 +225,10 @@ export default function WorkoutViewer() {
             <button
               key={d.label}
               onClick={() => setActiveDay(i)}
-              className={`rounded-full px-5 py-2 text-sm font-medium transition-all active:scale-[0.97] ${
+              className={`rounded-full border px-5 py-2 text-sm font-medium transition-all active:scale-[0.97] ${
                 i === activeDay
-                  ? "bg-white text-black"
-                  : "border border-white/20 text-zinc-400 hover:text-white"
+                  ? "border-transparent bg-white text-black"
+                  : "border-white/20 text-zinc-400 hover:text-white"
               }`}
             >
               {d.label}
@@ -241,38 +241,44 @@ export default function WorkoutViewer() {
           <ComplexCard checked={checked} onToggle={toggle} />
         </div>
 
-        {/* Day title */}
-        <h2
-          className="animate-in mb-4 mt-8 text-xl font-semibold text-white"
-          style={{ animationDelay: "150ms" }}
-        >
-          {day.title}
-        </h2>
+        {/* Day content — keyed to trigger fade on switch */}
+        <div key={day.label} className="day-content">
+          {/* Day title */}
+          <h2
+            className="animate-in mb-4 mt-8 text-xl font-semibold text-white"
+            style={{ animationDelay: "150ms" }}
+          >
+            {day.title}
+          </h2>
 
-        {/* Supersets */}
-        <div className="space-y-4">
-          {day.supersets.map((s, i) => (
-            <div
-              key={s.name}
-              className="animate-in"
-              style={{ animationDelay: `${200 + i * 50}ms` }}
-            >
-              <SupersetCard
-                superset={s}
-                checked={checked}
-                onToggle={toggle}
-              />
-            </div>
-          ))}
-        </div>
+          {/* Supersets */}
+          <div className="space-y-4">
+            {day.supersets.map((s, i) => (
+              <div
+                key={s.name}
+                className="animate-in"
+                style={{ animationDelay: `${200 + i * 50}ms` }}
+              >
+                <SupersetCard
+                  superset={s}
+                  checked={checked}
+                  onToggle={toggle}
+                />
+              </div>
+            ))}
+          </div>
 
-        {/* Finisher */}
-        <div className="animate-in mt-4" style={{ animationDelay: "300ms" }}>
-          <FinisherCard
-            finisher={day.finisher}
-            checked={!!checked[`finisher-${day.finisher.name}`]}
-            onToggle={() => toggle(`finisher-${day.finisher.name}`)}
-          />
+          {/* Finisher */}
+          <div
+            className="animate-in mt-4"
+            style={{ animationDelay: "300ms" }}
+          >
+            <FinisherCard
+              finisher={day.finisher}
+              checked={!!checked[`finisher-${day.finisher.name}`]}
+              onToggle={() => toggle(`finisher-${day.finisher.name}`)}
+            />
+          </div>
         </div>
 
         {/* Progression notes */}

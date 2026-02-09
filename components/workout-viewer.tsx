@@ -25,7 +25,7 @@ function Checkbox({
   return (
     <button
       onClick={onChange}
-      className={`mt-1.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
+      className={`mt-1.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-all active:scale-[0.85] ${
         checked
           ? "border-red-500/50 bg-red-500/20 text-red-400"
           : "border-white/20 text-transparent hover:border-white/40"
@@ -81,7 +81,7 @@ function ComplexCard({
                 checked={!!checked[key]}
                 onChange={() => onToggle(key)}
               />
-              <div className={checked[key] ? "opacity-40" : ""}>
+              <div className={`transition-opacity ${checked[key] ? "opacity-40" : ""}`}>
                 <p className="font-medium text-white">{ex.name}</p>
                 <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
                   <span className="capitalize">{ex.bell}</span>
@@ -130,7 +130,7 @@ function SupersetCard({
                 checked={!!checked[key]}
                 onChange={() => onToggle(key)}
               />
-              <div className={checked[key] ? "opacity-40" : ""}>
+              <div className={`transition-opacity ${checked[key] ? "opacity-40" : ""}`}>
                 <p className="font-medium text-white">{ex.name}</p>
                 <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
                   <span>{ex.reps}</span>
@@ -165,7 +165,7 @@ function FinisherCard({
       </div>
       <div className="flex items-start gap-2">
         <Checkbox checked={checked} onChange={onToggle} />
-        <div className={checked ? "opacity-40" : ""}>
+        <div className={`transition-opacity ${checked ? "opacity-40" : ""}`}>
           <p className="font-medium text-white">{finisher.name}</p>
           <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
             <span>
@@ -197,113 +197,125 @@ export default function WorkoutViewer() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-lg px-4 py-8">
-      <header className="mb-6">
-        <div className="mb-3 flex items-center gap-1.5">
-          <svg
-            width="50"
-            height="50"
-            viewBox="0 0 32 32"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="shrink-0"
-          >
-            {/* Blade */}
-            <path
-              d="M16 2L14.5 16.5L16 18L17.5 16.5L16 2Z"
-              fill="#d4d4d8"
-            />
-            {/* Crossguard */}
-            <rect x="10" y="17.5" width="12" height="2" rx="1" fill="#a1a1aa" />
-            {/* Grip */}
-            <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
-            {/* Pommel */}
-            <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
-          </svg>
-          <div>
+    <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8">
+      <div className="flex-1">
+        {/* Header */}
+        <header className="animate-in mb-6">
+          <div className="flex items-center gap-1.5">
+            <svg
+              width="50"
+              height="50"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="shrink-0"
+            >
+              <path d="M16 2L14.5 16.5L16 18L17.5 16.5L16 2Z" fill="#d4d4d8" />
+              <rect x="10" y="17.5" width="12" height="2" rx="1" fill="#a1a1aa" />
+              <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
+              <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
+            </svg>
             <h1 className="text-2xl font-bold text-white">Dungym</h1>
-            <p className="text-sm text-zinc-400">A workout program by Taylor Prince</p>
+          </div>
+        </header>
+
+        {/* Day selector */}
+        <div className="animate-in mb-6 flex gap-2" style={{ animationDelay: "50ms" }}>
+          {workoutPlan.days.map((d, i) => (
+            <button
+              key={d.label}
+              onClick={() => setActiveDay(i)}
+              className={`rounded-full px-5 py-2 text-sm font-medium transition-all active:scale-[0.97] ${
+                i === activeDay
+                  ? "bg-white text-black"
+                  : "border border-white/20 text-zinc-400 hover:text-white"
+              }`}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Complex */}
+        <div className="animate-in" style={{ animationDelay: "100ms" }}>
+          <ComplexCard checked={checked} onToggle={toggle} />
+        </div>
+
+        {/* Day title */}
+        <h2
+          className="animate-in mb-4 mt-8 text-xl font-semibold text-white"
+          style={{ animationDelay: "150ms" }}
+        >
+          {day.title}
+        </h2>
+
+        {/* Supersets */}
+        <div className="space-y-4">
+          {day.supersets.map((s, i) => (
+            <div
+              key={s.name}
+              className="animate-in"
+              style={{ animationDelay: `${200 + i * 50}ms` }}
+            >
+              <SupersetCard
+                superset={s}
+                checked={checked}
+                onToggle={toggle}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Finisher */}
+        <div className="animate-in mt-4" style={{ animationDelay: "300ms" }}>
+          <FinisherCard
+            finisher={day.finisher}
+            checked={!!checked[`finisher-${day.finisher.name}`]}
+            onToggle={() => toggle(`finisher-${day.finisher.name}`)}
+          />
+        </div>
+
+        {/* Progression notes */}
+        <div
+          className="animate-in mt-8 space-y-3"
+          style={{ animationDelay: "350ms" }}
+        >
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
+            Progression Notes
+          </h3>
+          <p className="text-xs text-zinc-500">
+            Tempo: {workoutPlan.tempoExplanation}
+          </p>
+          <div>
+            <h4 className="text-sm font-medium text-zinc-300">Heavy Bell</h4>
+            <p className="mt-0.5 text-sm text-zinc-500">
+              Should make round 3 challenging but clean. If form breaks on the
+              press, size down.
+            </p>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-zinc-300">Light Bell</h4>
+            <p className="mt-0.5 text-sm text-zinc-500">
+              Windmills should be slow and controlled. No grinding.
+            </p>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-zinc-300">Moving Up</h4>
+            <p className="mt-0.5 text-sm text-zinc-500">
+              Progress heavy bell first. When 3 rounds feel controlled, bump up
+              one size.
+            </p>
           </div>
         </div>
-      </header>
-
-      {/* Day selector */}
-      <div className="mb-6 flex gap-2">
-        {workoutPlan.days.map((d, i) => (
-          <button
-            key={d.label}
-            onClick={() => setActiveDay(i)}
-            className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
-              i === activeDay
-                ? "bg-white text-black"
-                : "border border-white/20 text-zinc-400 hover:text-white"
-            }`}
-          >
-            {d.label}
-          </button>
-        ))}
       </div>
 
-      {/* Complex */}
-      <ComplexCard checked={checked} onToggle={toggle} />
-
-      {/* Day title */}
-      <h2 className="mb-4 mt-8 text-xl font-semibold text-white">
-        {day.title}
-      </h2>
-
-      {/* Supersets */}
-      <div className="space-y-4">
-        {day.supersets.map((s) => (
-          <SupersetCard
-            key={s.name}
-            superset={s}
-            checked={checked}
-            onToggle={toggle}
-          />
-        ))}
-      </div>
-
-      {/* Finisher */}
-      <div className="mt-4">
-        <FinisherCard
-          finisher={day.finisher}
-          checked={!!checked[`finisher-${day.finisher.name}`]}
-          onToggle={() => toggle(`finisher-${day.finisher.name}`)}
-        />
-      </div>
-
-      {/* Progression notes */}
-      <div className="mt-8 space-y-3">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
-          Progression Notes
-        </h3>
-        <div>
-          <h4 className="text-sm font-medium text-zinc-300">Heavy Bell</h4>
-          <p className="mt-0.5 text-sm text-zinc-500">
-            Should make round 3 challenging but clean. If form breaks on the
-            press, size down.
-          </p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-zinc-300">Light Bell</h4>
-          <p className="mt-0.5 text-sm text-zinc-500">
-            Windmills should be slow and controlled. No grinding.
-          </p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-zinc-300">Moving Up</h4>
-          <p className="mt-0.5 text-sm text-zinc-500">
-            Progress heavy bell first. When 3 rounds feel controlled, bump up
-            one size.
-          </p>
-        </div>
-      </div>
-
-      {/* Tempo explanation */}
-      <p className="mt-6 text-xs text-zinc-500">
-        Tempo: {workoutPlan.tempoExplanation}
-      </p>
+      {/* Footer */}
+      <footer
+        className="animate-in mt-12 border-t border-white/5 pt-6 pb-4 text-center"
+        style={{ animationDelay: "400ms" }}
+      >
+        <p className="text-sm text-zinc-500">A workout program by Taylor Prince</p>
+      </footer>
     </div>
   );
 }

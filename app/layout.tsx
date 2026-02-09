@@ -7,8 +7,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Kettlebell Complex Program",
-  description: "3-day kettlebell complex workout viewer",
+  title: "Dungym",
+  description: "A workout program by Taylor Prince",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({

@@ -78,7 +78,7 @@ function Collapsible({
     <div className={`rounded-xl border border-white/10 bg-[#1a1a1a] ${className ?? ""}`} style={style}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-5 py-3 text-left active:scale-[0.99] transition-transform"
+        className="flex w-full items-center justify-between px-5 py-3 text-left"
       >
         <span className="text-sm font-medium text-zinc-400">{title}</span>
         <svg

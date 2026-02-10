@@ -332,7 +332,7 @@ export default function WorkoutViewer() {
   }, [offsetX, activeDay]);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
+    <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
       <div className="flex-1">
         {/* Header */}
         <header className="animate-in mb-6 flex items-center justify-between">
@@ -449,11 +449,10 @@ export default function WorkoutViewer() {
 
       {/* Footer */}
       <footer
-        className="animate-in mt-8 border-t border-white/5 pt-4 text-center"
+        className="animate-in mt-8 border-t border-white/5 py-4 text-center"
         style={{ animationDelay: "400ms" }}
       >
-        <p className="text-sm text-zinc-500">A workout program by Taylor Prince</p>
-        <a href="mailto:tprince09@gmail.com" className="mt-1 block text-xs text-zinc-600">tprince09@gmail.com</a>
+        <p className="text-sm text-zinc-500">A workout program by <a href="mailto:tprince09@gmail.com" className="text-red-500/60">Taylor Prince</a></p>
       </footer>
     </div>
   );

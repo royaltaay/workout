@@ -54,6 +54,57 @@ function Checkbox({
   );
 }
 
+const warmUpItems = [
+  { name: "Row", time: "5 min" },
+  { name: "Hip 90/90s", time: "1 min" },
+  { name: "Arm bar", time: "2 min" },
+  { name: "Bodyweight windmill", time: "1 min" },
+  { name: "Goblet squat hold", time: "30 sec" },
+];
+
+function Collapsible({
+  title,
+  children,
+  className,
+  style,
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`rounded-xl border border-white/10 bg-[#1a1a1a] ${className ?? ""}`} style={style}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between px-5 py-3 text-left active:scale-[0.99] transition-transform"
+      >
+        <span className="text-sm font-medium text-zinc-400">{title}</span>
+        <svg
+          className={`h-4 w-4 text-zinc-500 transition-transform duration-200 ease-out ${open ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-out"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <div className="px-5 pb-4 pt-1">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TempoBadge({ tempo }: { tempo: string }) {
   return (
     <span className="inline-block rounded bg-white/10 px-1.5 py-0.5 font-mono text-xs text-zinc-300">
@@ -318,14 +369,27 @@ export default function WorkoutViewer() {
           </div>
         </header>
 
+        {/* Warm-up */}
+        <Collapsible title="Warm-up" className="animate-in" style={{ animationDelay: "75ms" }}>
+          <div className="space-y-1.5">
+            {warmUpItems.map((item) => (
+              <div key={item.name} className="flex items-baseline justify-between">
+                <span className="text-sm text-zinc-300">{item.name}</span>
+                <span className="text-xs text-zinc-500">{item.time}</span>
+              </div>
+            ))}
+          </div>
+        </Collapsible>
+
         {/* Complex */}
-        <div className="animate-in" style={{ animationDelay: "100ms" }}>
+        <div className="animate-in mt-4" style={{ animationDelay: "100ms" }}>
           <ComplexCard checked={checked} onToggle={toggle} />
         </div>
 
         {/* Swipeable day content */}
         <div
-          className="overflow-hidden"
+          className="animate-in overflow-hidden"
+          style={{ animationDelay: "150ms" }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -349,36 +413,37 @@ export default function WorkoutViewer() {
         </div>
 
         {/* Progression notes */}
-        <div
-          className="animate-in mt-8 space-y-3"
-          style={{ animationDelay: "350ms" }}
-        >
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
-            Progression Notes
-          </h3>
-          <p className="text-xs text-zinc-500">
-            Tempo: {workoutPlan.tempoExplanation}
-          </p>
-          <div>
-            <h4 className="text-sm font-medium text-zinc-300">Heavy Bell</h4>
-            <p className="mt-0.5 text-sm text-zinc-500">
-              Should make round 3 challenging but clean. If form breaks on the
-              press, size down.
+        <div className="animate-in mt-8 space-y-2" style={{ animationDelay: "350ms" }}>
+          <Collapsible title="Progression Notes">
+            <div className="space-y-3">
+              <div>
+                <h4 className="text-sm font-medium text-zinc-300">Heavy Bell</h4>
+                <p className="mt-0.5 text-sm text-zinc-500">
+                  Should make round 3 challenging but clean. If form breaks on the
+                  press, size down.
+                </p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-zinc-300">Light Bell</h4>
+                <p className="mt-0.5 text-sm text-zinc-500">
+                  Windmills should be slow and controlled. No grinding.
+                </p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-zinc-300">Moving Up</h4>
+                <p className="mt-0.5 text-sm text-zinc-500">
+                  Progress heavy bell first. When 3 rounds feel controlled, bump up
+                  one size.
+                </p>
+              </div>
+            </div>
+          </Collapsible>
+
+          <Collapsible title="Tempo Guide">
+            <p className="text-sm text-zinc-400">
+              {workoutPlan.tempoExplanation}
             </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-zinc-300">Light Bell</h4>
-            <p className="mt-0.5 text-sm text-zinc-500">
-              Windmills should be slow and controlled. No grinding.
-            </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-zinc-300">Moving Up</h4>
-            <p className="mt-0.5 text-sm text-zinc-500">
-              Progress heavy bell first. When 3 rounds feel controlled, bump up
-              one size.
-            </p>
-          </div>
+          </Collapsible>
         </div>
       </div>
 

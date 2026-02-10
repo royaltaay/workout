@@ -342,7 +342,7 @@ export default function WorkoutViewer() {
                 onClick={() => setActiveDay(i)}
                 className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
                   i === activeDay
-                    ? "border-transparent bg-white text-black"
+                    ? "border-red-500/40 bg-[#1a1a1a] text-white"
                     : "border-white/20 text-zinc-400 hover:text-white"
                 }`}
               >

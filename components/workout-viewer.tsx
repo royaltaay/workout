@@ -15,41 +15,32 @@ function getTodayTab(): number {
   return 2;
 }
 
-function Checkbox({
-  checked,
-  onChange,
+function RoundDots({
+  total,
+  completed,
+  onTap,
+  label,
 }: {
-  checked: boolean;
-  onChange: () => void;
+  total: number;
+  completed: number;
+  onTap: () => void;
+  label: string;
 }) {
   return (
-    <button
-      onClick={onChange}
-      className="-m-2 mt-0.5 flex shrink-0 items-center justify-center p-2"
-    >
-      <span
-        className={`flex h-4.5 w-4.5 items-center justify-center rounded-sm border transition-all ${
-          checked
-            ? "border-red-500/50 bg-red-500/20 text-red-400"
-            : "border-white/20 text-transparent"
-        }`}
-      >
-        {checked && (
-          <svg
-            className="h-3 w-3"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={3}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        )}
-      </span>
+    <button onClick={onTap} className="flex items-center gap-1.5">
+      <div className="flex gap-1">
+        {Array.from({ length: total }, (_, i) => (
+          <span
+            key={i}
+            className={`h-2 w-2 rounded-full transition-all ${
+              i < completed
+                ? "bg-red-500/60"
+                : "bg-white/10"
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-sm text-zinc-400">{label}</span>
     </button>
   );
 }
@@ -114,43 +105,35 @@ function TempoBadge({ tempo }: { tempo: string }) {
 }
 
 function ComplexCard({
-  checked,
-  onToggle,
+  completed,
+  onTap,
 }: {
-  checked: Record<string, boolean>;
-  onToggle: (key: string) => void;
+  completed: number;
+  onTap: () => void;
 }) {
   const { complex } = workoutPlan;
+  const allDone = completed >= complex.rounds;
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5">
-      <div className="mb-4 flex items-baseline justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">The Complex</h2>
-        <span className="text-sm text-zinc-400">{complex.rounds} Rounds</span>
+        <RoundDots total={complex.rounds} completed={completed} onTap={onTap} label="Rounds" />
       </div>
-      <div className="space-y-3">
-        {complex.exercises.map((ex: ComplexExercise) => {
-          const key = `complex-${ex.name}`;
-          return (
-            <div key={ex.name} className="flex items-start gap-2">
-              <Checkbox
-                checked={!!checked[key]}
-                onChange={() => onToggle(key)}
-              />
-              <div className={`transition-opacity ${checked[key] ? "opacity-40" : ""}`}>
-                <p className="font-medium text-white">{ex.name}</p>
-                <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-                  <span className="capitalize">{ex.bell}</span>
-                  <span>·</span>
-                  <span>{ex.reps}</span>
-                  <span>·</span>
-                  <TempoBadge tempo={ex.tempo} />
-                  <span>·</span>
-                  <span>RPE {ex.rpe}</span>
-                </p>
-              </div>
-            </div>
-          );
-        })}
+      <div className={`space-y-3 transition-opacity ${allDone ? "opacity-40" : ""}`}>
+        {complex.exercises.map((ex: ComplexExercise) => (
+          <div key={ex.name}>
+            <p className="font-medium text-white">{ex.name}</p>
+            <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+              <span className="capitalize">{ex.bell}</span>
+              <span>·</span>
+              <span>{ex.reps}</span>
+              <span>·</span>
+              <TempoBadge tempo={ex.tempo} />
+              <span>·</span>
+              <span>RPE {ex.rpe}</span>
+            </p>
+          </div>
+        ))}
       </div>
       <p className="mt-4 text-sm text-zinc-500">
         Rest between rounds: {complex.rest}
@@ -161,43 +144,33 @@ function ComplexCard({
 
 function SupersetCard({
   superset,
-  checked,
-  onToggle,
+  completed,
+  onTap,
 }: {
   superset: Day["supersets"][number];
-  checked: Record<string, boolean>;
-  onToggle: (key: string) => void;
+  completed: number;
+  onTap: () => void;
 }) {
+  const allDone = completed >= superset.rounds;
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5">
-      <div className="mb-4 flex items-baseline justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-white">{superset.name}</h3>
-        <span className="text-sm text-zinc-400">
-          {superset.rounds} Rounds
-        </span>
+        <RoundDots total={superset.rounds} completed={completed} onTap={onTap} label="Rounds" />
       </div>
-      <div className="space-y-3">
-        {superset.exercises.map((ex: Exercise) => {
-          const key = `${superset.name}-${ex.name}`;
-          return (
-            <div key={ex.name} className="flex items-start gap-2">
-              <Checkbox
-                checked={!!checked[key]}
-                onChange={() => onToggle(key)}
-              />
-              <div className={`transition-opacity ${checked[key] ? "opacity-40" : ""}`}>
-                <p className="font-medium text-white">{ex.name}</p>
-                <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-                  <span>{ex.reps}</span>
-                  <span>·</span>
-                  <TempoBadge tempo={ex.tempo} />
-                  <span>·</span>
-                  <span>RPE {ex.rpe}</span>
-                </p>
-              </div>
-            </div>
-          );
-        })}
+      <div className={`space-y-3 transition-opacity ${allDone ? "opacity-40" : ""}`}>
+        {superset.exercises.map((ex: Exercise) => (
+          <div key={ex.name}>
+            <p className="font-medium text-white">{ex.name}</p>
+            <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+              <span>{ex.reps}</span>
+              <span>·</span>
+              <TempoBadge tempo={ex.tempo} />
+              <span>·</span>
+              <span>RPE {ex.rpe}</span>
+            </p>
+          </div>
+        ))}
       </div>
       <p className="mt-4 text-sm text-zinc-500">Rest: {superset.rest}</p>
     </div>
@@ -206,35 +179,33 @@ function SupersetCard({
 
 function FinisherCard({
   finisher,
-  checked,
-  onToggle,
+  completed,
+  onTap,
 }: {
   finisher: Day["finisher"];
-  checked: boolean;
-  onToggle: () => void;
+  completed: number;
+  onTap: () => void;
 }) {
+  const allDone = completed >= finisher.sets;
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5">
-      <div className="mb-4 flex items-baseline justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-white">Finisher</h3>
-        <span className="text-sm text-zinc-400">{finisher.sets} Rounds</span>
+        <RoundDots total={finisher.sets} completed={completed} onTap={onTap} label="Sets" />
       </div>
-      <div className="flex items-start gap-2">
-        <Checkbox checked={checked} onChange={onToggle} />
-        <div className={`transition-opacity ${checked ? "opacity-40" : ""}`}>
-          <p className="font-medium text-white">{finisher.name}</p>
-          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-            <span>{finisher.reps}</span>
-            {finisher.tempo && (
-              <>
-                <span>·</span>
-                <TempoBadge tempo={finisher.tempo} />
-              </>
-            )}
-            <span>·</span>
-            <span>RPE {finisher.rpe}</span>
-          </p>
-        </div>
+      <div className={`transition-opacity ${allDone ? "opacity-40" : ""}`}>
+        <p className="font-medium text-white">{finisher.name}</p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+          <span>{finisher.reps}</span>
+          {finisher.tempo && (
+            <>
+              <span>·</span>
+              <TempoBadge tempo={finisher.tempo} />
+            </>
+          )}
+          <span>·</span>
+          <span>RPE {finisher.rpe}</span>
+        </p>
       </div>
       <p className="mt-4 text-sm text-zinc-500">Rest: {finisher.rest}</p>
     </div>
@@ -243,12 +214,12 @@ function FinisherCard({
 
 function DayContent({
   day,
-  checked,
-  onToggle,
+  counts,
+  onTap,
 }: {
   day: Day;
-  checked: Record<string, boolean>;
-  onToggle: (key: string) => void;
+  counts: Record<string, number>;
+  onTap: (key: string, max: number) => void;
 }) {
   return (
     <div className="min-w-full px-1">
@@ -260,16 +231,16 @@ function DayContent({
           <SupersetCard
             key={s.name}
             superset={s}
-            checked={checked}
-            onToggle={onToggle}
+            completed={counts[`superset-${day.label}-${s.name}`] ?? 0}
+            onTap={() => onTap(`superset-${day.label}-${s.name}`, s.rounds)}
           />
         ))}
       </div>
       <div className="mt-4">
         <FinisherCard
           finisher={day.finisher}
-          checked={!!checked[`finisher-${day.finisher.name}`]}
-          onToggle={() => onToggle(`finisher-${day.finisher.name}`)}
+          completed={counts[`finisher-${day.label}`] ?? 0}
+          onTap={() => onTap(`finisher-${day.label}`, day.finisher.sets)}
         />
       </div>
     </div>
@@ -278,13 +249,16 @@ function DayContent({
 
 export default function WorkoutViewer() {
   const [activeDay, setActiveDay] = useState(getTodayTab);
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [counts, setCounts] = useState<Record<string, number>>({});
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchRef = useRef({ startX: 0, startY: 0, locked: false });
 
-  function toggle(key: string) {
-    setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
+  function tap(key: string, max: number) {
+    setCounts((prev) => {
+      const current = prev[key] ?? 0;
+      return { ...prev, [key]: current >= max ? 0 : current + 1 };
+    });
   }
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -383,7 +357,10 @@ export default function WorkoutViewer() {
 
         {/* Complex */}
         <div className="animate-in mt-4" style={{ animationDelay: "100ms" }}>
-          <ComplexCard checked={checked} onToggle={toggle} />
+          <ComplexCard
+            completed={counts["complex"] ?? 0}
+            onTap={() => tap("complex", workoutPlan.complex.rounds)}
+          />
         </div>
 
         {/* Swipeable day content */}
@@ -405,8 +382,8 @@ export default function WorkoutViewer() {
               <DayContent
                 key={d.label}
                 day={d}
-                checked={checked}
-                onToggle={toggle}
+                counts={counts}
+                onTap={tap}
               />
             ))}
           </div>

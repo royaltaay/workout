@@ -284,11 +284,11 @@ export default function WorkoutViewer() {
     <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
       <div className="flex-1">
         {/* Header */}
-        <header className="animate-in mb-6">
-          <div className="flex items-center gap-1.5">
+        <header className="animate-in mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-1">
             <svg
-              width="50"
-              height="50"
+              width="36"
+              height="36"
               viewBox="0 0 32 32"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -301,24 +301,22 @@ export default function WorkoutViewer() {
             </svg>
             <h1 className="text-2xl font-bold text-white">Dungym</h1>
           </div>
+          <div className="flex gap-1.5">
+            {workoutPlan.days.map((d, i) => (
+              <button
+                key={d.label}
+                onClick={() => setActiveDay(i)}
+                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
+                  i === activeDay
+                    ? "border-transparent bg-white text-black"
+                    : "border-white/20 text-zinc-400 hover:text-white"
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
         </header>
-
-        {/* Day selector */}
-        <div className="animate-in mb-6 flex gap-2" style={{ animationDelay: "50ms" }}>
-          {workoutPlan.days.map((d, i) => (
-            <button
-              key={d.label}
-              onClick={() => setActiveDay(i)}
-              className={`rounded-full border px-5 py-2 text-sm font-medium transition-all active:scale-[0.97] ${
-                i === activeDay
-                  ? "border-transparent bg-white text-black"
-                  : "border-white/20 text-zinc-400 hover:text-white"
-              }`}
-            >
-              {d.label}
-            </button>
-          ))}
-        </div>
 
         {/* Complex */}
         <div className="animate-in" style={{ animationDelay: "100ms" }}>
@@ -386,10 +384,11 @@ export default function WorkoutViewer() {
 
       {/* Footer */}
       <footer
-        className="animate-in mt-12 border-t border-white/5 pt-6 pb-4 text-center"
+        className="animate-in mt-8 border-t border-white/5 pt-4 text-center"
         style={{ animationDelay: "400ms" }}
       >
         <p className="text-sm text-zinc-500">A workout program by Taylor Prince</p>
+        <a href="mailto:tprince09@gmail.com" className="mt-1 block text-xs text-zinc-600">tprince09@gmail.com</a>
       </footer>
     </div>
   );

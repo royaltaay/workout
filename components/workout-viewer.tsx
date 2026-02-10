@@ -29,16 +29,25 @@ function RoundDots({
   return (
     <button onClick={onTap} className="flex items-center gap-1.5">
       <div className="flex gap-1">
-        {Array.from({ length: total }, (_, i) => (
-          <span
-            key={i}
-            className={`h-2 w-2 rounded-full transition-all ${
-              i < completed
-                ? "bg-red-500/60"
-                : "bg-white/10"
-            }`}
-          />
-        ))}
+        {Array.from({ length: total }, (_, i) => {
+          const allDone = completed >= total;
+          const isCurrent = i === completed - 1 && completed > 0;
+          const isDone = i < completed;
+          return (
+            <span
+              key={i}
+              className={`h-2 w-2 rounded-full transition-all ${
+                allDone
+                  ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]"
+                  : isCurrent
+                    ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]"
+                    : isDone
+                      ? "bg-red-500/60"
+                      : "bg-white/10"
+              }`}
+            />
+          );
+        })}
       </div>
       <span className="text-sm text-zinc-400">{label}</span>
     </button>

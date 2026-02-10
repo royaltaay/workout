@@ -87,7 +87,7 @@ export const workoutPlan: WorkoutPlan = {
       title: "Monday — Push / Anti-Extension",
       supersets: [
         {
-          name: "Superset A",
+          name: "Superset",
           rounds: 3,
           exercises: [
             {
@@ -120,7 +120,7 @@ export const workoutPlan: WorkoutPlan = {
       title: "Wednesday — Pull / Anti-Rotation",
       supersets: [
         {
-          name: "Superset A",
+          name: "Superset",
           rounds: 3,
           exercises: [
             {
@@ -153,7 +153,7 @@ export const workoutPlan: WorkoutPlan = {
       title: "Friday — Carry / Total Body",
       supersets: [
         {
-          name: "Superset A",
+          name: "Superset",
           rounds: 3,
           exercises: [
             {

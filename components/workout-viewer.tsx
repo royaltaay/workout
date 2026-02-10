@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   workoutPlan,
   type ComplexExercise,
@@ -25,27 +25,31 @@ function Checkbox({
   return (
     <button
       onClick={onChange}
-      className={`mt-1.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-all active:scale-[0.85] ${
-        checked
-          ? "border-red-500/50 bg-red-500/20 text-red-400"
-          : "border-white/20 text-transparent hover:border-white/40"
-      }`}
+      className="-m-2 mt-0.5 flex shrink-0 items-center justify-center p-2"
     >
-      {checked && (
-        <svg
-          className="h-2.5 w-2.5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={3}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-      )}
+      <span
+        className={`flex h-4.5 w-4.5 items-center justify-center rounded-sm border transition-all ${
+          checked
+            ? "border-red-500/50 bg-red-500/20 text-red-400"
+            : "border-white/20 text-transparent"
+        }`}
+      >
+        {checked && (
+          <svg
+            className="h-3 w-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={3}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        )}
+      </span>
     </button>
   );
 }
@@ -160,17 +164,16 @@ function FinisherCard({
 }) {
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5">
-      <div className="mb-4">
+      <div className="mb-4 flex items-baseline justify-between">
         <h3 className="text-lg font-semibold text-white">Finisher</h3>
+        <span className="text-sm text-zinc-400">{finisher.sets} Rounds</span>
       </div>
       <div className="flex items-start gap-2">
         <Checkbox checked={checked} onChange={onToggle} />
         <div className={`transition-opacity ${checked ? "opacity-40" : ""}`}>
           <p className="font-medium text-white">{finisher.name}</p>
           <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-            <span>
-              {finisher.sets}×{finisher.reps}
-            </span>
+            <span>{finisher.reps}</span>
             {finisher.tempo && (
               <>
                 <span>·</span>
@@ -187,14 +190,95 @@ function FinisherCard({
   );
 }
 
+function DayContent({
+  day,
+  checked,
+  onToggle,
+}: {
+  day: Day;
+  checked: Record<string, boolean>;
+  onToggle: (key: string) => void;
+}) {
+  return (
+    <div className="min-w-full px-1">
+      <h2 className="mb-4 mt-8 text-xl font-semibold text-white">
+        {day.title}
+      </h2>
+      <div className="space-y-4">
+        {day.supersets.map((s) => (
+          <SupersetCard
+            key={s.name}
+            superset={s}
+            checked={checked}
+            onToggle={onToggle}
+          />
+        ))}
+      </div>
+      <div className="mt-4">
+        <FinisherCard
+          finisher={day.finisher}
+          checked={!!checked[`finisher-${day.finisher.name}`]}
+          onToggle={() => onToggle(`finisher-${day.finisher.name}`)}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function WorkoutViewer() {
   const [activeDay, setActiveDay] = useState(getTodayTab);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
-  const day = workoutPlan.days[activeDay];
+  const [offsetX, setOffsetX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchRef = useRef({ startX: 0, startY: 0, locked: false });
 
   function toggle(key: string) {
     setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
   }
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchRef.current = {
+      startX: e.touches[0].clientX,
+      startY: e.touches[0].clientY,
+      locked: false,
+    };
+    setIsSwiping(true);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const dx = e.touches[0].clientX - touchRef.current.startX;
+    const dy = e.touches[0].clientY - touchRef.current.startY;
+
+    // Lock direction on first significant move
+    if (!touchRef.current.locked) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      touchRef.current.locked = true;
+      if (Math.abs(dy) > Math.abs(dx)) {
+        // Vertical scroll — bail out
+        setIsSwiping(false);
+        return;
+      }
+    }
+
+    if (!isSwiping) return;
+
+    // Dampen at edges
+    const atEdge =
+      (activeDay === 0 && dx > 0) ||
+      (activeDay === workoutPlan.days.length - 1 && dx < 0);
+    setOffsetX(atEdge ? dx * 0.2 : dx);
+  }, [activeDay, isSwiping]);
+
+  const handleTouchEnd = useCallback(() => {
+    const threshold = 60;
+    if (offsetX < -threshold && activeDay < workoutPlan.days.length - 1) {
+      setActiveDay((prev) => prev + 1);
+    } else if (offsetX > threshold && activeDay > 0) {
+      setActiveDay((prev) => prev - 1);
+    }
+    setOffsetX(0);
+    setIsSwiping(false);
+  }, [offsetX, activeDay]);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
@@ -241,43 +325,28 @@ export default function WorkoutViewer() {
           <ComplexCard checked={checked} onToggle={toggle} />
         </div>
 
-        {/* Day content — keyed to trigger fade on switch */}
-        <div key={day.label} className="day-content">
-          {/* Day title */}
-          <h2
-            className="animate-in mb-4 mt-8 text-xl font-semibold text-white"
-            style={{ animationDelay: "150ms" }}
-          >
-            {day.title}
-          </h2>
-
-          {/* Supersets */}
-          <div className="space-y-4">
-            {day.supersets.map((s, i) => (
-              <div
-                key={s.name}
-                className="animate-in"
-                style={{ animationDelay: `${200 + i * 50}ms` }}
-              >
-                <SupersetCard
-                  superset={s}
-                  checked={checked}
-                  onToggle={toggle}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Finisher */}
+        {/* Swipeable day content */}
+        <div
+          className="overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
-            className="animate-in mt-4"
-            style={{ animationDelay: "300ms" }}
+            className="flex"
+            style={{
+              transform: `translateX(calc(-${activeDay * 100}% + ${offsetX}px))`,
+              transition: isSwiping ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
+            }}
           >
-            <FinisherCard
-              finisher={day.finisher}
-              checked={!!checked[`finisher-${day.finisher.name}`]}
-              onToggle={() => toggle(`finisher-${day.finisher.name}`)}
-            />
+            {workoutPlan.days.map((d) => (
+              <DayContent
+                key={d.label}
+                day={d}
+                checked={checked}
+                onToggle={toggle}
+              />
+            ))}
           </div>
         </div>
 

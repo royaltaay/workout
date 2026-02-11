@@ -416,7 +416,44 @@ export default function WorkoutViewer() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const [nudge, setNudge] = useState(0);
 
+  // Session timer — supports pause/resume via banked time
+  const [sessionStart, setSessionStart] = useState<number | null>(null);
+  const [sessionBank, setSessionBank] = useState(0);
+  const [sessionElapsed, setSessionElapsed] = useState(0);
+  const sessionRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const sessionActive = sessionStart !== null;
+  const sessionStarted = sessionActive || sessionBank > 0;
+
+  // Completion check
+  const activeDayData = workoutPlan.days[activeDay];
+  const allComplete = sessionStarted &&
+    (counts["complex"] ?? 0) >= workoutPlan.complex.rounds &&
+    activeDayData.supersets.every(s =>
+      (counts[`superset-${activeDayData.label}-${s.name}`] ?? 0) >= s.rounds
+    ) &&
+    (counts[`finisher-${activeDayData.label}`] ?? 0) >= activeDayData.finisher.sets;
+
+  function sessionPause() {
+    if (!sessionStart) return;
+    setSessionBank(sessionElapsed);
+    setSessionStart(null);
+  }
+
+  function sessionResume() {
+    setSessionStart(Date.now());
+  }
+
+  function sessionReset() {
+    if (sessionRef.current) clearInterval(sessionRef.current);
+    setSessionStart(null);
+    setSessionBank(0);
+    setSessionElapsed(0);
+  }
+
   function tap(key: string, max: number) {
+    if (!sessionStarted) { setSessionStart(Date.now()); }
+    else if (!sessionActive) { sessionResume(); }
+    try { navigator.vibrate?.(10); } catch {}
     setCounts((prev) => {
       const current = prev[key] ?? 0;
       return { ...prev, [key]: current >= max ? 0 : current + 1 };
@@ -493,6 +530,15 @@ export default function WorkoutViewer() {
     };
   }, []);
 
+  // Session elapsed timer
+  useEffect(() => {
+    if (!sessionStart || allComplete) return;
+    sessionRef.current = setInterval(() => {
+      setSessionElapsed(sessionBank + Math.floor((Date.now() - sessionStart) / 1000));
+    }, 1000);
+    return () => clearInterval(sessionRef.current);
+  }, [sessionStart, sessionBank, allComplete]);
+
   // One-time swipe hint nudge after entrance animations
   useEffect(() => {
     const t1 = setTimeout(() => setNudge(-30), 600);
@@ -556,7 +602,15 @@ export default function WorkoutViewer() {
   }, []);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
+    <div
+      className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]"
+      style={{
+        boxShadow: allComplete
+          ? "inset 0 0 60px rgba(239,68,68,0.075), inset 0 0 150px rgba(239,68,68,0.045), inset 0 0 300px rgba(239,68,68,0.02)"
+          : "none",
+        transition: "box-shadow 1s ease-out",
+      }}
+    >
       <div className="flex-1">
         {/* Header */}
         <header className="animate-in mb-6 flex items-center justify-between">
@@ -596,6 +650,44 @@ export default function WorkoutViewer() {
             ))}
           </div>
         </header>
+
+        {/* Session timer */}
+        <div
+          className="animate-in mb-3 flex h-10 items-center rounded-xl border border-white/10 bg-[#1a1a1a] px-4"
+          style={{ animationDelay: "50ms" }}
+        >
+          <span className="text-sm font-medium text-zinc-400">Session</span>
+          <span className="ml-auto font-mono text-sm text-zinc-500">
+            {sessionStarted ? formatTime(sessionElapsed) : "0:00"}
+          </span>
+          <div className="ml-3 flex items-center gap-2">
+            {sessionActive ? (
+              <button onClick={sessionPause} className="text-zinc-500 active:text-zinc-300">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16" rx="1" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={() => sessionStarted ? sessionResume() : setSessionStart(Date.now())}
+                className="text-zinc-500 active:text-zinc-300"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+              </button>
+            )}
+            {sessionStarted && (
+              <button onClick={sessionReset} className="text-zinc-500 active:text-zinc-300">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" d="M1 4v6h6" />
+                  <path strokeLinecap="round" d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Warm-up */}
         <Collapsible title="Warm-up" className="animate-in" style={{ animationDelay: "75ms" }}>

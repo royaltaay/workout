@@ -262,6 +262,8 @@ export default function WorkoutViewer() {
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchRef = useRef({ startX: 0, startY: 0, locked: false });
+  const offsetRef = useRef(0);
+  const swipingRef = useRef(false);
 
   function tap(key: string, max: number) {
     setCounts((prev) => {
@@ -276,6 +278,7 @@ export default function WorkoutViewer() {
       startY: e.touches[0].clientY,
       locked: false,
     };
+    swipingRef.current = true;
     setIsSwiping(true);
   }, []);
 
@@ -289,30 +292,43 @@ export default function WorkoutViewer() {
       touchRef.current.locked = true;
       if (Math.abs(dy) > Math.abs(dx)) {
         // Vertical scroll — bail out
+        swipingRef.current = false;
         setIsSwiping(false);
         return;
       }
     }
 
-    if (!isSwiping) return;
+    if (!swipingRef.current) return;
 
     // Dampen at edges
     const atEdge =
       (activeDay === 0 && dx > 0) ||
       (activeDay === workoutPlan.days.length - 1 && dx < 0);
-    setOffsetX(atEdge ? dx * 0.2 : dx);
-  }, [activeDay, isSwiping]);
+    const val = atEdge ? dx * 0.2 : dx;
+    offsetRef.current = val;
+    setOffsetX(val);
+  }, [activeDay]);
 
   const handleTouchEnd = useCallback(() => {
     const threshold = 60;
-    if (offsetX < -threshold && activeDay < workoutPlan.days.length - 1) {
-      setActiveDay((prev) => prev + 1);
-    } else if (offsetX > threshold && activeDay > 0) {
-      setActiveDay((prev) => prev - 1);
+    const ox = offsetRef.current;
+    if (ox < -threshold) {
+      setActiveDay((prev) => Math.min(prev + 1, workoutPlan.days.length - 1));
+    } else if (ox > threshold) {
+      setActiveDay((prev) => Math.max(prev - 1, 0));
     }
+    offsetRef.current = 0;
     setOffsetX(0);
+    swipingRef.current = false;
     setIsSwiping(false);
-  }, [offsetX, activeDay]);
+  }, []);
+
+  const handleTouchCancel = useCallback(() => {
+    offsetRef.current = 0;
+    setOffsetX(0);
+    swipingRef.current = false;
+    setIsSwiping(false);
+  }, []);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]">
@@ -339,7 +355,11 @@ export default function WorkoutViewer() {
             {workoutPlan.days.map((d, i) => (
               <button
                 key={d.label}
-                onClick={() => setActiveDay(i)}
+                onClick={() => {
+                  offsetRef.current = 0;
+                  setOffsetX(0);
+                  setActiveDay(i);
+                }}
                 className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
                   i === activeDay
                     ? "border-red-500/40 bg-[#1a1a1a] text-white"
@@ -379,6 +399,7 @@ export default function WorkoutViewer() {
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchCancel}
         >
           <div
             className="flex"

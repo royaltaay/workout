@@ -1,12 +1,49 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   workoutPlan,
   type ComplexExercise,
   type Exercise,
   type Day,
 } from "@/lib/workout-data";
+
+function parseRest(rest: string): { lower: number; upper: number } {
+  const m = rest.match(/(\d+)[–-](\d+)/);
+  if (m) return { lower: parseInt(m[1]), upper: parseInt(m[2]) };
+  const s = rest.match(/(\d+)/);
+  if (s) {
+    const v = parseInt(s[1]);
+    return { lower: v, upper: v };
+  }
+  return { lower: 60, upper: 60 };
+}
+
+function formatTime(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function playBeep(ctx: AudioContext) {
+  if (ctx.state !== "running") return;
+  try {
+    for (let i = 0; i < 3; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      const t = ctx.currentTime + i * 0.2;
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+      osc.start(t);
+      osc.stop(t + 0.12);
+    }
+  } catch {
+    // Audio scheduling failed
+  }
+}
 
 function getTodayTab(): number {
   const day = new Date().getDay();
@@ -113,12 +150,108 @@ function TempoBadge({ tempo }: { tempo: string }) {
   );
 }
 
+function RestButton({
+  rest,
+  label,
+  onStart,
+}: {
+  rest: string;
+  label?: string;
+  onStart: (rest: string) => void;
+}) {
+  return (
+    <button
+      onClick={() => onStart(rest)}
+      className="mt-4 flex items-center gap-1.5 text-sm text-zinc-500 transition-colors active:text-zinc-300"
+    >
+      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <circle cx="12" cy="12" r="10" />
+        <path strokeLinecap="round" d="M12 7v5l3 2" />
+      </svg>
+      <span>{label ? `${label}: ${rest}` : `Rest: ${rest}`}</span>
+    </button>
+  );
+}
+
+function TimerBubble({
+  seconds,
+  total,
+  lower,
+  finished,
+  onCancel,
+}: {
+  seconds: number;
+  total: number;
+  lower: number;
+  finished: boolean;
+  onCancel: () => void;
+}) {
+  const radius = 26;
+  const circumference = 2 * Math.PI * radius;
+  const progress = total > 0 ? seconds / total : 0;
+  const offset = circumference * (1 - progress);
+  const isReady = !finished && seconds <= total - lower && total > lower;
+
+  return (
+    <div
+      className="fixed z-50"
+      style={{
+        bottom: "calc(1.5rem + env(safe-area-inset-bottom))",
+        right: "calc(1.5rem + env(safe-area-inset-right))",
+      }}
+    >
+      <button
+        onClick={onCancel}
+        className={`relative flex h-16 w-16 items-center justify-center rounded-full border bg-[#1a1a1a] transition-all ${
+          finished
+            ? "border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse"
+            : isReady
+              ? "border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+              : "border-white/10"
+        }`}
+      >
+        <svg className="absolute inset-0 -rotate-90" viewBox="0 0 64 64">
+          <circle
+            cx="32"
+            cy="32"
+            r={radius}
+            fill="none"
+            stroke="rgba(255,255,255,0.05)"
+            strokeWidth="2.5"
+          />
+          <circle
+            cx="32"
+            cy="32"
+            r={radius}
+            fill="none"
+            stroke={finished || isReady ? "#ef4444" : "rgba(239,68,68,0.5)"}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{ transition: "stroke-dashoffset 1s linear" }}
+          />
+        </svg>
+        <span
+          className={`relative font-mono text-sm font-medium ${
+            finished ? "text-red-400" : "text-white"
+          }`}
+        >
+          {finished ? "GO" : formatTime(seconds)}
+        </span>
+      </button>
+    </div>
+  );
+}
+
 function ComplexCard({
   completed,
   onTap,
+  onStartTimer,
 }: {
   completed: number;
   onTap: () => void;
+  onStartTimer: (rest: string) => void;
 }) {
   const { complex } = workoutPlan;
   const allDone = completed >= complex.rounds;
@@ -144,9 +277,7 @@ function ComplexCard({
           </div>
         ))}
       </div>
-      <p className="mt-4 text-sm text-zinc-500">
-        Rest between rounds: {complex.rest}
-      </p>
+      <RestButton rest={complex.rest} label="Rest between rounds" onStart={onStartTimer} />
     </div>
   );
 }
@@ -155,10 +286,12 @@ function SupersetCard({
   superset,
   completed,
   onTap,
+  onStartTimer,
 }: {
   superset: Day["supersets"][number];
   completed: number;
   onTap: () => void;
+  onStartTimer: (rest: string) => void;
 }) {
   const allDone = completed >= superset.rounds;
   return (
@@ -181,7 +314,7 @@ function SupersetCard({
           </div>
         ))}
       </div>
-      <p className="mt-4 text-sm text-zinc-500">Rest: {superset.rest}</p>
+      <RestButton rest={superset.rest} onStart={onStartTimer} />
     </div>
   );
 }
@@ -190,10 +323,12 @@ function FinisherCard({
   finisher,
   completed,
   onTap,
+  onStartTimer,
 }: {
   finisher: Day["finisher"];
   completed: number;
   onTap: () => void;
+  onStartTimer: (rest: string) => void;
 }) {
   const allDone = completed >= finisher.sets;
   return (
@@ -216,7 +351,7 @@ function FinisherCard({
           <span>RPE {finisher.rpe}</span>
         </p>
       </div>
-      <p className="mt-4 text-sm text-zinc-500">Rest: {finisher.rest}</p>
+      <RestButton rest={finisher.rest} onStart={onStartTimer} />
     </div>
   );
 }
@@ -225,10 +360,12 @@ function DayContent({
   day,
   counts,
   onTap,
+  onStartTimer,
 }: {
   day: Day;
   counts: Record<string, number>;
   onTap: (key: string, max: number) => void;
+  onStartTimer: (rest: string, countKey: string, countMax: number) => void;
 }) {
   return (
     <div className="min-w-full px-1">
@@ -242,6 +379,7 @@ function DayContent({
             superset={s}
             completed={counts[`superset-${day.label}-${s.name}`] ?? 0}
             onTap={() => onTap(`superset-${day.label}-${s.name}`, s.rounds)}
+            onStartTimer={(rest) => onStartTimer(rest, `superset-${day.label}-${s.name}`, s.rounds)}
           />
         ))}
       </div>
@@ -250,6 +388,7 @@ function DayContent({
           finisher={day.finisher}
           completed={counts[`finisher-${day.label}`] ?? 0}
           onTap={() => onTap(`finisher-${day.label}`, day.finisher.sets)}
+          onStartTimer={(rest) => onStartTimer(rest, `finisher-${day.label}`, day.finisher.sets)}
         />
       </div>
     </div>
@@ -265,12 +404,93 @@ export default function WorkoutViewer() {
   const offsetRef = useRef(0);
   const swipingRef = useRef(false);
 
+  const [timer, setTimer] = useState<{
+    seconds: number;
+    lower: number;
+    total: number;
+    finished: boolean;
+  } | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const dismissRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const timerContextRef = useRef<{ countKey: string; countMax: number } | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
   function tap(key: string, max: number) {
     setCounts((prev) => {
       const current = prev[key] ?? 0;
       return { ...prev, [key]: current >= max ? 0 : current + 1 };
     });
   }
+
+  const startTimer = useCallback((rest: string, countKey: string, countMax: number) => {
+    const { lower, upper } = parseRest(rest);
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      if (audioCtxRef.current.state === "suspended") {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+    } catch {
+      // AudioContext unavailable
+    }
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (dismissRef.current) clearTimeout(dismissRef.current);
+    timerContextRef.current = { countKey, countMax };
+
+    setTimer({ seconds: upper, lower, total: upper, finished: false });
+
+    timerRef.current = setInterval(() => {
+      setTimer((prev) => {
+        if (!prev || prev.finished) {
+          clearInterval(timerRef.current);
+          return prev;
+        }
+        const next = prev.seconds - 1;
+        if (next <= 0) {
+          clearInterval(timerRef.current);
+          try {
+            if (audioCtxRef.current) playBeep(audioCtxRef.current);
+          } catch {
+            // Audio playback failed
+          }
+          try {
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          } catch {
+            // Vibration unavailable
+          }
+          // Increment round/set count
+          if (timerContextRef.current) {
+            const ctx = timerContextRef.current;
+            timerContextRef.current = null;
+            setCounts((c) => {
+              const cur = c[ctx.countKey] ?? 0;
+              return cur < ctx.countMax ? { ...c, [ctx.countKey]: cur + 1 } : c;
+            });
+          }
+          // Auto-dismiss after 10 seconds
+          dismissRef.current = setTimeout(() => {
+            setTimer((t) => (t?.finished ? null : t));
+          }, 10000);
+          return { ...prev, seconds: 0, finished: true };
+        }
+        return { ...prev, seconds: next };
+      });
+    }, 1000);
+  }, []);
+
+  const cancelTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (dismissRef.current) clearTimeout(dismissRef.current);
+    timerContextRef.current = null;
+    setTimer(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchRef.current = {
@@ -286,12 +506,10 @@ export default function WorkoutViewer() {
     const dx = e.touches[0].clientX - touchRef.current.startX;
     const dy = e.touches[0].clientY - touchRef.current.startY;
 
-    // Lock direction on first significant move
     if (!touchRef.current.locked) {
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       touchRef.current.locked = true;
       if (Math.abs(dy) > Math.abs(dx)) {
-        // Vertical scroll — bail out
         swipingRef.current = false;
         setIsSwiping(false);
         return;
@@ -300,7 +518,6 @@ export default function WorkoutViewer() {
 
     if (!swipingRef.current) return;
 
-    // Dampen at edges
     const atEdge =
       (activeDay === 0 && dx > 0) ||
       (activeDay === workoutPlan.days.length - 1 && dx < 0);
@@ -389,6 +606,7 @@ export default function WorkoutViewer() {
           <ComplexCard
             completed={counts["complex"] ?? 0}
             onTap={() => tap("complex", workoutPlan.complex.rounds)}
+            onStartTimer={(rest) => startTimer(rest, "complex", workoutPlan.complex.rounds)}
           />
         </div>
 
@@ -414,6 +632,7 @@ export default function WorkoutViewer() {
                 day={d}
                 counts={counts}
                 onTap={tap}
+                onStartTimer={startTimer}
               />
             ))}
           </div>
@@ -461,6 +680,17 @@ export default function WorkoutViewer() {
       >
         <p className="text-sm text-zinc-500">A workout program by <a href="mailto:tprince09@gmail.com" className="text-red-500/60">Taylor Prince</a></p>
       </footer>
+
+      {/* Rest countdown timer */}
+      {timer && (
+        <TimerBubble
+          seconds={timer.seconds}
+          total={timer.total}
+          lower={timer.lower}
+          finished={timer.finished}
+          onCancel={cancelTimer}
+        />
+      )}
     </div>
   );
 }

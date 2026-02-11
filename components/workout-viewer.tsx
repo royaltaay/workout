@@ -414,6 +414,7 @@ export default function WorkoutViewer() {
   const dismissRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const timerContextRef = useRef<{ countKey: string; countMax: number } | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const [nudge, setNudge] = useState(0);
 
   function tap(key: string, max: number) {
     setCounts((prev) => {
@@ -490,6 +491,13 @@ export default function WorkoutViewer() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
+  }, []);
+
+  // One-time swipe hint nudge after entrance animations
+  useEffect(() => {
+    const t1 = setTimeout(() => setNudge(-30), 600);
+    const t2 = setTimeout(() => setNudge(0), 900);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -622,7 +630,7 @@ export default function WorkoutViewer() {
           <div
             className="flex"
             style={{
-              transform: `translateX(calc(-${activeDay * 100}% + ${offsetX}px))`,
+              transform: `translateX(calc(-${activeDay * 100}% + ${offsetX + nudge}px))`,
               transition: isSwiping ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
             }}
           >

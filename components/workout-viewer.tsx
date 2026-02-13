@@ -446,11 +446,22 @@ export default function WorkoutViewer() {
     setSessionStart(Date.now());
   }
 
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const resetConfirmRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
   function sessionReset() {
+    if (!resetConfirm) {
+      setResetConfirm(true);
+      resetConfirmRef.current = setTimeout(() => setResetConfirm(false), 1000);
+      return;
+    }
+    clearTimeout(resetConfirmRef.current);
+    setResetConfirm(false);
     if (sessionRef.current) clearInterval(sessionRef.current);
     setSessionStart(null);
     setSessionBank(0);
     setSessionElapsed(0);
+    setCounts({});
   }
 
   function tap(key: string, max: number) {
@@ -677,7 +688,10 @@ export default function WorkoutViewer() {
               </button>
             )}
             {sessionStarted && (
-              <button onClick={sessionReset} className="text-zinc-500 active:text-zinc-300">
+              <button
+                onClick={sessionReset}
+                className={`transition-colors ${resetConfirm ? "text-red-500" : "text-zinc-500 active:text-zinc-300"}`}
+              >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" d="M1 4v6h6" />
                   <path strokeLinecap="round" d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />

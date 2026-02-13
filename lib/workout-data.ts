@@ -173,10 +173,10 @@ export const workoutPlan: WorkoutPlan = {
         },
       ],
       finisher: {
-        name: "Single-Arm OH Carry",
+        name: "Farmer's Carry",
         sets: 3,
-        reps: "40 yd/arm",
-        rpe: "7",
+        reps: "50 yd",
+        rpe: "7–8",
         rest: "60 sec",
       },
     },

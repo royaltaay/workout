@@ -13,6 +13,17 @@ export const metadata: Metadata = {
     icon: "/icon.png",
     apple: "/apple-icon.png",
   },
+  openGraph: {
+    title: "Dungym",
+    description: "A workout program by Taylor Prince",
+    images: [{ url: "/og-image.jpg" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dungym",
+    description: "A workout program by Taylor Prince",
+    images: ["/og-image.jpg"],
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

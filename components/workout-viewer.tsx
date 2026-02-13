@@ -25,20 +25,21 @@ function formatTime(totalSeconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function playBeep(ctx: AudioContext) {
-  if (ctx.state !== "running") return;
+async function playBeep(ctx: AudioContext) {
   try {
+    if (ctx.state !== "running") await ctx.resume();
+    if (ctx.state !== "running") return;
     for (let i = 0; i < 3; i++) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.frequency.value = 880;
-      const t = ctx.currentTime + i * 0.2;
-      gain.gain.setValueAtTime(0.3, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+      const t = ctx.currentTime + i * 0.25;
+      gain.gain.setValueAtTime(0.6, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
       osc.start(t);
-      osc.stop(t + 0.12);
+      osc.stop(t + 0.2);
     }
   } catch {
     // Audio scheduling failed
@@ -186,7 +187,7 @@ function TimerBubble({
   finished: boolean;
   onCancel: () => void;
 }) {
-  const radius = 26;
+  const radius = 34;
   const circumference = 2 * Math.PI * radius;
   const progress = total > 0 ? seconds / total : 0;
   const offset = circumference * (1 - progress);
@@ -202,30 +203,30 @@ function TimerBubble({
     >
       <button
         onClick={onCancel}
-        className={`relative flex h-16 w-16 items-center justify-center rounded-full border bg-[#1a1a1a] transition-all ${
+        className={`relative flex h-20 w-20 items-center justify-center rounded-full border bg-[#1a1a1a] transition-all ${
           finished
-            ? "border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse"
+            ? "border-red-500/60 shadow-[0_0_24px_rgba(239,68,68,0.4)] animate-pulse"
             : isReady
-              ? "border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+              ? "border-red-500/30 shadow-[0_0_16px_rgba(239,68,68,0.2)]"
               : "border-white/10"
         }`}
       >
-        <svg className="absolute inset-0 -rotate-90" viewBox="0 0 64 64">
+        <svg className="absolute inset-0 -rotate-90" viewBox="0 0 80 80">
           <circle
-            cx="32"
-            cy="32"
+            cx="40"
+            cy="40"
             r={radius}
             fill="none"
             stroke="rgba(255,255,255,0.05)"
-            strokeWidth="2.5"
+            strokeWidth="3"
           />
           <circle
-            cx="32"
-            cy="32"
+            cx="40"
+            cy="40"
             r={radius}
             fill="none"
             stroke={finished || isReady ? "#ef4444" : "rgba(239,68,68,0.5)"}
-            strokeWidth="2.5"
+            strokeWidth="3"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
@@ -233,7 +234,7 @@ function TimerBubble({
           />
         </svg>
         <span
-          className={`relative font-mono text-sm font-medium ${
+          className={`relative font-mono text-base font-semibold ${
             finished ? "text-red-400" : "text-white"
           }`}
         >
@@ -397,12 +398,13 @@ function DayContent({
 
 export default function WorkoutViewer() {
   const [activeDay, setActiveDay] = useState(getTodayTab);
+  const activeDayRef = useRef(activeDay);
+  activeDayRef.current = activeDay;
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
-  const touchRef = useRef({ startX: 0, startY: 0, locked: false });
+  const touchRef = useRef({ startX: 0, startY: 0, direction: null as "h" | "v" | null });
   const offsetRef = useRef(0);
-  const swipingRef = useRef(false);
 
   const [timer, setTimer] = useState<{
     seconds: number;
@@ -414,7 +416,8 @@ export default function WorkoutViewer() {
   const dismissRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const timerContextRef = useRef<{ countKey: string; countMax: number } | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const [nudge, setNudge] = useState(0);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
 
   // Session timer — supports pause/resume via banked time
   const [sessionStart, setSessionStart] = useState<number | null>(null);
@@ -460,6 +463,15 @@ export default function WorkoutViewer() {
     });
   }
 
+  function acquireWakeLock() {
+    navigator.wakeLock?.request("screen").then(s => { wakeLockRef.current = s; }).catch(() => {});
+  }
+
+  function releaseWakeLock() {
+    wakeLockRef.current?.release().catch(() => {});
+    wakeLockRef.current = null;
+  }
+
   const startTimer = useCallback((rest: string, countKey: string, countMax: number) => {
     const { lower, upper } = parseRest(rest);
     try {
@@ -475,6 +487,7 @@ export default function WorkoutViewer() {
     if (timerRef.current) clearInterval(timerRef.current);
     if (dismissRef.current) clearTimeout(dismissRef.current);
     timerContextRef.current = { countKey, countMax };
+    acquireWakeLock();
 
     setTimer({ seconds: upper, lower, total: upper, finished: false });
 
@@ -487,6 +500,7 @@ export default function WorkoutViewer() {
         const next = prev.seconds - 1;
         if (next <= 0) {
           clearInterval(timerRef.current);
+          releaseWakeLock();
           try {
             if (audioCtxRef.current) playBeep(audioCtxRef.current);
           } catch {
@@ -521,6 +535,7 @@ export default function WorkoutViewer() {
     if (timerRef.current) clearInterval(timerRef.current);
     if (dismissRef.current) clearTimeout(dismissRef.current);
     timerContextRef.current = null;
+    releaseWakeLock();
     setTimer(null);
   }, []);
 
@@ -539,67 +554,54 @@ export default function WorkoutViewer() {
     return () => clearInterval(sessionRef.current);
   }, [sessionStart, sessionBank, allComplete]);
 
-  // One-time swipe hint nudge after entrance animations
-  useEffect(() => {
-    const t1 = setTimeout(() => setNudge(-30), 600);
-    const t2 = setTimeout(() => setNudge(0), 900);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchRef.current = {
-      startX: e.touches[0].clientX,
-      startY: e.touches[0].clientY,
-      locked: false,
-    };
-    swipingRef.current = true;
+  function selectDay(index: number) {
+    setActiveDay(index);
+    offsetRef.current = 0;
+    setOffsetX(0);
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, direction: null };
     setIsSwiping(true);
-  }, []);
+  }
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  function handleTouchMove(e: React.TouchEvent) {
     const dx = e.touches[0].clientX - touchRef.current.startX;
     const dy = e.touches[0].clientY - touchRef.current.startY;
 
-    if (!touchRef.current.locked) {
+    if (touchRef.current.direction === null) {
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-      touchRef.current.locked = true;
-      if (Math.abs(dy) > Math.abs(dx)) {
-        swipingRef.current = false;
-        setIsSwiping(false);
-        return;
-      }
+      touchRef.current.direction = Math.abs(dx) > Math.abs(dy) ? "h" : "v";
+      if (touchRef.current.direction === "v") { setIsSwiping(false); return; }
     }
+    if (touchRef.current.direction !== "h") return;
 
-    if (!swipingRef.current) return;
+    const day = activeDayRef.current;
+    const atEdge = (day === 0 && dx > 0) || (day === workoutPlan.days.length - 1 && dx < 0);
+    offsetRef.current = atEdge ? dx * 0.2 : dx;
+    setOffsetX(offsetRef.current);
+  }
 
-    const atEdge =
-      (activeDay === 0 && dx > 0) ||
-      (activeDay === workoutPlan.days.length - 1 && dx < 0);
-    const val = atEdge ? dx * 0.2 : dx;
-    offsetRef.current = val;
-    setOffsetX(val);
-  }, [activeDay]);
-
-  const handleTouchEnd = useCallback(() => {
-    const threshold = 60;
+  function handleTouchEnd() {
     const ox = offsetRef.current;
-    if (ox < -threshold) {
-      setActiveDay((prev) => Math.min(prev + 1, workoutPlan.days.length - 1));
-    } else if (ox > threshold) {
-      setActiveDay((prev) => Math.max(prev - 1, 0));
+    const day = activeDayRef.current;
+    if (ox < -60 && day < workoutPlan.days.length - 1) {
+      selectDay(day + 1);
+    } else if (ox > 60 && day > 0) {
+      selectDay(day - 1);
+    } else {
+      offsetRef.current = 0;
+      setOffsetX(0);
     }
-    offsetRef.current = 0;
-    setOffsetX(0);
-    swipingRef.current = false;
     setIsSwiping(false);
-  }, []);
+  }
 
-  const handleTouchCancel = useCallback(() => {
+  function handleTouchCancel() {
     offsetRef.current = 0;
     setOffsetX(0);
-    swipingRef.current = false;
     setIsSwiping(false);
-  }, []);
+  }
 
   return (
     <div
@@ -634,11 +636,7 @@ export default function WorkoutViewer() {
             {workoutPlan.days.map((d, i) => (
               <button
                 key={d.label}
-                onClick={() => {
-                  offsetRef.current = 0;
-                  setOffsetX(0);
-                  setActiveDay(i);
-                }}
+                onClick={() => selectDay(i)}
                 className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
                   i === activeDay
                     ? "border-red-500/40 bg-[#1a1a1a] text-white"
@@ -722,7 +720,7 @@ export default function WorkoutViewer() {
           <div
             className="flex"
             style={{
-              transform: `translateX(calc(-${activeDay * 100}% + ${offsetX + nudge}px))`,
+              transform: `translateX(calc(-${activeDay * 100}% + ${offsetX}px))`,
               transition: isSwiping ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
             }}
           >

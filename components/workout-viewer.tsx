@@ -161,127 +161,118 @@ function TempoBadge({ tempo }: { tempo: string }) {
   );
 }
 
-function ExerciseInfo({
-  name,
-  openGuide,
-  setOpenGuide,
-}: {
-  name: string;
-  openGuide: string | null;
-  setOpenGuide: (name: string | null) => void;
-}) {
-  const detail = exerciseDetails[name];
-  if (!detail) return null;
-  const open = openGuide === name;
-
-  return (
-    <div className="mt-1.5">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpenGuide(open ? null : name);
-        }}
-        className="flex items-center gap-1 text-xs text-zinc-500 transition-colors active:text-zinc-300"
-      >
-        <svg
-          className="h-3 w-3"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path strokeLinecap="round" d="M12 16v-4m0-4h.01" />
-        </svg>
-        <span>{open ? "Hide guide" : "Form guide"}</span>
-      </button>
-      <div
-        className="grid transition-[grid-template-rows] duration-200 ease-out"
-        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
-      >
-        <div className="overflow-hidden">
-          <div className="mt-2 space-y-2">
-            <a
-              href={detail.videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative block aspect-video w-full overflow-hidden rounded-lg bg-[#111] border border-white/5"
-            >
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/90 shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-transform group-active:scale-95">
-                  <svg className="ml-0.5 h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                    <polygon points="5,3 19,12 5,21" />
-                  </svg>
-                </div>
-                <span className="text-xs font-medium text-zinc-500">Watch form guide</span>
-              </div>
-            </a>
-            <p className="text-sm leading-relaxed text-zinc-400">
-              {detail.instructions}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SetLogger({
+function ExerciseDetail({
   name,
   sets,
   entries,
   onChange,
   previous,
+  expanded,
+  onToggle,
 }: {
   name: string;
   sets: number;
   entries: SetEntry[];
   onChange: (name: string, entries: SetEntry[]) => void;
   previous: SetEntry[] | undefined;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
+  const detail = exerciseDetails[name];
   return (
-    <div className="mt-3 space-y-1">
-      {Array.from({ length: sets }, (_, i) => {
-        const entry = entries[i] ?? { weight: "", reps: "" };
-        const prev = previous?.[i];
-        return (
-          <div key={i} className="flex items-center gap-1.5">
-            <span className="w-4 text-center text-xs tabular-nums text-zinc-600">
-              {i + 1}
-            </span>
-            <input
-              type="number"
-              inputMode="decimal"
-              placeholder={prev?.weight || "—"}
-              value={entry.weight}
-              onChange={(e) => {
-                const updated = [...entries];
-                while (updated.length <= i) updated.push({ weight: "", reps: "" });
-                updated[i] = { ...updated[i], weight: e.target.value };
-                onChange(name, updated);
-              }}
-              className="w-16 rounded bg-white/5 px-2 py-1.5 text-center text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
-            />
-            <span className="text-xs text-zinc-600">lb</span>
-            <span className="text-xs text-zinc-600">&times;</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              placeholder={prev?.reps || "—"}
-              value={entry.reps}
-              onChange={(e) => {
-                const updated = [...entries];
-                while (updated.length <= i) updated.push({ weight: "", reps: "" });
-                updated[i] = { ...updated[i], reps: e.target.value };
-                onChange(name, updated);
-              }}
-              className="w-14 rounded bg-white/5 px-2 py-1.5 text-center text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
-            />
-            <span className="text-xs text-zinc-600">reps</span>
+    <>
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggle(); }}
+        className="flex items-center gap-1.5 text-left"
+      >
+        <p className="font-medium text-white">{name}</p>
+        <svg
+          className={`h-3 w-3 shrink-0 text-zinc-600 transition-transform duration-200 ease-out ${expanded ? "rotate-90" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-out"
+        style={{ gridTemplateRows: expanded ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <div className="mt-3 space-y-3">
+            {/* Set inputs */}
+            <div className="space-y-1">
+              {Array.from({ length: sets }, (_, i) => {
+                const entry = entries[i] ?? { weight: "", reps: "" };
+                const prev = previous?.[i];
+                return (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <span className="w-4 text-center text-xs tabular-nums text-zinc-600">
+                      {i + 1}
+                    </span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder={prev?.weight || "—"}
+                      value={entry.weight}
+                      onChange={(e) => {
+                        const updated = [...entries];
+                        while (updated.length <= i) updated.push({ weight: "", reps: "" });
+                        updated[i] = { ...updated[i], weight: e.target.value };
+                        onChange(name, updated);
+                      }}
+                      className="w-16 rounded bg-white/5 px-2 py-1.5 text-center text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                    />
+                    <span className="text-xs text-zinc-600">lb</span>
+                    <span className="text-xs text-zinc-600">&times;</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder={prev?.reps || "—"}
+                      value={entry.reps}
+                      onChange={(e) => {
+                        const updated = [...entries];
+                        while (updated.length <= i) updated.push({ weight: "", reps: "" });
+                        updated[i] = { ...updated[i], reps: e.target.value };
+                        onChange(name, updated);
+                      }}
+                      className="w-14 rounded bg-white/5 px-2 py-1.5 text-center text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                    />
+                    <span className="text-xs text-zinc-600">reps</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Form guide */}
+            {detail && (
+              <div className="space-y-2">
+                <a
+                  href={detail.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative block aspect-video w-full overflow-hidden rounded-lg bg-[#111] border border-white/5"
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/90 shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-transform group-active:scale-95">
+                      <svg className="ml-0.5 h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5,3 19,12 5,21" />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-medium text-zinc-500">Watch form guide</span>
+                  </div>
+                </a>
+                <p className="text-sm leading-relaxed text-zinc-400">
+                  {detail.instructions}
+                </p>
+              </div>
+            )}
           </div>
-        );
-      })}
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -383,8 +374,8 @@ function ComplexCard({
   completed,
   onTap,
   onStartTimer,
-  openGuide,
-  setOpenGuide,
+  openExercise,
+  setOpenExercise,
   logs,
   onLogChange,
   previousLogs,
@@ -392,8 +383,8 @@ function ComplexCard({
   completed: number;
   onTap: () => void;
   onStartTimer: (rest: string) => void;
-  openGuide: string | null;
-  setOpenGuide: (name: string | null) => void;
+  openExercise: string | null;
+  setOpenExercise: (name: string | null) => void;
   logs: Record<string, SetEntry[]>;
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
@@ -409,7 +400,15 @@ function ComplexCard({
       <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {complex.exercises.map((ex: ComplexExercise) => (
           <div key={ex.name}>
-            <p className="font-medium text-white">{ex.name}</p>
+            <ExerciseDetail
+              name={ex.name}
+              sets={complex.rounds}
+              entries={logs[ex.name] ?? []}
+              onChange={onLogChange}
+              previous={previousLogs?.[ex.name]}
+              expanded={openExercise === ex.name}
+              onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
+            />
             <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
               <span className="capitalize">{ex.bell}</span>
               <span>·</span>
@@ -419,8 +418,6 @@ function ComplexCard({
               <span>·</span>
               <span>RPE {ex.rpe}</span>
             </p>
-            <SetLogger name={ex.name} sets={complex.rounds} entries={logs[ex.name] ?? []} onChange={onLogChange} previous={previousLogs?.[ex.name]} />
-            <ExerciseInfo name={ex.name} openGuide={openGuide} setOpenGuide={setOpenGuide} />
           </div>
         ))}
       </div>
@@ -434,8 +431,8 @@ function SupersetCard({
   completed,
   onTap,
   onStartTimer,
-  openGuide,
-  setOpenGuide,
+  openExercise,
+  setOpenExercise,
   logs,
   onLogChange,
   previousLogs,
@@ -444,8 +441,8 @@ function SupersetCard({
   completed: number;
   onTap: () => void;
   onStartTimer: (rest: string) => void;
-  openGuide: string | null;
-  setOpenGuide: (name: string | null) => void;
+  openExercise: string | null;
+  setOpenExercise: (name: string | null) => void;
   logs: Record<string, SetEntry[]>;
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
@@ -460,7 +457,15 @@ function SupersetCard({
       <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {superset.exercises.map((ex: Exercise) => (
           <div key={ex.name}>
-            <p className="font-medium text-white">{ex.name}</p>
+            <ExerciseDetail
+              name={ex.name}
+              sets={superset.rounds}
+              entries={logs[ex.name] ?? []}
+              onChange={onLogChange}
+              previous={previousLogs?.[ex.name]}
+              expanded={openExercise === ex.name}
+              onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
+            />
             <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
               <span>{ex.reps}</span>
               <span>·</span>
@@ -468,8 +473,6 @@ function SupersetCard({
               <span>·</span>
               <span>RPE {ex.rpe}</span>
             </p>
-            <SetLogger name={ex.name} sets={superset.rounds} entries={logs[ex.name] ?? []} onChange={onLogChange} previous={previousLogs?.[ex.name]} />
-            <ExerciseInfo name={ex.name} openGuide={openGuide} setOpenGuide={setOpenGuide} />
           </div>
         ))}
       </div>
@@ -483,8 +486,8 @@ function FinisherCard({
   completed,
   onTap,
   onStartTimer,
-  openGuide,
-  setOpenGuide,
+  openExercise,
+  setOpenExercise,
   logs,
   onLogChange,
   previousLogs,
@@ -493,8 +496,8 @@ function FinisherCard({
   completed: number;
   onTap: () => void;
   onStartTimer: (rest: string) => void;
-  openGuide: string | null;
-  setOpenGuide: (name: string | null) => void;
+  openExercise: string | null;
+  setOpenExercise: (name: string | null) => void;
   logs: Record<string, SetEntry[]>;
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
@@ -507,7 +510,15 @@ function FinisherCard({
         <RoundDots total={finisher.sets} completed={completed} onTap={onTap} label="Sets" />
       </div>
       <div className={`transition-opacity ${allDone ? "opacity-40" : ""}`}>
-        <p className="font-medium text-white">{finisher.name}</p>
+        <ExerciseDetail
+          name={finisher.name}
+          sets={finisher.sets}
+          entries={logs[finisher.name] ?? []}
+          onChange={onLogChange}
+          previous={previousLogs?.[finisher.name]}
+          expanded={openExercise === finisher.name}
+          onToggle={() => setOpenExercise(openExercise === finisher.name ? null : finisher.name)}
+        />
         <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
           <span>{finisher.reps}</span>
           {finisher.tempo && (
@@ -519,8 +530,6 @@ function FinisherCard({
           <span>·</span>
           <span>RPE {finisher.rpe}</span>
         </p>
-        <SetLogger name={finisher.name} sets={finisher.sets} entries={logs[finisher.name] ?? []} onChange={onLogChange} previous={previousLogs?.[finisher.name]} />
-        <ExerciseInfo name={finisher.name} openGuide={openGuide} setOpenGuide={setOpenGuide} />
       </div>
       <RestButton rest={finisher.rest} onStart={onStartTimer} />
     </div>
@@ -532,8 +541,8 @@ function DayContent({
   counts,
   onTap,
   onStartTimer,
-  openGuide,
-  setOpenGuide,
+  openExercise,
+  setOpenExercise,
   logs,
   onLogChange,
   previousLogs,
@@ -542,8 +551,8 @@ function DayContent({
   counts: Record<string, number>;
   onTap: (key: string, max: number) => void;
   onStartTimer: (rest: string, countKey: string, countMax: number) => void;
-  openGuide: string | null;
-  setOpenGuide: (name: string | null) => void;
+  openExercise: string | null;
+  setOpenExercise: (name: string | null) => void;
   logs: Record<string, SetEntry[]>;
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
@@ -561,8 +570,8 @@ function DayContent({
             completed={counts[`superset-${day.label}-${s.name}`] ?? 0}
             onTap={() => onTap(`superset-${day.label}-${s.name}`, s.rounds)}
             onStartTimer={(rest) => onStartTimer(rest, `superset-${day.label}-${s.name}`, s.rounds)}
-            openGuide={openGuide}
-            setOpenGuide={setOpenGuide}
+            openExercise={openExercise}
+            setOpenExercise={setOpenExercise}
             logs={logs}
             onLogChange={onLogChange}
             previousLogs={previousLogs}
@@ -575,8 +584,8 @@ function DayContent({
           completed={counts[`finisher-${day.label}`] ?? 0}
           onTap={() => onTap(`finisher-${day.label}`, day.finisher.sets)}
           onStartTimer={(rest) => onStartTimer(rest, `finisher-${day.label}`, day.finisher.sets)}
-          openGuide={openGuide}
-          setOpenGuide={setOpenGuide}
+          openExercise={openExercise}
+          setOpenExercise={setOpenExercise}
           logs={logs}
           onLogChange={onLogChange}
           previousLogs={previousLogs}
@@ -591,7 +600,7 @@ export default function WorkoutViewer() {
   const activeDayRef = useRef(activeDay);
   activeDayRef.current = activeDay;
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [openGuide, setOpenGuide] = useState<string | null>(null);
+  const [openExercise, setOpenExercise] = useState<string | null>(null);
   const [exerciseLogs, setExerciseLogs] = useState<Record<string, SetEntry[]>>({});
   const [previousSession, setPreviousSession] = useState<Record<string, SetEntry[]> | undefined>(undefined);
   const [offsetX, setOffsetX] = useState(0);
@@ -946,8 +955,8 @@ export default function WorkoutViewer() {
             completed={counts["complex"] ?? 0}
             onTap={() => tap("complex", workoutPlan.complex.rounds)}
             onStartTimer={(rest) => startTimer(rest, "complex", workoutPlan.complex.rounds)}
-            openGuide={openGuide}
-            setOpenGuide={setOpenGuide}
+            openExercise={openExercise}
+            setOpenExercise={setOpenExercise}
             logs={exerciseLogs}
             onLogChange={updateLog}
             previousLogs={previousSession}
@@ -977,8 +986,8 @@ export default function WorkoutViewer() {
                 counts={counts}
                 onTap={tap}
                 onStartTimer={startTimer}
-                openGuide={openGuide}
-                setOpenGuide={setOpenGuide}
+                openExercise={openExercise}
+                setOpenExercise={setOpenExercise}
                 logs={exerciseLogs}
                 onLogChange={updateLog}
                 previousLogs={previousSession}

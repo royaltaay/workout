@@ -152,17 +152,25 @@ function TempoBadge({ tempo }: { tempo: string }) {
   );
 }
 
-function ExerciseInfo({ name }: { name: string }) {
-  const [open, setOpen] = useState(false);
+function ExerciseInfo({
+  name,
+  openGuide,
+  setOpenGuide,
+}: {
+  name: string;
+  openGuide: string | null;
+  setOpenGuide: (name: string | null) => void;
+}) {
   const detail = exerciseDetails[name];
   if (!detail) return null;
+  const open = openGuide === name;
 
   return (
     <div className="mt-1.5">
       <button
         onClick={(e) => {
           e.stopPropagation();
-          setOpen(!open);
+          setOpenGuide(open ? null : name);
         }}
         className="flex items-center gap-1 text-xs text-zinc-500 transition-colors active:text-zinc-300"
       >
@@ -307,10 +315,14 @@ function ComplexCard({
   completed,
   onTap,
   onStartTimer,
+  openGuide,
+  setOpenGuide,
 }: {
   completed: number;
   onTap: () => void;
   onStartTimer: (rest: string) => void;
+  openGuide: string | null;
+  setOpenGuide: (name: string | null) => void;
 }) {
   const { complex } = workoutPlan;
   const allDone = completed >= complex.rounds;
@@ -320,7 +332,7 @@ function ComplexCard({
         <h2 className="text-lg font-semibold text-white">The Complex</h2>
         <RoundDots total={complex.rounds} completed={completed} onTap={onTap} label="Rounds" />
       </div>
-      <div className={`space-y-3 transition-opacity ${allDone ? "opacity-40" : ""}`}>
+      <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {complex.exercises.map((ex: ComplexExercise) => (
           <div key={ex.name}>
             <p className="font-medium text-white">{ex.name}</p>
@@ -333,7 +345,7 @@ function ComplexCard({
               <span>·</span>
               <span>RPE {ex.rpe}</span>
             </p>
-            <ExerciseInfo name={ex.name} />
+            <ExerciseInfo name={ex.name} openGuide={openGuide} setOpenGuide={setOpenGuide} />
           </div>
         ))}
       </div>
@@ -347,11 +359,15 @@ function SupersetCard({
   completed,
   onTap,
   onStartTimer,
+  openGuide,
+  setOpenGuide,
 }: {
   superset: Day["supersets"][number];
   completed: number;
   onTap: () => void;
   onStartTimer: (rest: string) => void;
+  openGuide: string | null;
+  setOpenGuide: (name: string | null) => void;
 }) {
   const allDone = completed >= superset.rounds;
   return (
@@ -360,7 +376,7 @@ function SupersetCard({
         <h3 className="text-lg font-semibold text-white">{superset.name}</h3>
         <RoundDots total={superset.rounds} completed={completed} onTap={onTap} label="Rounds" />
       </div>
-      <div className={`space-y-3 transition-opacity ${allDone ? "opacity-40" : ""}`}>
+      <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {superset.exercises.map((ex: Exercise) => (
           <div key={ex.name}>
             <p className="font-medium text-white">{ex.name}</p>
@@ -371,7 +387,7 @@ function SupersetCard({
               <span>·</span>
               <span>RPE {ex.rpe}</span>
             </p>
-            <ExerciseInfo name={ex.name} />
+            <ExerciseInfo name={ex.name} openGuide={openGuide} setOpenGuide={setOpenGuide} />
           </div>
         ))}
       </div>
@@ -385,11 +401,15 @@ function FinisherCard({
   completed,
   onTap,
   onStartTimer,
+  openGuide,
+  setOpenGuide,
 }: {
   finisher: Day["finisher"];
   completed: number;
   onTap: () => void;
   onStartTimer: (rest: string) => void;
+  openGuide: string | null;
+  setOpenGuide: (name: string | null) => void;
 }) {
   const allDone = completed >= finisher.sets;
   return (
@@ -411,7 +431,7 @@ function FinisherCard({
           <span>·</span>
           <span>RPE {finisher.rpe}</span>
         </p>
-        <ExerciseInfo name={finisher.name} />
+        <ExerciseInfo name={finisher.name} openGuide={openGuide} setOpenGuide={setOpenGuide} />
       </div>
       <RestButton rest={finisher.rest} onStart={onStartTimer} />
     </div>
@@ -423,11 +443,15 @@ function DayContent({
   counts,
   onTap,
   onStartTimer,
+  openGuide,
+  setOpenGuide,
 }: {
   day: Day;
   counts: Record<string, number>;
   onTap: (key: string, max: number) => void;
   onStartTimer: (rest: string, countKey: string, countMax: number) => void;
+  openGuide: string | null;
+  setOpenGuide: (name: string | null) => void;
 }) {
   return (
     <div className="min-w-full px-1">
@@ -442,6 +466,8 @@ function DayContent({
             completed={counts[`superset-${day.label}-${s.name}`] ?? 0}
             onTap={() => onTap(`superset-${day.label}-${s.name}`, s.rounds)}
             onStartTimer={(rest) => onStartTimer(rest, `superset-${day.label}-${s.name}`, s.rounds)}
+            openGuide={openGuide}
+            setOpenGuide={setOpenGuide}
           />
         ))}
       </div>
@@ -451,6 +477,8 @@ function DayContent({
           completed={counts[`finisher-${day.label}`] ?? 0}
           onTap={() => onTap(`finisher-${day.label}`, day.finisher.sets)}
           onStartTimer={(rest) => onStartTimer(rest, `finisher-${day.label}`, day.finisher.sets)}
+          openGuide={openGuide}
+          setOpenGuide={setOpenGuide}
         />
       </div>
     </div>
@@ -462,6 +490,7 @@ export default function WorkoutViewer() {
   const activeDayRef = useRef(activeDay);
   activeDayRef.current = activeDay;
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [openGuide, setOpenGuide] = useState<string | null>(null);
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchRef = useRef({ startX: 0, startY: 0, direction: null as "h" | "v" | null });
@@ -780,6 +809,8 @@ export default function WorkoutViewer() {
             completed={counts["complex"] ?? 0}
             onTap={() => tap("complex", workoutPlan.complex.rounds)}
             onStartTimer={(rest) => startTimer(rest, "complex", workoutPlan.complex.rounds)}
+            openGuide={openGuide}
+            setOpenGuide={setOpenGuide}
           />
         </div>
 
@@ -806,6 +837,8 @@ export default function WorkoutViewer() {
                 counts={counts}
                 onTap={tap}
                 onStartTimer={startTimer}
+                openGuide={openGuide}
+                setOpenGuide={setOpenGuide}
               />
             ))}
           </div>

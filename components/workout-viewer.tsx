@@ -208,21 +208,6 @@ function ExerciseDetail({
             {/* Form guide */}
             {detail && (
               <div className="space-y-2">
-                <a
-                  href={detail.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative block aspect-video w-full overflow-hidden rounded-lg bg-[#111] border border-white/5"
-                >
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/90 shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-transform group-active:scale-95">
-                      <svg className="ml-0.5 h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5,3 19,12 5,21" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-medium text-zinc-500">Watch form guide</span>
-                  </div>
-                </a>
                 <p className="text-sm leading-relaxed text-zinc-400">
                   {detail.instructions}
                 </p>

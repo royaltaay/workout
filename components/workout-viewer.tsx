@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
   workoutPlan,
+  exerciseDetails,
   type ComplexExercise,
   type Exercise,
   type Day,
@@ -151,6 +152,63 @@ function TempoBadge({ tempo }: { tempo: string }) {
   );
 }
 
+function ExerciseInfo({ name }: { name: string }) {
+  const [open, setOpen] = useState(false);
+  const detail = exerciseDetails[name];
+  if (!detail) return null;
+
+  return (
+    <div className="mt-1.5">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+        className="flex items-center gap-1 text-xs text-zinc-500 transition-colors active:text-zinc-300"
+      >
+        <svg
+          className="h-3 w-3"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path strokeLinecap="round" d="M12 16v-4m0-4h.01" />
+        </svg>
+        <span>{open ? "Hide guide" : "Form guide"}</span>
+      </button>
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-out"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <div className="mt-2 space-y-2">
+            <a
+              href={detail.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative block aspect-video w-full overflow-hidden rounded-lg bg-[#111] border border-white/5"
+            >
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/90 shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-transform group-active:scale-95">
+                  <svg className="ml-0.5 h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5,3 19,12 5,21" />
+                  </svg>
+                </div>
+                <span className="text-xs font-medium text-zinc-500">Watch form guide</span>
+              </div>
+            </a>
+            <p className="text-sm leading-relaxed text-zinc-400">
+              {detail.instructions}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RestButton({
   rest,
   label,
@@ -275,6 +333,7 @@ function ComplexCard({
               <span>·</span>
               <span>RPE {ex.rpe}</span>
             </p>
+            <ExerciseInfo name={ex.name} />
           </div>
         ))}
       </div>
@@ -312,6 +371,7 @@ function SupersetCard({
               <span>·</span>
               <span>RPE {ex.rpe}</span>
             </p>
+            <ExerciseInfo name={ex.name} />
           </div>
         ))}
       </div>
@@ -351,6 +411,7 @@ function FinisherCard({
           <span>·</span>
           <span>RPE {finisher.rpe}</span>
         </p>
+        <ExerciseInfo name={finisher.name} />
       </div>
       <RestButton rest={finisher.rest} onStart={onStartTimer} />
     </div>

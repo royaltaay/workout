@@ -50,6 +50,74 @@ export type WorkoutPlan = {
   progressionNotes: string[];
 };
 
+export type ExerciseDetail = {
+  videoUrl: string;
+  instructions: string;
+};
+
+export const exerciseDetails: Record<string, ExerciseDetail> = {
+  "Single-Arm Swings": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Hinge at the hips and drive the bell with your glutes. Keep your core braced and shoulder packed throughout the movement.",
+  },
+  "SA Clean → Front Squat → Press": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Clean the bell to rack, squat to depth with an upright torso, then press overhead. Control the descent on each phase.",
+  },
+  Windmill: {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Keep your eyes on the bell overhead. Push your hip out and slowly fold down, maintaining a straight arm and packed shoulder.",
+  },
+  "Bench Press": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Retract your shoulder blades and arch slightly. Lower the bar with control to your mid-chest, then press evenly.",
+  },
+  "Single-Arm KB Row": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Brace on a bench with your opposite hand. Pull the bell to your hip, squeezing your lat at the top. Control the negative.",
+  },
+  "Hanging Leg Raises": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Hang with a dead grip and raise your legs by curling your pelvis. Avoid swinging — use control on the way up and down.",
+  },
+  "Pull-Ups": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Start from a dead hang, pull your chest to the bar by driving your elbows down. Control the descent fully.",
+  },
+  "Pallof Press": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Stand perpendicular to the cable or band. Press your hands forward and resist the rotation — hold the fully extended position.",
+  },
+  "Goblet Cossack Squat": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Hold a kettlebell at your chest. Shift your weight to one side, sitting deep into the hip while the other leg stays straight.",
+  },
+  "Barbell RDL": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Keep a soft knee and hinge at the hips, pushing your glutes back. Lower until you feel a deep hamstring stretch, then drive up.",
+  },
+  "Dead Bug": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Press your lower back into the floor. Extend opposite arm and leg slowly while maintaining core tension throughout.",
+  },
+  "Farmer's Carry": {
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    instructions:
+      "Grip heavy dumbbells or kettlebells at your sides. Walk with tall posture, shoulders packed, and core fully braced.",
+  },
+};
+
 export const workoutPlan: WorkoutPlan = {
   warmUp: "5 min — hip 90/90s, arm bars, bodyweight windmills",
   tempoExplanation:

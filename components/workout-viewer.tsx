@@ -221,7 +221,7 @@ function RestButton({
   return (
     <button
       onClick={() => onStart(rest)}
-      className="mt-4 flex items-center gap-1.5 text-sm text-zinc-500 transition-colors active:text-zinc-300"
+      className="mt-4 flex items-center gap-1.5 border-t border-white/5 pt-4 text-sm text-zinc-500 transition-colors active:text-zinc-300"
     >
       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <circle cx="12" cy="12" r="10" />

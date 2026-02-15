@@ -3,10 +3,20 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
   workoutPlan,
+  exerciseDetails,
   type ComplexExercise,
   type Exercise,
   type Day,
 } from "@/lib/workout-data";
+import {
+  type SetEntry,
+  getDraft,
+  saveDraft,
+  clearDraft,
+  saveSession,
+  getLastSession,
+  exportSessions,
+} from "@/lib/storage";
 
 function parseRest(rest: string): { lower: number; upper: number } {
   const m = rest.match(/(\d+)[–-](\d+)/);
@@ -151,6 +161,124 @@ function TempoBadge({ tempo }: { tempo: string }) {
   );
 }
 
+function ExerciseDetail({
+  name,
+  sets,
+  entries,
+  onChange,
+  previous,
+  expanded,
+  onToggle,
+  children,
+}: {
+  name: string;
+  sets: number;
+  entries: SetEntry[];
+  onChange: (name: string, entries: SetEntry[]) => void;
+  previous: SetEntry[] | undefined;
+  expanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  const detail = exerciseDetails[name];
+  return (
+    <>
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggle(); }}
+        className="flex items-center gap-1.5 text-left"
+      >
+        <p className="font-medium text-white">{name}</p>
+        <svg
+          className={`h-3 w-3 shrink-0 text-zinc-600 transition-transform duration-200 ease-out ${expanded ? "rotate-90" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+      {children}
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-out"
+        style={{ gridTemplateRows: expanded ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <div className="mt-3 space-y-3">
+            {/* Form guide */}
+            {detail && (
+              <div className="space-y-2">
+                <a
+                  href={detail.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative block aspect-video w-full overflow-hidden rounded-lg bg-[#111] border border-white/5"
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/90 shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-transform group-active:scale-95">
+                      <svg className="ml-0.5 h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5,3 19,12 5,21" />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-medium text-zinc-500">Watch form guide</span>
+                  </div>
+                </a>
+                <p className="text-sm leading-relaxed text-zinc-400">
+                  {detail.instructions}
+                </p>
+              </div>
+            )}
+
+            {/* Set inputs */}
+            <div className="space-y-1">
+              {Array.from({ length: sets }, (_, i) => {
+                const entry = entries[i] ?? { weight: "", reps: "" };
+                const prev = previous?.[i];
+                return (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <span className="w-4 text-center text-xs tabular-nums text-zinc-600">
+                      {i + 1}
+                    </span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder={prev?.weight || "—"}
+                      value={entry.weight}
+                      onChange={(e) => {
+                        const updated = [...entries];
+                        while (updated.length <= i) updated.push({ weight: "", reps: "" });
+                        updated[i] = { ...updated[i], weight: e.target.value };
+                        onChange(name, updated);
+                      }}
+                      className="w-16 rounded bg-white/5 px-2 py-1.5 text-center text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                    />
+                    <span className="text-xs text-zinc-600">lb</span>
+                    <span className="text-xs text-zinc-600">&times;</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder={prev?.reps || "—"}
+                      value={entry.reps}
+                      onChange={(e) => {
+                        const updated = [...entries];
+                        while (updated.length <= i) updated.push({ weight: "", reps: "" });
+                        updated[i] = { ...updated[i], reps: e.target.value };
+                        onChange(name, updated);
+                      }}
+                      className="w-14 rounded bg-white/5 px-2 py-1.5 text-center text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                    />
+                    <span className="text-xs text-zinc-600">reps</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function RestButton({
   rest,
   label,
@@ -163,7 +291,7 @@ function RestButton({
   return (
     <button
       onClick={() => onStart(rest)}
-      className="mt-4 flex items-center gap-1.5 text-sm text-zinc-500 transition-colors active:text-zinc-300"
+      className="mt-4 flex items-center gap-1.5 border-t border-white/5 pt-4 text-sm text-zinc-500 transition-colors active:text-zinc-300"
     >
       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <circle cx="12" cy="12" r="10" />
@@ -249,10 +377,20 @@ function ComplexCard({
   completed,
   onTap,
   onStartTimer,
+  openExercise,
+  setOpenExercise,
+  logs,
+  onLogChange,
+  previousLogs,
 }: {
   completed: number;
   onTap: () => void;
   onStartTimer: (rest: string) => void;
+  openExercise: string | null;
+  setOpenExercise: (name: string | null) => void;
+  logs: Record<string, SetEntry[]>;
+  onLogChange: (name: string, entries: SetEntry[]) => void;
+  previousLogs: Record<string, SetEntry[]> | undefined;
 }) {
   const { complex } = workoutPlan;
   const allDone = completed >= complex.rounds;
@@ -262,19 +400,28 @@ function ComplexCard({
         <h2 className="text-lg font-semibold text-white">The Complex</h2>
         <RoundDots total={complex.rounds} completed={completed} onTap={onTap} label="Rounds" />
       </div>
-      <div className={`space-y-3 transition-opacity ${allDone ? "opacity-40" : ""}`}>
+      <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {complex.exercises.map((ex: ComplexExercise) => (
           <div key={ex.name}>
-            <p className="font-medium text-white">{ex.name}</p>
-            <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-              <span className="capitalize">{ex.bell}</span>
-              <span>·</span>
-              <span>{ex.reps}</span>
-              <span>·</span>
-              <TempoBadge tempo={ex.tempo} />
-              <span>·</span>
-              <span>RPE {ex.rpe}</span>
-            </p>
+            <ExerciseDetail
+              name={ex.name}
+              sets={complex.rounds}
+              entries={logs[ex.name] ?? []}
+              onChange={onLogChange}
+              previous={previousLogs?.[ex.name]}
+              expanded={openExercise === ex.name}
+              onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
+            >
+              <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+                <span className="capitalize">{ex.bell}</span>
+                <span>·</span>
+                <span>{ex.reps}</span>
+                <span>·</span>
+                <TempoBadge tempo={ex.tempo} />
+                <span>·</span>
+                <span>RPE {ex.rpe}</span>
+              </p>
+            </ExerciseDetail>
           </div>
         ))}
       </div>
@@ -288,11 +435,21 @@ function SupersetCard({
   completed,
   onTap,
   onStartTimer,
+  openExercise,
+  setOpenExercise,
+  logs,
+  onLogChange,
+  previousLogs,
 }: {
   superset: Day["supersets"][number];
   completed: number;
   onTap: () => void;
   onStartTimer: (rest: string) => void;
+  openExercise: string | null;
+  setOpenExercise: (name: string | null) => void;
+  logs: Record<string, SetEntry[]>;
+  onLogChange: (name: string, entries: SetEntry[]) => void;
+  previousLogs: Record<string, SetEntry[]> | undefined;
 }) {
   const allDone = completed >= superset.rounds;
   return (
@@ -301,17 +458,26 @@ function SupersetCard({
         <h3 className="text-lg font-semibold text-white">{superset.name}</h3>
         <RoundDots total={superset.rounds} completed={completed} onTap={onTap} label="Rounds" />
       </div>
-      <div className={`space-y-3 transition-opacity ${allDone ? "opacity-40" : ""}`}>
+      <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {superset.exercises.map((ex: Exercise) => (
           <div key={ex.name}>
-            <p className="font-medium text-white">{ex.name}</p>
-            <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-              <span>{ex.reps}</span>
-              <span>·</span>
-              <TempoBadge tempo={ex.tempo} />
-              <span>·</span>
-              <span>RPE {ex.rpe}</span>
-            </p>
+            <ExerciseDetail
+              name={ex.name}
+              sets={superset.rounds}
+              entries={logs[ex.name] ?? []}
+              onChange={onLogChange}
+              previous={previousLogs?.[ex.name]}
+              expanded={openExercise === ex.name}
+              onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
+            >
+              <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+                <span>{ex.reps}</span>
+                <span>·</span>
+                <TempoBadge tempo={ex.tempo} />
+                <span>·</span>
+                <span>RPE {ex.rpe}</span>
+              </p>
+            </ExerciseDetail>
           </div>
         ))}
       </div>
@@ -325,11 +491,21 @@ function FinisherCard({
   completed,
   onTap,
   onStartTimer,
+  openExercise,
+  setOpenExercise,
+  logs,
+  onLogChange,
+  previousLogs,
 }: {
   finisher: Day["finisher"];
   completed: number;
   onTap: () => void;
   onStartTimer: (rest: string) => void;
+  openExercise: string | null;
+  setOpenExercise: (name: string | null) => void;
+  logs: Record<string, SetEntry[]>;
+  onLogChange: (name: string, entries: SetEntry[]) => void;
+  previousLogs: Record<string, SetEntry[]> | undefined;
 }) {
   const allDone = completed >= finisher.sets;
   return (
@@ -339,18 +515,27 @@ function FinisherCard({
         <RoundDots total={finisher.sets} completed={completed} onTap={onTap} label="Sets" />
       </div>
       <div className={`transition-opacity ${allDone ? "opacity-40" : ""}`}>
-        <p className="font-medium text-white">{finisher.name}</p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-          <span>{finisher.reps}</span>
-          {finisher.tempo && (
-            <>
-              <span>·</span>
-              <TempoBadge tempo={finisher.tempo} />
-            </>
-          )}
-          <span>·</span>
-          <span>RPE {finisher.rpe}</span>
-        </p>
+        <ExerciseDetail
+          name={finisher.name}
+          sets={finisher.sets}
+          entries={logs[finisher.name] ?? []}
+          onChange={onLogChange}
+          previous={previousLogs?.[finisher.name]}
+          expanded={openExercise === finisher.name}
+          onToggle={() => setOpenExercise(openExercise === finisher.name ? null : finisher.name)}
+        >
+          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+            <span>{finisher.reps}</span>
+            {finisher.tempo && (
+              <>
+                <span>·</span>
+                <TempoBadge tempo={finisher.tempo} />
+              </>
+            )}
+            <span>·</span>
+            <span>RPE {finisher.rpe}</span>
+          </p>
+        </ExerciseDetail>
       </div>
       <RestButton rest={finisher.rest} onStart={onStartTimer} />
     </div>
@@ -362,11 +547,21 @@ function DayContent({
   counts,
   onTap,
   onStartTimer,
+  openExercise,
+  setOpenExercise,
+  logs,
+  onLogChange,
+  previousLogs,
 }: {
   day: Day;
   counts: Record<string, number>;
   onTap: (key: string, max: number) => void;
   onStartTimer: (rest: string, countKey: string, countMax: number) => void;
+  openExercise: string | null;
+  setOpenExercise: (name: string | null) => void;
+  logs: Record<string, SetEntry[]>;
+  onLogChange: (name: string, entries: SetEntry[]) => void;
+  previousLogs: Record<string, SetEntry[]> | undefined;
 }) {
   return (
     <div className="min-w-full px-1">
@@ -381,6 +576,11 @@ function DayContent({
             completed={counts[`superset-${day.label}-${s.name}`] ?? 0}
             onTap={() => onTap(`superset-${day.label}-${s.name}`, s.rounds)}
             onStartTimer={(rest) => onStartTimer(rest, `superset-${day.label}-${s.name}`, s.rounds)}
+            openExercise={openExercise}
+            setOpenExercise={setOpenExercise}
+            logs={logs}
+            onLogChange={onLogChange}
+            previousLogs={previousLogs}
           />
         ))}
       </div>
@@ -390,6 +590,11 @@ function DayContent({
           completed={counts[`finisher-${day.label}`] ?? 0}
           onTap={() => onTap(`finisher-${day.label}`, day.finisher.sets)}
           onStartTimer={(rest) => onStartTimer(rest, `finisher-${day.label}`, day.finisher.sets)}
+          openExercise={openExercise}
+          setOpenExercise={setOpenExercise}
+          logs={logs}
+          onLogChange={onLogChange}
+          previousLogs={previousLogs}
         />
       </div>
     </div>
@@ -401,6 +606,9 @@ export default function WorkoutViewer() {
   const activeDayRef = useRef(activeDay);
   activeDayRef.current = activeDay;
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [openExercise, setOpenExercise] = useState<string | null>(null);
+  const [exerciseLogs, setExerciseLogs] = useState<Record<string, SetEntry[]>>({});
+  const [previousSession, setPreviousSession] = useState<Record<string, SetEntry[]> | undefined>(undefined);
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchRef = useRef({ startX: 0, startY: 0, direction: null as "h" | "v" | null });
@@ -436,6 +644,24 @@ export default function WorkoutViewer() {
     ) &&
     (counts[`finisher-${activeDayData.label}`] ?? 0) >= activeDayData.finisher.sets;
 
+  // Load draft and previous session from localStorage on mount
+  useEffect(() => {
+    setExerciseLogs(getDraft());
+  }, []);
+
+  useEffect(() => {
+    const prev = getLastSession(workoutPlan.days[activeDay].label);
+    setPreviousSession(prev?.exercises);
+  }, [activeDay]);
+
+  function updateLog(name: string, entries: SetEntry[]) {
+    setExerciseLogs((prev) => {
+      const updated = { ...prev, [name]: entries };
+      saveDraft(updated);
+      return updated;
+    });
+  }
+
   function sessionPause() {
     if (!sessionStart) return;
     setSessionBank(sessionElapsed);
@@ -457,6 +683,22 @@ export default function WorkoutViewer() {
     }
     clearTimeout(resetConfirmRef.current);
     setResetConfirm(false);
+    // Save session if there's logged data
+    const hasData = Object.values(exerciseLogs).some((sets) =>
+      sets.some((s) => s.weight || s.reps)
+    );
+    if (hasData && sessionStarted) {
+      saveSession({
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        day: activeDayData.label,
+        duration: sessionElapsed,
+        exercises: exerciseLogs,
+      });
+      setPreviousSession(exerciseLogs);
+    }
+    clearDraft();
+    setExerciseLogs({});
     if (sessionRef.current) clearInterval(sessionRef.current);
     setSessionStart(null);
     setSessionBank(0);
@@ -719,6 +961,11 @@ export default function WorkoutViewer() {
             completed={counts["complex"] ?? 0}
             onTap={() => tap("complex", workoutPlan.complex.rounds)}
             onStartTimer={(rest) => startTimer(rest, "complex", workoutPlan.complex.rounds)}
+            openExercise={openExercise}
+            setOpenExercise={setOpenExercise}
+            logs={exerciseLogs}
+            onLogChange={updateLog}
+            previousLogs={previousSession}
           />
         </div>
 
@@ -745,6 +992,11 @@ export default function WorkoutViewer() {
                 counts={counts}
                 onTap={tap}
                 onStartTimer={startTimer}
+                openExercise={openExercise}
+                setOpenExercise={setOpenExercise}
+                logs={exerciseLogs}
+                onLogChange={updateLog}
+                previousLogs={previousSession}
               />
             ))}
           </div>
@@ -787,10 +1039,28 @@ export default function WorkoutViewer() {
 
       {/* Footer */}
       <footer
-        className="animate-in mt-8 border-t border-white/5 py-4 text-center"
+        className="animate-in mt-8 space-y-3 border-t border-white/5 py-4"
         style={{ animationDelay: "400ms" }}
       >
-        <p className="text-sm text-zinc-500">A workout program by <a href="mailto:tprince09@gmail.com" className="text-red-500/60">Taylor Prince</a></p>
+        <button
+          onClick={() => {
+            const json = exportSessions();
+            const blob = new Blob([json], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `dungym-log-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          className="flex w-full items-center justify-center gap-1.5 text-sm text-zinc-600 transition-colors active:text-zinc-400"
+        >
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
+          </svg>
+          <span>Export workout log</span>
+        </button>
+        <p className="text-center text-sm text-zinc-500">A workout program by <a href="mailto:tprince09@gmail.com" className="text-red-500/60">Taylor Prince</a></p>
       </footer>
 
       {/* Rest countdown timer */}

@@ -205,9 +205,10 @@ function ExerciseDetail({
       >
         <div className="overflow-hidden">
           <div className="mt-3 space-y-3">
-            {/* Form guide */}
+            {/* Form guide – video thumbnail hidden until real videos are available */}
             {detail && (
               <div className="space-y-2">
+                {/* TODO: unhide when real exercise videos are ready
                 <a
                   href={detail.videoUrl}
                   target="_blank"
@@ -223,6 +224,7 @@ function ExerciseDetail({
                     <span className="text-xs font-medium text-zinc-500">Watch form guide</span>
                   </div>
                 </a>
+                */}
                 <p className="text-sm leading-relaxed text-zinc-400">
                   {detail.instructions}
                 </p>

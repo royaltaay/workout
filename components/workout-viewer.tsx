@@ -169,6 +169,7 @@ function ExerciseDetail({
   previous,
   expanded,
   onToggle,
+  children,
 }: {
   name: string;
   sets: number;
@@ -177,6 +178,7 @@ function ExerciseDetail({
   previous: SetEntry[] | undefined;
   expanded: boolean;
   onToggle: () => void;
+  children: React.ReactNode;
 }) {
   const detail = exerciseDetails[name];
   return (
@@ -196,12 +198,37 @@ function ExerciseDetail({
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>
+      {children}
       <div
         className="grid transition-[grid-template-rows] duration-200 ease-out"
         style={{ gridTemplateRows: expanded ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
           <div className="mt-3 space-y-3">
+            {/* Form guide */}
+            {detail && (
+              <div className="space-y-2">
+                <a
+                  href={detail.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative block aspect-video w-full overflow-hidden rounded-lg bg-[#111] border border-white/5"
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/90 shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-transform group-active:scale-95">
+                      <svg className="ml-0.5 h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5,3 19,12 5,21" />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-medium text-zinc-500">Watch form guide</span>
+                  </div>
+                </a>
+                <p className="text-sm leading-relaxed text-zinc-400">
+                  {detail.instructions}
+                </p>
+              </div>
+            )}
+
             {/* Set inputs */}
             <div className="space-y-1">
               {Array.from({ length: sets }, (_, i) => {
@@ -245,30 +272,6 @@ function ExerciseDetail({
                 );
               })}
             </div>
-
-            {/* Form guide */}
-            {detail && (
-              <div className="space-y-2">
-                <a
-                  href={detail.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative block aspect-video w-full overflow-hidden rounded-lg bg-[#111] border border-white/5"
-                >
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/90 shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-transform group-active:scale-95">
-                      <svg className="ml-0.5 h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5,3 19,12 5,21" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-medium text-zinc-500">Watch form guide</span>
-                  </div>
-                </a>
-                <p className="text-sm leading-relaxed text-zinc-400">
-                  {detail.instructions}
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -408,16 +411,17 @@ function ComplexCard({
               previous={previousLogs?.[ex.name]}
               expanded={openExercise === ex.name}
               onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
-            />
-            <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-              <span className="capitalize">{ex.bell}</span>
-              <span>·</span>
-              <span>{ex.reps}</span>
-              <span>·</span>
-              <TempoBadge tempo={ex.tempo} />
-              <span>·</span>
-              <span>RPE {ex.rpe}</span>
-            </p>
+            >
+              <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+                <span className="capitalize">{ex.bell}</span>
+                <span>·</span>
+                <span>{ex.reps}</span>
+                <span>·</span>
+                <TempoBadge tempo={ex.tempo} />
+                <span>·</span>
+                <span>RPE {ex.rpe}</span>
+              </p>
+            </ExerciseDetail>
           </div>
         ))}
       </div>
@@ -465,14 +469,15 @@ function SupersetCard({
               previous={previousLogs?.[ex.name]}
               expanded={openExercise === ex.name}
               onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
-            />
-            <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-              <span>{ex.reps}</span>
-              <span>·</span>
-              <TempoBadge tempo={ex.tempo} />
-              <span>·</span>
-              <span>RPE {ex.rpe}</span>
-            </p>
+            >
+              <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+                <span>{ex.reps}</span>
+                <span>·</span>
+                <TempoBadge tempo={ex.tempo} />
+                <span>·</span>
+                <span>RPE {ex.rpe}</span>
+              </p>
+            </ExerciseDetail>
           </div>
         ))}
       </div>
@@ -518,18 +523,19 @@ function FinisherCard({
           previous={previousLogs?.[finisher.name]}
           expanded={openExercise === finisher.name}
           onToggle={() => setOpenExercise(openExercise === finisher.name ? null : finisher.name)}
-        />
-        <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-          <span>{finisher.reps}</span>
-          {finisher.tempo && (
-            <>
-              <span>·</span>
-              <TempoBadge tempo={finisher.tempo} />
-            </>
-          )}
-          <span>·</span>
-          <span>RPE {finisher.rpe}</span>
-        </p>
+        >
+          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+            <span>{finisher.reps}</span>
+            {finisher.tempo && (
+              <>
+                <span>·</span>
+                <TempoBadge tempo={finisher.tempo} />
+              </>
+            )}
+            <span>·</span>
+            <span>RPE {finisher.rpe}</span>
+          </p>
+        </ExerciseDetail>
       </div>
       <RestButton rest={finisher.rest} onStart={onStartTimer} />
     </div>

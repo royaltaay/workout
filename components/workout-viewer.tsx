@@ -646,14 +646,18 @@ export default function WorkoutViewer() {
     ) &&
     (counts[`finisher-${activeDayData.label}`] ?? 0) >= activeDayData.finisher.sets;
 
-  // Load draft and previous session from localStorage on mount
+  // Load draft from localStorage on mount
   useEffect(() => {
     setExerciseLogs(getDraft());
   }, []);
 
+  // Load previous session (async — Supabase with localStorage fallback)
   useEffect(() => {
-    const prev = getLastSession(workoutPlan.days[activeDay].label);
-    setPreviousSession(prev?.exercises);
+    let cancelled = false;
+    getLastSession(workoutPlan.days[activeDay].label).then((prev) => {
+      if (!cancelled) setPreviousSession(prev?.exercises);
+    });
+    return () => { cancelled = true; };
   }, [activeDay]);
 
   function updateLog(name: string, entries: SetEntry[]) {
@@ -690,14 +694,15 @@ export default function WorkoutViewer() {
       sets.some((s) => s.weight || s.reps)
     );
     if (hasData && sessionStarted) {
+      const logSnapshot = { ...exerciseLogs };
       saveSession({
         id: crypto.randomUUID(),
         date: new Date().toISOString(),
         day: activeDayData.label,
         duration: sessionElapsed,
-        exercises: exerciseLogs,
+        exercises: logSnapshot,
       });
-      setPreviousSession(exerciseLogs);
+      setPreviousSession(logSnapshot);
     }
     clearDraft();
     setExerciseLogs({});
@@ -1045,8 +1050,8 @@ export default function WorkoutViewer() {
         style={{ animationDelay: "400ms" }}
       >
         <button
-          onClick={() => {
-            const json = exportSessions();
+          onClick={async () => {
+            const json = await exportSessions();
             const blob = new Blob([json], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");

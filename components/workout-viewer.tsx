@@ -285,13 +285,12 @@ function ExerciseDetail({
 
 function RestButton({
   rest,
-  label,
   onStart,
 }: {
   rest: string;
-  label?: string;
   onStart: (rest: string) => void;
 }) {
+  const { upper } = parseRest(rest);
   return (
     <button
       onClick={() => onStart(rest)}
@@ -301,7 +300,7 @@ function RestButton({
         <circle cx="12" cy="12" r="10" />
         <path strokeLinecap="round" d="M12 7v5l3 2" />
       </svg>
-      <span>{label ? `${label}: ${rest}` : `Rest: ${rest}`}</span>
+      <span>Rest {upper}s</span>
     </button>
   );
 }
@@ -429,7 +428,7 @@ function ComplexCard({
           </div>
         ))}
       </div>
-      <RestButton rest={complex.rest} label="Rest between rounds" onStart={onStartTimer} />
+      <RestButton rest={complex.rest} onStart={onStartTimer} />
     </div>
   );
 }
@@ -713,7 +712,7 @@ export default function WorkoutViewer() {
   function finishWorkout() {
     if (!finishConfirm) {
       setFinishConfirm(true);
-      finishConfirmRef.current = setTimeout(() => setFinishConfirm(false), 2000);
+      finishConfirmRef.current = setTimeout(() => setFinishConfirm(false), 3000);
       return;
     }
     clearTimeout(finishConfirmRef.current);
@@ -1062,13 +1061,13 @@ export default function WorkoutViewer() {
             {sessionStarted && (
               <button
                 onClick={finishWorkout}
-                className={`mt-6 w-full rounded-xl py-3.5 text-sm font-semibold transition-all active:scale-[0.98] ${
+                className={`mt-6 w-full rounded-xl border py-3.5 text-sm font-semibold transition-colors duration-300 active:scale-[0.98] ${
                   finishConfirm
-                    ? "bg-red-500/90 text-white shadow-[0_0_20px_rgba(239,68,68,0.2)]"
-                    : "border border-red-500/20 bg-red-500/5 text-zinc-300"
+                    ? "border-white/20 bg-white/10 text-white"
+                    : "border-red-500/20 bg-red-500/5 text-zinc-300"
                 }`}
               >
-                {finishConfirm ? "Tap again to save & finish" : "Finish workout"}
+                {finishConfirm ? "Confirm" : "Finish workout"}
               </button>
             )}
 
@@ -1105,6 +1104,13 @@ export default function WorkoutViewer() {
                 </p>
               </Collapsible>
             </div>
+
+            <p className="mt-8 mb-6 text-center text-sm text-zinc-500">
+              A workout program by{" "}
+              <a href="mailto:tprince09@gmail.com" className="text-red-500/60">
+                Taylor Prince
+              </a>
+            </p>
           </>
         ) : (
           <HistoryView onOpenAuth={() => setAuthDrawerOpen(true)} />

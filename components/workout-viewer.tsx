@@ -604,7 +604,8 @@ function DayContent({
 }
 
 export default function WorkoutViewer() {
-  const [activeDay, setActiveDay] = useState(getTodayTab);
+  const [activeDay, setActiveDay] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
   const activeDayRef = useRef(activeDay);
   activeDayRef.current = activeDay;
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -646,8 +647,10 @@ export default function WorkoutViewer() {
     ) &&
     (counts[`finisher-${activeDayData.label}`] ?? 0) >= activeDayData.finisher.sets;
 
-  // Load draft from localStorage on mount
+  // Set correct day and load draft on mount (client-side only, after hydration)
   useEffect(() => {
+    setActiveDay(getTodayTab());
+    setHydrated(true);
     setExerciseLogs(getDraft());
   }, []);
 
@@ -816,6 +819,7 @@ export default function WorkoutViewer() {
 
 
   function selectDay(index: number) {
+    setHydrated(true);
     setActiveDay(index);
     offsetRef.current = 0;
     setOffsetX(0);
@@ -893,19 +897,22 @@ export default function WorkoutViewer() {
             <h1 className="text-2xl font-bold text-white">Dungym</h1>
           </div>
           <div className="flex gap-1.5">
-            {workoutPlan.days.map((d, i) => (
-              <button
-                key={d.label}
-                onClick={() => selectDay(i)}
-                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
-                  i === activeDay
-                    ? "border-red-500/40 bg-[#1a1a1a] text-white"
-                    : "border-white/20 text-zinc-400 hover:text-white"
-                }`}
-              >
-                {d.label}
-              </button>
-            ))}
+            {workoutPlan.days.map((d, i) => {
+              const isActive = hydrated && i === activeDay;
+              return (
+                <button
+                  key={d.label}
+                  onClick={() => selectDay(i)}
+                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
+                    isActive
+                      ? "border-red-500/40 bg-[#1a1a1a] text-white"
+                      : "border-white/20 text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
           </div>
         </header>
 

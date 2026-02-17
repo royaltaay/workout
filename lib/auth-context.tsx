@@ -2,13 +2,14 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { getSupabase, onAuthChange, signInWithEmail, signOut as supabaseSignOut } from "./supabase";
+import { getSupabase, onAuthChange, signInWithEmail, verifyOtp as supabaseVerifyOtp, signOut as supabaseSignOut } from "./supabase";
 
 type AuthState = {
   user: User | null;
   isAnonymous: boolean;
   loading: boolean;
   signIn: (email: string) => Promise<{ error: string | null }>;
+  verifyOtp: (email: string, token: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthState>({
   isAnonymous: true,
   loading: true,
   signIn: async () => ({ error: null }),
+  verifyOtp: async () => ({ error: null }),
   signOut: async () => {},
 });
 
@@ -57,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAnonymous,
         loading,
         signIn: signInWithEmail,
+        verifyOtp: supabaseVerifyOtp,
         signOut: supabaseSignOut,
       }}
     >

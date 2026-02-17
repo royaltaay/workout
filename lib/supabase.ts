@@ -41,6 +41,14 @@ export async function signInWithEmail(email: string): Promise<{ error: string | 
   return { error: error?.message ?? null };
 }
 
+export async function verifyOtp(email: string, token: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: "Supabase not configured" };
+
+  const { error } = await sb.auth.verifyOtp({ email, token, type: "email" });
+  return { error: error?.message ?? null };
+}
+
 export async function signOut(): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;

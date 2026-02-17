@@ -254,7 +254,7 @@ function ExerciseDetail({
                         updated[i] = { ...updated[i], weight: e.target.value };
                         onChange(name, updated);
                       }}
-                      className="w-16 rounded bg-white/5 px-2 py-1.5 text-center text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                      className="w-16 rounded bg-white/5 px-2 py-1.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
                     />
                     <span className="text-xs text-zinc-600">lb</span>
                     <span className="text-xs text-zinc-600">&times;</span>
@@ -269,7 +269,7 @@ function ExerciseDetail({
                         updated[i] = { ...updated[i], reps: e.target.value };
                         onChange(name, updated);
                       }}
-                      className="w-14 rounded bg-white/5 px-2 py-1.5 text-center text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                      className="w-14 rounded bg-white/5 px-2 py-1.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
                     />
                     <span className="text-xs text-zinc-600">reps</span>
                   </div>

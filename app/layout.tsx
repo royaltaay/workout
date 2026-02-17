@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 
 const inter = Inter({
@@ -60,7 +61,7 @@ export default function RootLayout({
           </svg>
           <span className="mt-3 text-lg font-bold text-white">Dungym</span>
         </div>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

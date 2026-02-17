@@ -32,3 +32,28 @@ export async function ensureAuth(): Promise<boolean> {
   authReady = true;
   return true;
 }
+
+export async function signInWithEmail(email: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: "Supabase not configured" };
+
+  const { error } = await sb.auth.signInWithOtp({ email });
+  return { error: error?.message ?? null };
+}
+
+export async function signOut(): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  await sb.auth.signOut();
+  authReady = false;
+}
+
+export function onAuthChange(callback: (user: import("@supabase/supabase-js").User | null) => void) {
+  const sb = getSupabase();
+  if (!sb) return () => {};
+
+  const { data: { subscription } } = sb.auth.onAuthStateChange((_event, session) => {
+    callback(session?.user ?? null);
+  });
+  return () => subscription.unsubscribe();
+}

@@ -44,3 +44,16 @@
 .splash-overlay {
   animation: splash-fade-out 0.6s ease-out forwards;
 }
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.drawer-slide-up {
+  animation: slide-up 0.3s ease-out;
+}

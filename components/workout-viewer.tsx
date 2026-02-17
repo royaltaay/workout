@@ -15,8 +15,10 @@ import {
   clearDraft,
   saveSession,
   getLastSession,
-  exportSessions,
 } from "@/lib/storage";
+import { useAuth } from "@/lib/auth-context";
+import AuthDrawer from "./auth-drawer";
+import HistoryView from "./history-view";
 
 function parseRest(rest: string): { lower: number; upper: number } {
   const m = rest.match(/(\d+)[–-](\d+)/);
@@ -283,13 +285,12 @@ function ExerciseDetail({
 
 function RestButton({
   rest,
-  label,
   onStart,
 }: {
   rest: string;
-  label?: string;
   onStart: (rest: string) => void;
 }) {
+  const { upper } = parseRest(rest);
   return (
     <button
       onClick={() => onStart(rest)}
@@ -299,7 +300,7 @@ function RestButton({
         <circle cx="12" cy="12" r="10" />
         <path strokeLinecap="round" d="M12 7v5l3 2" />
       </svg>
-      <span>{label ? `${label}: ${rest}` : `Rest: ${rest}`}</span>
+      <span>Rest {upper}s</span>
     </button>
   );
 }
@@ -327,7 +328,7 @@ function TimerBubble({
     <div
       className="fixed z-50"
       style={{
-        bottom: "calc(1.5rem + env(safe-area-inset-bottom))",
+        bottom: "calc(4.5rem + env(safe-area-inset-bottom))",
         right: "calc(1.5rem + env(safe-area-inset-right))",
       }}
     >
@@ -427,7 +428,7 @@ function ComplexCard({
           </div>
         ))}
       </div>
-      <RestButton rest={complex.rest} label="Rest between rounds" onStart={onStartTimer} />
+      <RestButton rest={complex.rest} onStart={onStartTimer} />
     </div>
   );
 }
@@ -604,6 +605,9 @@ function DayContent({
 }
 
 export default function WorkoutViewer() {
+  const { user, isAnonymous } = useAuth();
+  const [activeView, setActiveView] = useState<"workout" | "history">("workout");
+  const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [activeDay, setActiveDay] = useState(0);
   const [hydrated, setHydrated] = useState(false);
   const activeDayRef = useRef(activeDay);
@@ -663,12 +667,19 @@ export default function WorkoutViewer() {
     return () => { cancelled = true; };
   }, [activeDay]);
 
+  const hasLoggedData = Object.values(exerciseLogs).some((sets) =>
+    sets.some((s) => s.weight || s.reps)
+  );
+
   function updateLog(name: string, entries: SetEntry[]) {
     setExerciseLogs((prev) => {
       const updated = { ...prev, [name]: entries };
       saveDraft(updated);
       return updated;
     });
+    // Auto-start session on first input
+    if (!sessionStarted) setSessionStart(Date.now());
+    else if (!sessionActive) sessionResume();
   }
 
   function sessionPause() {
@@ -681,32 +692,12 @@ export default function WorkoutViewer() {
     setSessionStart(Date.now());
   }
 
-  const [resetConfirm, setResetConfirm] = useState(false);
-  const resetConfirmRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [finishConfirm, setFinishConfirm] = useState(false);
+  const finishConfirmRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [discardConfirm, setDiscardConfirm] = useState(false);
+  const discardConfirmRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  function sessionReset() {
-    if (!resetConfirm) {
-      setResetConfirm(true);
-      resetConfirmRef.current = setTimeout(() => setResetConfirm(false), 1000);
-      return;
-    }
-    clearTimeout(resetConfirmRef.current);
-    setResetConfirm(false);
-    // Save session if there's logged data
-    const hasData = Object.values(exerciseLogs).some((sets) =>
-      sets.some((s) => s.weight || s.reps)
-    );
-    if (hasData && sessionStarted) {
-      const logSnapshot = { ...exerciseLogs };
-      saveSession({
-        id: crypto.randomUUID(),
-        date: new Date().toISOString(),
-        day: activeDayData.label,
-        duration: sessionElapsed,
-        exercises: logSnapshot,
-      });
-      setPreviousSession(logSnapshot);
-    }
+  function resetState() {
     clearDraft();
     setExerciseLogs({});
     if (sessionRef.current) clearInterval(sessionRef.current);
@@ -714,6 +705,38 @@ export default function WorkoutViewer() {
     setSessionBank(0);
     setSessionElapsed(0);
     setCounts({});
+    setFinishConfirm(false);
+    setDiscardConfirm(false);
+  }
+
+  function finishWorkout() {
+    if (!finishConfirm) {
+      setFinishConfirm(true);
+      finishConfirmRef.current = setTimeout(() => setFinishConfirm(false), 3000);
+      return;
+    }
+    clearTimeout(finishConfirmRef.current);
+    // Save session
+    const logSnapshot = { ...exerciseLogs };
+    saveSession({
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      day: activeDayData.label,
+      duration: sessionElapsed,
+      exercises: logSnapshot,
+    });
+    setPreviousSession(logSnapshot);
+    resetState();
+  }
+
+  function discardSession() {
+    if (!discardConfirm) {
+      setDiscardConfirm(true);
+      discardConfirmRef.current = setTimeout(() => setDiscardConfirm(false), 2000);
+      return;
+    }
+    clearTimeout(discardConfirmRef.current);
+    resetState();
   }
 
   function tap(key: string, max: number) {
@@ -869,7 +892,7 @@ export default function WorkoutViewer() {
 
   return (
     <div
-      className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)] pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]"
+      className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-0 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]"
       style={{
         boxShadow: allComplete
           ? "inset 0 0 60px rgba(239,68,68,0.075), inset 0 0 150px rgba(239,68,68,0.045), inset 0 0 300px rgba(239,68,68,0.02)"
@@ -879,203 +902,256 @@ export default function WorkoutViewer() {
     >
       <div className="flex-1">
         {/* Header */}
-        <header className="animate-in mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <svg
-              width="36"
-              height="36"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="shrink-0"
-            >
-              <path d="M16 2L14.5 16.5L16 18L17.5 16.5L16 2Z" fill="#d4d4d8" />
-              <rect x="10" y="17.5" width="12" height="2" rx="1" fill="#a1a1aa" />
-              <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
-              <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
-            </svg>
-            <h1 className="text-2xl font-bold text-white">Dungym</h1>
-          </div>
-          <div className="flex gap-1.5">
-            {workoutPlan.days.map((d, i) => {
-              const isActive = hydrated && i === activeDay;
-              return (
-                <button
-                  key={d.label}
-                  onClick={() => selectDay(i)}
-                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
-                    isActive
-                      ? "border-red-500/40 bg-[#1a1a1a] text-white"
-                      : "border-white/20 text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  {d.label}
-                </button>
-              );
-            })}
-          </div>
+        <header className="animate-in mb-6 flex items-center justify-center gap-1">
+          <svg
+            width="36"
+            height="36"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="shrink-0"
+          >
+            <path d="M16 2L14.5 16.5L16 18L17.5 16.5L16 2Z" fill="#d4d4d8" />
+            <rect x="10" y="17.5" width="12" height="2" rx="1" fill="#a1a1aa" />
+            <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
+            <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
+          </svg>
+          <h1 className="text-2xl font-bold text-white">Dungym</h1>
         </header>
 
-        {/* Session timer */}
-        <div
-          className="animate-in mb-3 flex h-10 items-center rounded-xl border border-white/10 bg-[#1a1a1a] px-4"
-          style={{ animationDelay: "50ms" }}
-        >
-          <span className="text-sm font-medium text-zinc-400">Session</span>
-          <span className="ml-auto font-mono text-sm text-zinc-500">
-            {sessionStarted ? formatTime(sessionElapsed) : "0:00"}
-          </span>
-          <div className="ml-3 flex items-center gap-2">
-            {sessionActive ? (
-              <button onClick={sessionPause} className="text-zinc-500 active:text-zinc-300">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="6" y="4" width="4" height="16" rx="1" />
-                  <rect x="14" y="4" width="4" height="16" rx="1" />
-                </svg>
-              </button>
-            ) : (
-              <button
-                onClick={() => sessionStarted ? sessionResume() : setSessionStart(Date.now())}
-                className="text-zinc-500 active:text-zinc-300"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5,3 19,12 5,21" />
-                </svg>
-              </button>
-            )}
-            {sessionStarted && (
-              <button
-                onClick={sessionReset}
-                className={`transition-colors ${resetConfirm ? "text-red-500" : "text-zinc-500 active:text-zinc-300"}`}
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" d="M1 4v6h6" />
-                  <path strokeLinecap="round" d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Warm-up */}
-        <Collapsible title="Warm-up" className="animate-in" style={{ animationDelay: "75ms" }}>
-          <div className="space-y-1.5">
-            {warmUpItems.map((item) => (
-              <div key={item.name} className="flex items-baseline justify-between">
-                <span className="text-sm text-zinc-300">{item.name}</span>
-                <span className="text-xs text-zinc-500">{item.time}</span>
+        {activeView === "workout" ? (
+          <>
+            {/* Day tabs + session timer */}
+            <div
+              className="animate-in mb-4 flex items-center"
+              style={{ animationDelay: "50ms" }}
+            >
+              <div className="flex gap-1.5">
+                {workoutPlan.days.map((d, i) => {
+                  const isActive = hydrated && i === activeDay;
+                  return (
+                    <button
+                      key={d.label}
+                      onClick={() => selectDay(i)}
+                      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
+                        isActive
+                          ? "border-red-500/40 bg-[#1a1a1a] text-white"
+                          : "border-white/10 text-zinc-500 active:text-zinc-300"
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        </Collapsible>
+              <div className="ml-auto flex items-center gap-3">
+                {sessionStarted ? (
+                  <>
+                    <span className="font-mono text-sm tabular-nums text-zinc-500">
+                      {formatTime(sessionElapsed)}
+                    </span>
+                    {sessionActive ? (
+                      <button onClick={sessionPause} className="text-zinc-500 active:text-zinc-300">
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                          <rect x="6" y="4" width="4" height="16" rx="1" />
+                          <rect x="14" y="4" width="4" height="16" rx="1" />
+                        </svg>
+                      </button>
+                    ) : (
+                      <>
+                        <button onClick={sessionResume} className="text-zinc-500 active:text-zinc-300">
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5,3 19,12 5,21" />
+                          </svg>
+                        </button>
+                        <button onClick={discardSession} className={`transition-colors ${discardConfirm ? "text-red-500" : "text-zinc-600 active:text-zinc-300"}`}>
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setSessionStart(Date.now())}
+                    className="text-sm font-medium text-zinc-500 transition-colors active:text-white"
+                  >
+                    Start
+                  </button>
+                )}
+              </div>
+            </div>
 
-        {/* Complex */}
-        <div className="animate-in mt-4" style={{ animationDelay: "100ms" }}>
-          <ComplexCard
-            completed={counts["complex"] ?? 0}
-            onTap={() => tap("complex", workoutPlan.complex.rounds)}
-            onStartTimer={(rest) => startTimer(rest, "complex", workoutPlan.complex.rounds)}
-            openExercise={openExercise}
-            setOpenExercise={setOpenExercise}
-            logs={exerciseLogs}
-            onLogChange={updateLog}
-            previousLogs={previousSession}
-          />
-        </div>
+            {/* Warm-up */}
+            <Collapsible title="Warm-up" className="animate-in" style={{ animationDelay: "75ms" }}>
+              <div className="space-y-1.5">
+                {warmUpItems.map((item) => (
+                  <div key={item.name} className="flex items-baseline justify-between">
+                    <span className="text-sm text-zinc-300">{item.name}</span>
+                    <span className="text-xs text-zinc-500">{item.time}</span>
+                  </div>
+                ))}
+              </div>
+            </Collapsible>
 
-        {/* Swipeable day content */}
-        <div
-          className="animate-in overflow-hidden"
-          style={{ animationDelay: "150ms" }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchCancel}
-        >
-          <div
-            className="flex"
-            style={{
-              transform: `translateX(calc(-${activeDay * 100}% + ${offsetX}px))`,
-              transition: isSwiping ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
-            }}
-          >
-            {workoutPlan.days.map((d) => (
-              <DayContent
-                key={d.label}
-                day={d}
-                counts={counts}
-                onTap={tap}
-                onStartTimer={startTimer}
+            {/* Complex */}
+            <div className="animate-in mt-4" style={{ animationDelay: "100ms" }}>
+              <ComplexCard
+                completed={counts["complex"] ?? 0}
+                onTap={() => tap("complex", workoutPlan.complex.rounds)}
+                onStartTimer={(rest) => startTimer(rest, "complex", workoutPlan.complex.rounds)}
                 openExercise={openExercise}
                 setOpenExercise={setOpenExercise}
                 logs={exerciseLogs}
                 onLogChange={updateLog}
                 previousLogs={previousSession}
               />
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Progression notes */}
-        <div className="animate-in mt-8 space-y-2" style={{ animationDelay: "350ms" }}>
-          <Collapsible title="Progression Notes">
-            <div className="space-y-3">
-              <div>
-                <h4 className="text-sm font-medium text-zinc-300">Heavy Bell</h4>
-                <p className="mt-0.5 text-sm text-zinc-500">
-                  Should make round 3 challenging but clean. If form breaks on the
-                  press, size down.
-                </p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-zinc-300">Light Bell</h4>
-                <p className="mt-0.5 text-sm text-zinc-500">
-                  Windmills should be slow and controlled. No grinding.
-                </p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-zinc-300">Moving Up</h4>
-                <p className="mt-0.5 text-sm text-zinc-500">
-                  Progress heavy bell first. When 3 rounds feel controlled, bump up
-                  one size.
-                </p>
+            {/* Swipeable day content */}
+            <div
+              className="animate-in overflow-hidden"
+              style={{ animationDelay: "150ms" }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchCancel}
+            >
+              <div
+                className="flex"
+                style={{
+                  transform: `translateX(calc(-${activeDay * 100}% + ${offsetX}px))`,
+                  transition: isSwiping ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
+                }}
+              >
+                {workoutPlan.days.map((d) => (
+                  <DayContent
+                    key={d.label}
+                    day={d}
+                    counts={counts}
+                    onTap={tap}
+                    onStartTimer={startTimer}
+                    openExercise={openExercise}
+                    setOpenExercise={setOpenExercise}
+                    logs={exerciseLogs}
+                    onLogChange={updateLog}
+                    previousLogs={previousSession}
+                  />
+                ))}
               </div>
             </div>
-          </Collapsible>
 
-          <Collapsible title="Tempo Guide">
-            <p className="text-sm text-zinc-400">
-              {workoutPlan.tempoExplanation}
+            {/* Finish workout button */}
+            {sessionStarted && (
+              <button
+                onClick={finishWorkout}
+                className={`mt-6 w-full rounded-xl border py-3.5 text-sm font-semibold transition-colors duration-300 active:scale-[0.98] ${
+                  finishConfirm
+                    ? "border-white/20 bg-white/10 text-white"
+                    : "border-red-500/20 bg-red-500/5 text-zinc-300"
+                }`}
+              >
+                {finishConfirm ? "Confirm" : "Finish workout"}
+              </button>
+            )}
+
+            {/* Progression notes */}
+            <div className="animate-in mt-8 space-y-2" style={{ animationDelay: "350ms" }}>
+              <Collapsible title="Progression Notes">
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-sm font-medium text-zinc-300">Heavy Bell</h4>
+                    <p className="mt-0.5 text-sm text-zinc-500">
+                      Should make round 3 challenging but clean. If form breaks on the
+                      press, size down.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-zinc-300">Light Bell</h4>
+                    <p className="mt-0.5 text-sm text-zinc-500">
+                      Windmills should be slow and controlled. No grinding.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-zinc-300">Moving Up</h4>
+                    <p className="mt-0.5 text-sm text-zinc-500">
+                      Progress heavy bell first. When 3 rounds feel controlled, bump up
+                      one size.
+                    </p>
+                  </div>
+                </div>
+              </Collapsible>
+
+              <Collapsible title="Tempo Guide">
+                <p className="text-sm text-zinc-400">
+                  {workoutPlan.tempoExplanation}
+                </p>
+              </Collapsible>
+            </div>
+
+            <p className="mt-8 mb-6 text-center text-sm text-zinc-500">
+              A workout program by{" "}
+              <a href="mailto:tprince09@gmail.com" className="text-red-500/60">
+                Taylor Prince
+              </a>
             </p>
-          </Collapsible>
-        </div>
+          </>
+        ) : (
+          <HistoryView onOpenAuth={() => setAuthDrawerOpen(true)} />
+        )}
       </div>
 
-      {/* Footer */}
-      <footer
-        className="animate-in mt-8 space-y-3 border-t border-white/5 py-4"
-        style={{ animationDelay: "400ms" }}
+      {/* Tab bar */}
+      <nav
+        className="sticky bottom-0 z-30 border-t border-white/10 bg-[#0a0a0a]"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <button
-          onClick={async () => {
-            const json = await exportSessions();
-            const blob = new Blob([json], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `dungym-log-${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-          }}
-          className="flex w-full items-center justify-center gap-1.5 text-sm text-zinc-600 transition-colors active:text-zinc-400"
-        >
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
-          </svg>
-          <span>Export workout log</span>
-        </button>
-        <p className="text-center text-sm text-zinc-500">A workout program by <a href="mailto:tprince09@gmail.com" className="text-red-500/60">Taylor Prince</a></p>
-      </footer>
+        <div className="flex">
+          <button
+            onClick={() => setActiveView("workout")}
+            className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 transition-colors ${
+              activeView === "workout" ? "text-white" : "text-zinc-600"
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={activeView === "workout" ? 2.5 : 1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+            </svg>
+            <span className="text-[10px] font-medium">Workout</span>
+          </button>
+          <button
+            onClick={() => setActiveView("history")}
+            className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 transition-colors ${
+              activeView === "history" ? "text-white" : "text-zinc-600"
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={activeView === "history" ? 2.5 : 1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-[10px] font-medium">History</span>
+          </button>
+          <button
+            onClick={() => setAuthDrawerOpen(true)}
+            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-zinc-600 transition-colors"
+          >
+            {!isAnonymous && user?.email ? (
+              <>
+                <span className="flex h-5 w-5 items-center justify-center text-xs font-semibold text-zinc-400">
+                  {user.email[0].toUpperCase()}
+                </span>
+                <span className="text-[10px] font-medium">Account</span>
+              </>
+            ) : (
+              <>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+                <span className="text-[10px] font-medium">Sign in</span>
+              </>
+            )}
+          </button>
+        </div>
+      </nav>
 
       {/* Rest countdown timer */}
       {timer && (
@@ -1087,6 +1163,9 @@ export default function WorkoutViewer() {
           onCancel={cancelTimer}
         />
       )}
+
+      {/* Auth drawer */}
+      <AuthDrawer open={authDrawerOpen} onClose={() => setAuthDrawerOpen(false)} />
     </div>
   );
 }

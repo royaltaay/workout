@@ -902,54 +902,36 @@ export default function WorkoutViewer() {
     >
       <div className="flex-1">
         {/* Header */}
-        <header className="animate-in mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <svg
-                width="36"
-                height="36"
-                viewBox="0 0 32 32"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="shrink-0"
-              >
-                <path d="M16 2L14.5 16.5L16 18L17.5 16.5L16 2Z" fill="#d4d4d8" />
-                <rect x="10" y="17.5" width="12" height="2" rx="1" fill="#a1a1aa" />
-                <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
-                <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
-              </svg>
-              <h1 className="text-2xl font-bold text-white">Dungym</h1>
-            </div>
-            <button
-              onClick={() => setAuthDrawerOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a] transition-colors active:bg-white/10"
-            >
-              {!isAnonymous && user?.email ? (
-                <span className="text-sm font-semibold text-white">
-                  {user.email[0].toUpperCase()}
-                </span>
-              ) : (
-                <svg className="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                </svg>
-              )}
-            </button>
-          </div>
+        <header className="animate-in mb-6 flex items-center justify-center gap-1">
+          <svg
+            width="36"
+            height="36"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="shrink-0"
+          >
+            <path d="M16 2L14.5 16.5L16 18L17.5 16.5L16 2Z" fill="#d4d4d8" />
+            <rect x="10" y="17.5" width="12" height="2" rx="1" fill="#a1a1aa" />
+            <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
+            <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
+          </svg>
+          <h1 className="text-2xl font-bold text-white">Dungym</h1>
         </header>
 
         {activeView === "workout" ? (
           <>
-            {/* Day tabs + session timer — combined bar */}
+            {/* Day tabs + session timer */}
             <div
-              className="animate-in mb-3 flex h-10 items-center rounded-xl border border-white/10 bg-[#1a1a1a] pl-1.5 pr-4"
+              className="animate-in mb-4 flex items-center"
               style={{ animationDelay: "50ms" }}
             >
-              <div className="flex gap-1">
+              <div className="flex gap-1.5">
                 {workoutPlan.days.map((d, i) => (
                   <button
                     key={d.label}
                     onClick={() => selectDay(i)}
-                    className={`rounded-lg px-3 py-1 text-sm font-medium transition-all active:scale-[0.97] ${
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
                       i === activeDay
                         ? "bg-red-500/10 text-white shadow-[inset_0_0_0_1px_rgba(239,68,68,0.25)]"
                         : "text-zinc-500 active:text-zinc-300"
@@ -1144,6 +1126,26 @@ export default function WorkoutViewer() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span className="text-[10px] font-medium">History</span>
+          </button>
+          <button
+            onClick={() => setAuthDrawerOpen(true)}
+            className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-zinc-600 transition-colors"
+          >
+            {!isAnonymous && user?.email ? (
+              <>
+                <span className="flex h-5 w-5 items-center justify-center text-xs font-semibold text-zinc-400">
+                  {user.email[0].toUpperCase()}
+                </span>
+                <span className="text-[10px] font-medium">Account</span>
+              </>
+            ) : (
+              <>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+                <span className="text-[10px] font-medium">Sign in</span>
+              </>
+            )}
           </button>
         </div>
       </nav>

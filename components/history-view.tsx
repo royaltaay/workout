@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSessions, exportSessions, type WorkoutSession } from "@/lib/storage";
+import { getSessions, type WorkoutSession } from "@/lib/storage";
+import { useAuth } from "@/lib/auth-context";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -75,7 +76,8 @@ function SessionCard({ session }: { session: WorkoutSession }) {
   );
 }
 
-export default function HistoryView() {
+export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) {
+  const { isAnonymous } = useAuth();
   const [sessions, setSessions] = useState<WorkoutSession[] | null>(null);
 
   useEffect(() => {
@@ -84,13 +86,9 @@ export default function HistoryView() {
 
   return (
     <div className="pb-4 pt-2">
-      {/* Loading skeleton */}
+      {/* Loading */}
       {sessions === null && (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl bg-[#1a1a1a]" />
-          ))}
-        </div>
+        <div className="py-16" />
       )}
 
       {/* Empty state */}
@@ -101,6 +99,14 @@ export default function HistoryView() {
           </svg>
           <p className="mt-3 text-sm font-medium text-zinc-400">No workouts yet</p>
           <p className="mt-1 text-xs text-zinc-600">Complete a session to see it here</p>
+          {isAnonymous && (
+            <button
+              onClick={onOpenAuth}
+              className="mt-6 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-zinc-300 transition-colors active:bg-white/10"
+            >
+              Sign in to save across devices
+            </button>
+          )}
         </div>
       )}
 
@@ -113,33 +119,13 @@ export default function HistoryView() {
         </div>
       )}
 
-      {/* Footer — export + credit */}
-      <div className="mt-8 space-y-3 border-t border-white/5 pt-4">
-        <button
-          onClick={async () => {
-            const json = await exportSessions();
-            const blob = new Blob([json], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `dungym-log-${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-          }}
-          className="flex w-full items-center justify-center gap-1.5 text-sm text-zinc-600 transition-colors active:text-zinc-400"
-        >
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
-          </svg>
-          <span>Export workout log</span>
-        </button>
-        <p className="text-center text-sm text-zinc-500">
-          A workout program by{" "}
-          <a href="mailto:tprince09@gmail.com" className="text-red-500/60">
-            Taylor Prince
-          </a>
-        </p>
-      </div>
+      {/* Credit */}
+      <p className="mt-8 border-t border-white/5 pt-4 text-center text-sm text-zinc-500">
+        A workout program by{" "}
+        <a href="mailto:tprince09@gmail.com" className="text-red-500/60">
+          Taylor Prince
+        </a>
+      </p>
     </div>
   );
 }

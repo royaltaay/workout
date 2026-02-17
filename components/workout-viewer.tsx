@@ -668,12 +668,19 @@ export default function WorkoutViewer() {
     return () => { cancelled = true; };
   }, [activeDay]);
 
+  const hasLoggedData = Object.values(exerciseLogs).some((sets) =>
+    sets.some((s) => s.weight || s.reps)
+  );
+
   function updateLog(name: string, entries: SetEntry[]) {
     setExerciseLogs((prev) => {
       const updated = { ...prev, [name]: entries };
       saveDraft(updated);
       return updated;
     });
+    // Auto-start session on first input
+    if (!sessionStarted) setSessionStart(Date.now());
+    else if (!sessionActive) sessionResume();
   }
 
   function sessionPause() {
@@ -686,32 +693,12 @@ export default function WorkoutViewer() {
     setSessionStart(Date.now());
   }
 
-  const [resetConfirm, setResetConfirm] = useState(false);
-  const resetConfirmRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [finishConfirm, setFinishConfirm] = useState(false);
+  const finishConfirmRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [discardConfirm, setDiscardConfirm] = useState(false);
+  const discardConfirmRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  function sessionReset() {
-    if (!resetConfirm) {
-      setResetConfirm(true);
-      resetConfirmRef.current = setTimeout(() => setResetConfirm(false), 1000);
-      return;
-    }
-    clearTimeout(resetConfirmRef.current);
-    setResetConfirm(false);
-    // Save session if there's logged data
-    const hasData = Object.values(exerciseLogs).some((sets) =>
-      sets.some((s) => s.weight || s.reps)
-    );
-    if (hasData && sessionStarted) {
-      const logSnapshot = { ...exerciseLogs };
-      saveSession({
-        id: crypto.randomUUID(),
-        date: new Date().toISOString(),
-        day: activeDayData.label,
-        duration: sessionElapsed,
-        exercises: logSnapshot,
-      });
-      setPreviousSession(logSnapshot);
-    }
+  function resetState() {
     clearDraft();
     setExerciseLogs({});
     if (sessionRef.current) clearInterval(sessionRef.current);
@@ -719,6 +706,38 @@ export default function WorkoutViewer() {
     setSessionBank(0);
     setSessionElapsed(0);
     setCounts({});
+    setFinishConfirm(false);
+    setDiscardConfirm(false);
+  }
+
+  function finishWorkout() {
+    if (!finishConfirm) {
+      setFinishConfirm(true);
+      finishConfirmRef.current = setTimeout(() => setFinishConfirm(false), 2000);
+      return;
+    }
+    clearTimeout(finishConfirmRef.current);
+    // Save session
+    const logSnapshot = { ...exerciseLogs };
+    saveSession({
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      day: activeDayData.label,
+      duration: sessionElapsed,
+      exercises: logSnapshot,
+    });
+    setPreviousSession(logSnapshot);
+    resetState();
+  }
+
+  function discardSession() {
+    if (!discardConfirm) {
+      setDiscardConfirm(true);
+      discardConfirmRef.current = setTimeout(() => setDiscardConfirm(false), 2000);
+      return;
+    }
+    clearTimeout(discardConfirmRef.current);
+    resetState();
   }
 
   function tap(key: string, max: number) {
@@ -884,63 +903,97 @@ export default function WorkoutViewer() {
     >
       <div className="flex-1">
         {/* Header */}
-        <header className="animate-in mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <svg
-              width="36"
-              height="36"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="shrink-0"
+        <header className="animate-in mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="shrink-0"
+              >
+                <path d="M16 2L14.5 16.5L16 18L17.5 16.5L16 2Z" fill="#d4d4d8" />
+                <rect x="10" y="17.5" width="12" height="2" rx="1" fill="#a1a1aa" />
+                <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
+                <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
+              </svg>
+              <h1 className="text-2xl font-bold text-white">Dungym</h1>
+            </div>
+            <button
+              onClick={() => setAuthDrawerOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a] transition-colors active:bg-white/10"
             >
-              <path d="M16 2L14.5 16.5L16 18L17.5 16.5L16 2Z" fill="#d4d4d8" />
-              <rect x="10" y="17.5" width="12" height="2" rx="1" fill="#a1a1aa" />
-              <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
-              <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
-            </svg>
-            <h1 className="text-2xl font-bold text-white">Dungym</h1>
+              {!isAnonymous && user?.email ? (
+                <span className="text-sm font-semibold text-white">
+                  {user.email[0].toUpperCase()}
+                </span>
+              ) : (
+                <svg className="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+              )}
+            </button>
           </div>
         </header>
 
         {activeView === "workout" ? (
           <>
-            {/* Session timer */}
+            {/* Day tabs + session timer — combined bar */}
             <div
-              className="animate-in mb-3 flex h-10 items-center rounded-xl border border-white/10 bg-[#1a1a1a] px-4"
+              className="animate-in mb-3 flex h-10 items-center rounded-xl border border-white/10 bg-[#1a1a1a] pl-1.5 pr-4"
               style={{ animationDelay: "50ms" }}
             >
-              <span className="text-sm font-medium text-zinc-400">Session</span>
-              <span className="ml-auto font-mono text-sm text-zinc-500">
-                {sessionStarted ? formatTime(sessionElapsed) : "0:00"}
-              </span>
-              <div className="ml-3 flex items-center gap-2">
-                {sessionActive ? (
-                  <button onClick={sessionPause} className="text-zinc-500 active:text-zinc-300">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <rect x="6" y="4" width="4" height="16" rx="1" />
-                      <rect x="14" y="4" width="4" height="16" rx="1" />
-                    </svg>
+              <div className="flex gap-1">
+                {workoutPlan.days.map((d, i) => (
+                  <button
+                    key={d.label}
+                    onClick={() => selectDay(i)}
+                    className={`rounded-lg px-3 py-1 text-sm font-medium transition-all active:scale-[0.97] ${
+                      i === activeDay
+                        ? "bg-red-500/10 text-white shadow-[inset_0_0_0_1px_rgba(239,68,68,0.25)]"
+                        : "text-zinc-500 active:text-zinc-300"
+                    }`}
+                  >
+                    {d.label}
                   </button>
+                ))}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                {sessionStarted ? (
+                  <>
+                    <span className="font-mono text-sm tabular-nums text-zinc-500">
+                      {formatTime(sessionElapsed)}
+                    </span>
+                    {sessionActive ? (
+                      <button onClick={sessionPause} className="text-zinc-500 active:text-zinc-300">
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                          <rect x="6" y="4" width="4" height="16" rx="1" />
+                          <rect x="14" y="4" width="4" height="16" rx="1" />
+                        </svg>
+                      </button>
+                    ) : (
+                      <>
+                        <button onClick={sessionResume} className="text-zinc-500 active:text-zinc-300">
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5,3 19,12 5,21" />
+                          </svg>
+                        </button>
+                        <button onClick={discardSession} className={`transition-colors ${discardConfirm ? "text-red-500" : "text-zinc-600 active:text-zinc-300"}`}>
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </>
+                    )}
+                  </>
                 ) : (
                   <button
-                    onClick={() => sessionStarted ? sessionResume() : setSessionStart(Date.now())}
-                    className="text-zinc-500 active:text-zinc-300"
+                    onClick={() => setSessionStart(Date.now())}
+                    className="text-sm font-medium text-zinc-500 transition-colors active:text-white"
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="5,3 19,12 5,21" />
-                    </svg>
-                  </button>
-                )}
-                {sessionStarted && (
-                  <button
-                    onClick={sessionReset}
-                    className={`transition-colors ${resetConfirm ? "text-red-500" : "text-zinc-500 active:text-zinc-300"}`}
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" d="M1 4v6h6" />
-                      <path strokeLinecap="round" d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                    </svg>
+                    Start
                   </button>
                 )}
               </div>
@@ -1005,6 +1058,20 @@ export default function WorkoutViewer() {
               </div>
             </div>
 
+            {/* Finish workout button */}
+            {sessionStarted && (
+              <button
+                onClick={finishWorkout}
+                className={`mt-6 w-full rounded-xl py-3.5 text-sm font-semibold transition-all active:scale-[0.98] ${
+                  finishConfirm
+                    ? "bg-red-500/90 text-white shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                    : "border border-red-500/20 bg-red-500/5 text-zinc-300"
+                }`}
+              >
+                {finishConfirm ? "Tap again to save & finish" : "Finish workout"}
+              </button>
+            )}
+
             {/* Progression notes */}
             <div className="animate-in mt-8 space-y-2" style={{ animationDelay: "350ms" }}>
               <Collapsible title="Progression Notes">
@@ -1040,7 +1107,7 @@ export default function WorkoutViewer() {
             </div>
           </>
         ) : (
-          <HistoryView />
+          <HistoryView onOpenAuth={() => setAuthDrawerOpen(true)} />
         )}
       </div>
 

@@ -927,19 +927,22 @@ export default function WorkoutViewer() {
               style={{ animationDelay: "50ms" }}
             >
               <div className="flex gap-1.5">
-                {workoutPlan.days.map((d, i) => (
-                  <button
-                    key={d.label}
-                    onClick={() => selectDay(i)}
-                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
-                      i === activeDay
-                        ? "bg-red-500/10 text-white shadow-[inset_0_0_0_1px_rgba(239,68,68,0.25)]"
-                        : "text-zinc-500 active:text-zinc-300"
-                    }`}
-                  >
-                    {d.label}
-                  </button>
-                ))}
+                {workoutPlan.days.map((d, i) => {
+                  const isActive = hydrated && i === activeDay;
+                  return (
+                    <button
+                      key={d.label}
+                      onClick={() => selectDay(i)}
+                      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
+                        isActive
+                          ? "border-red-500/40 bg-[#1a1a1a] text-white"
+                          : "border-white/10 text-zinc-500 active:text-zinc-300"
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
               </div>
               <div className="ml-auto flex items-center gap-3">
                 {sessionStarted ? (

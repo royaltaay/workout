@@ -126,6 +126,7 @@ export default function AuthDrawer({ open, onClose }: { open: boolean; onClose: 
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "center" }), 300)}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-white/20"
                     autoFocus
                   />
@@ -163,6 +164,7 @@ export default function AuthDrawer({ open, onClose }: { open: boolean; onClose: 
                     placeholder="000000"
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "center" }), 300)}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-2xl font-mono tracking-[0.3em] text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
                     autoFocus
                   />

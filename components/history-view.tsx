@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getSessions, type WorkoutSession } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
 
@@ -79,21 +79,31 @@ function SessionCard({ session }: { session: WorkoutSession }) {
 export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) {
   const { isAnonymous } = useAuth();
   const [sessions, setSessions] = useState<WorkoutSession[] | null>(null);
+  const firstLoad = useRef(true);
 
   useEffect(() => {
-    getSessions().then(setSessions);
+    getSessions().then((s) => {
+      setSessions(s);
+      // Clear flag after animation has time to play
+      setTimeout(() => { firstLoad.current = false; }, 600);
+    });
   }, []);
 
   return (
     <div className="pb-4 pt-2">
-      {/* Loading */}
+      {/* Loading spinner */}
       {sessions === null && (
-        <div className="py-16" />
+        <div className="flex justify-center py-20">
+          <svg className="h-6 w-6 animate-spin text-red-500/60" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-20" />
+            <path d="M12 2a10 10 0 019.75 7.75" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+        </div>
       )}
 
       {/* Empty state */}
       {sessions !== null && sessions.length === 0 && (
-        <div className="flex flex-col items-center py-16 text-center">
+        <div className={`flex flex-col items-center py-16 text-center ${firstLoad.current ? "animate-in" : ""}`}>
           <svg className="h-12 w-12 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -113,14 +123,16 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
       {/* Session list */}
       {sessions !== null && sessions.length > 0 && (
         <div className="space-y-2">
-          {sessions.map((s) => (
-            <SessionCard key={s.id} session={s} />
+          {sessions.map((s, i) => (
+            <div key={s.id} className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: `${i * 50}ms` } : undefined}>
+              <SessionCard session={s} />
+            </div>
           ))}
         </div>
       )}
 
       {/* Credit */}
-      <p className="mt-8 border-t border-white/5 pt-4 text-center text-sm text-zinc-500">
+      <p className={`mt-8 border-t border-white/5 pt-4 text-center text-sm text-zinc-500 ${firstLoad.current ? "animate-in" : ""}`} style={firstLoad.current ? { animationDelay: "200ms" } : undefined}>
         A workout program by{" "}
         <a href="mailto:tprince09@gmail.com" className="text-red-500/60">
           Taylor Prince

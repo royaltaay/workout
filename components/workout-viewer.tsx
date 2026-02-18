@@ -305,76 +305,6 @@ function RestButton({
   );
 }
 
-function TimerBubble({
-  seconds,
-  total,
-  lower,
-  finished,
-  onCancel,
-}: {
-  seconds: number;
-  total: number;
-  lower: number;
-  finished: boolean;
-  onCancel: () => void;
-}) {
-  const radius = 58;
-  const circumference = 2 * Math.PI * radius;
-  const progress = total > 0 ? seconds / total : 0;
-  const offset = circumference * (1 - progress);
-  const isReady = !finished && seconds <= total - lower && total > lower;
-
-  return (
-    <div
-      className="fixed z-50"
-      style={{
-        bottom: "calc(4.5rem + env(safe-area-inset-bottom))",
-        right: "calc(1rem + env(safe-area-inset-right))",
-      }}
-    >
-      <button
-        onClick={onCancel}
-        className={`relative flex h-32 w-32 items-center justify-center rounded-full border-2 bg-[#1a1a1a] transition-all ${
-          finished
-            ? "border-red-500/60 shadow-[0_0_40px_rgba(239,68,68,0.5)] animate-pulse"
-            : isReady
-              ? "border-red-500/30 shadow-[0_0_24px_rgba(239,68,68,0.25)]"
-              : "border-white/10"
-        }`}
-      >
-        <svg className="absolute inset-0 -rotate-90" viewBox="0 0 128 128">
-          <circle
-            cx="64"
-            cy="64"
-            r={radius}
-            fill="none"
-            stroke="rgba(255,255,255,0.05)"
-            strokeWidth="4"
-          />
-          <circle
-            cx="64"
-            cy="64"
-            r={radius}
-            fill="none"
-            stroke={finished || isReady ? "#ef4444" : "rgba(239,68,68,0.5)"}
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            style={{ transition: "stroke-dashoffset 1s linear" }}
-          />
-        </svg>
-        <span
-          className={`relative font-mono text-2xl font-bold ${
-            finished ? "text-red-400" : "text-white"
-          }`}
-        >
-          {finished ? "GO" : formatTime(seconds)}
-        </span>
-      </button>
-    </div>
-  );
-}
 
 function ComplexCard({
   completed,
@@ -944,71 +874,6 @@ export default function WorkoutViewer() {
           <AccountView />
         ) : activeView === "workout" ? (
           <>
-
-            {/* Session controls */}
-            <div
-              className={`animate-in mb-6 flex h-[4.75rem] items-center rounded-xl border px-5 ${
-                sessionStarted
-                  ? "border-white/10 bg-[#1a1a1a]"
-                  : "border-dashed border-white/10"
-              }`}
-              style={{ animationDelay: "75ms" }}
-            >
-              {sessionStarted ? (
-                <div className="flex w-full items-center justify-between">
-                  <span className="font-mono text-2xl font-semibold tabular-nums text-white">
-                    {formatTime(sessionElapsed)}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {sessionActive ? (
-                      <button
-                        onClick={sessionPause}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-zinc-400 active:bg-white/5 active:text-white"
-                      >
-                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                          <rect x="6" y="4" width="4" height="16" rx="1" />
-                          <rect x="14" y="4" width="4" height="16" rx="1" />
-                        </svg>
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          onClick={sessionResume}
-                          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-zinc-400 active:bg-white/5 active:text-white"
-                        >
-                          <svg className="ml-0.5 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5,3 19,12 5,21" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={discardSession}
-                          className={`flex h-11 w-11 items-center justify-center rounded-full border transition-colors ${
-                            discardConfirm
-                              ? "border-red-500/40 text-red-500"
-                              : "border-white/10 text-zinc-600 active:text-zinc-300"
-                          }`}
-                        >
-                          <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setSessionStart(Date.now())}
-                  className="flex w-full items-center justify-center gap-2 text-base font-medium text-zinc-500 transition-colors active:text-white"
-                >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                    <polygon points="5,3 19,12 5,21" />
-                  </svg>
-                  Start session
-                </button>
-              )}
-            </div>
-
             {/* Warm-up */}
             <Collapsible title="Warm-up" className="animate-in" style={{ animationDelay: "75ms" }}>
               <div className="space-y-1.5">
@@ -1068,20 +933,6 @@ export default function WorkoutViewer() {
               </div>
             </div>
 
-            {/* Finish workout button */}
-            {sessionStarted && (
-              <button
-                onClick={finishWorkout}
-                className={`mt-6 flex h-[4.75rem] w-full items-center justify-center rounded-xl border text-base font-semibold transition-colors duration-300 active:scale-[0.98] ${
-                  finishConfirm
-                    ? "border-white/20 bg-white/10 text-white"
-                    : "border-red-500/20 text-zinc-300"
-                }`}
-              >
-                {finishConfirm ? "Confirm" : "Finish workout"}
-              </button>
-            )}
-
             {/* Progression notes */}
             <div className="animate-in mt-8 space-y-2" style={{ animationDelay: "350ms" }}>
               <Collapsible title="Progression Notes">
@@ -1128,12 +979,104 @@ export default function WorkoutViewer() {
         )}
       </div>
 
-      {/* Tab bar */}
+      {/* Bottom bar */}
       <nav
-        className="sticky bottom-0 z-30 border-t border-white/10 bg-[#0a0a0a]"
+        className="sticky bottom-0 z-30 bg-[#0a0a0a]"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="flex">
+        {/* Session bar — integrated above tabs */}
+        {activeView === "workout" && (
+          <div className="flex h-14 items-center border-t border-white/10 px-4">
+            {timer ? (
+              /* Rest timer takes over the bar */
+              <button
+                onClick={cancelTimer}
+                className="flex w-full items-center justify-between"
+              >
+                <span className={`font-mono text-xl font-semibold tabular-nums ${timer.finished ? "text-red-400 animate-pulse" : timer.seconds <= timer.total - timer.lower && timer.total > timer.lower ? "text-red-400" : "text-white"}`}>
+                  {timer.finished ? "GO" : formatTime(timer.seconds)}
+                </span>
+                <div className="flex items-center gap-3">
+                  {/* Progress bar */}
+                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-red-500 transition-all duration-1000 ease-linear"
+                      style={{ width: `${timer.total > 0 ? ((timer.total - timer.seconds) / timer.total) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-zinc-500">Skip</span>
+                </div>
+              </button>
+            ) : sessionStarted ? (
+              <div className="flex w-full items-center gap-2">
+                <span className="font-mono text-xl font-semibold tabular-nums text-white">
+                  {formatTime(sessionElapsed)}
+                </span>
+
+                <div className="ml-auto flex items-center gap-2">
+                  {sessionActive ? (
+                    <button
+                      onClick={sessionPause}
+                      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-zinc-400 active:bg-white/5 active:text-white"
+                    >
+                      <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="4" width="4" height="16" rx="1" />
+                        <rect x="14" y="4" width="4" height="16" rx="1" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={sessionResume}
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-zinc-400 active:bg-white/5 active:text-white"
+                      >
+                        <svg className="ml-0.5 h-4.5 w-4.5" viewBox="0 0 24 24" fill="currentColor">
+                          <polygon points="5,3 19,12 5,21" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={discardSession}
+                        className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
+                          discardConfirm
+                            ? "border-red-500/40 text-red-500"
+                            : "border-white/10 text-zinc-600 active:text-zinc-300"
+                        }`}
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    onClick={finishWorkout}
+                    className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors active:scale-[0.97] ${
+                      finishConfirm
+                        ? "border-white/20 bg-white/10 text-white"
+                        : "border-red-500/20 text-zinc-400 active:text-white"
+                    }`}
+                  >
+                    {finishConfirm ? "Confirm" : "Finish"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setSessionStart(Date.now())}
+                className="flex w-full items-center justify-center gap-2 text-base font-medium text-zinc-500 transition-colors active:text-white"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+                Start session
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Tab icons */}
+        <div className="flex border-t border-white/10">
           <button
             onClick={() => setActiveView("workout")}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 transition-colors ${
@@ -1180,17 +1123,6 @@ export default function WorkoutViewer() {
           </button>
         </div>
       </nav>
-
-      {/* Rest countdown timer */}
-      {timer && (
-        <TimerBubble
-          seconds={timer.seconds}
-          total={timer.total}
-          lower={timer.lower}
-          finished={timer.finished}
-          onCancel={cancelTimer}
-        />
-      )}
 
     </div>
   );

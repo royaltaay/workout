@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { getSessions, type WorkoutSession } from "@/lib/storage";
+import { getSessions, deleteSession, type WorkoutSession } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
+import ProgressChart from "./progress-chart";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -16,9 +17,28 @@ function formatDuration(seconds: number): string {
   return `${h}h ${m % 60}m`;
 }
 
-function SessionCard({ session }: { session: WorkoutSession }) {
+function SessionCard({
+  session,
+  onDelete,
+}: {
+  session: WorkoutSession;
+  onDelete: (id: string) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const exerciseNames = Object.keys(session.exercises);
+
+  function handleDelete() {
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      deleteTimerRef.current = setTimeout(() => setDeleteConfirm(false), 3000);
+      return;
+    }
+    clearTimeout(deleteTimerRef.current);
+    deleteSession(session.id);
+    onDelete(session.id);
+  }
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a]">
@@ -63,12 +83,30 @@ function SessionCard({ session }: { session: WorkoutSession }) {
                           : s.weight
                             ? `${s.weight} lb`
                             : `${s.reps} reps`}
+                        {s.note && (
+                          <span className="ml-1 text-zinc-600">— {s.note}</span>
+                        )}
                       </span>
                     ))}
                   </div>
                 </div>
               );
             })}
+
+            {/* Delete button */}
+            <button
+              onClick={handleDelete}
+              className={`flex items-center gap-1.5 text-xs transition-colors ${
+                deleteConfirm
+                  ? "text-red-500"
+                  : "text-zinc-600 active:text-zinc-400"
+              }`}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+              {deleteConfirm ? "Tap again to delete" : "Delete session"}
+            </button>
           </div>
         </div>
       </div>
@@ -84,10 +122,13 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
   useEffect(() => {
     getSessions().then((s) => {
       setSessions(s);
-      // Clear flag after animation has time to play
       setTimeout(() => { firstLoad.current = false; }, 600);
     });
   }, []);
+
+  function handleDelete(id: string) {
+    setSessions((prev) => prev?.filter((s) => s.id !== id) ?? null);
+  }
 
   return (
     <div className="pb-4 pt-2">
@@ -120,14 +161,24 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
         </div>
       )}
 
-      {/* Session list */}
+      {/* Progress chart + session list */}
       {sessions !== null && sessions.length > 0 && (
-        <div className="space-y-2">
-          {sessions.map((s, i) => (
-            <div key={s.id} className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: `${i * 50}ms` } : undefined}>
-              <SessionCard session={s} />
+        <div className="space-y-4">
+          {/* Progress chart — show when 2+ sessions */}
+          {sessions.length >= 2 && (
+            <div className={firstLoad.current ? "animate-in" : ""}>
+              <ProgressChart sessions={sessions} />
             </div>
-          ))}
+          )}
+
+          {/* Session list */}
+          <div className="space-y-2">
+            {sessions.map((s, i) => (
+              <div key={s.id} className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: `${i * 50}ms` } : undefined}>
+                <SessionCard session={s} onDelete={handleDelete} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

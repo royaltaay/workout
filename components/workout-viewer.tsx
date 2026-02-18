@@ -183,6 +183,41 @@ function ExerciseDetail({
   children: React.ReactNode;
 }) {
   const detail = exerciseDetails[name];
+  const [noteOpen, setNoteOpen] = useState<number | null>(null);
+  const prevSet1Ref = useRef("");
+
+  // Auto-fill: when set 1 weight changes, propagate to subsequent sets
+  // that are empty or still match the previous set-1 value (i.e. were auto-filled)
+  function handleWeightChange(index: number, value: string) {
+    const updated = [...entries];
+    while (updated.length <= index) updated.push({ weight: "", reps: "" });
+    const oldSet1 = prevSet1Ref.current;
+    updated[index] = { ...updated[index], weight: value };
+    if (index === 0) {
+      prevSet1Ref.current = value;
+      if (value) {
+        for (let j = 1; j < sets; j++) {
+          while (updated.length <= j) updated.push({ weight: "", reps: "" });
+          if (!updated[j].weight || updated[j].weight === oldSet1) {
+            updated[j] = { ...updated[j], weight: value };
+          }
+        }
+      }
+    }
+    onChange(name, updated);
+  }
+
+  function toggleNote(i: number) {
+    if (noteOpen === i) {
+      // Closing — if note is empty, clear it
+      const entry = entries[i];
+      if (!entry?.note) setNoteOpen(null);
+      else setNoteOpen(null);
+      return;
+    }
+    setNoteOpen(i);
+  }
+
   return (
     <>
       <button
@@ -207,26 +242,9 @@ function ExerciseDetail({
       >
         <div className="overflow-hidden">
           <div className="mt-3 space-y-3">
-            {/* Form guide – video thumbnail hidden until real videos are available */}
+            {/* Form guide */}
             {detail && (
               <div className="space-y-2">
-                {/* TODO: unhide when real exercise videos are ready
-                <a
-                  href={detail.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative block aspect-video w-full overflow-hidden rounded-lg bg-[#111] border border-white/5"
-                >
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/90 shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-transform group-active:scale-95">
-                      <svg className="ml-0.5 h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5,3 19,12 5,21" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-medium text-zinc-500">Watch form guide</span>
-                  </div>
-                </a>
-                */}
                 <p className="text-sm leading-relaxed text-zinc-400">
                   {detail.instructions}
                 </p>
@@ -239,39 +257,63 @@ function ExerciseDetail({
                 const entry = entries[i] ?? { weight: "", reps: "" };
                 const prev = previous?.[i];
                 return (
-                  <div key={i} className="flex items-center gap-1.5">
-                    <span className="w-4 text-center text-xs tabular-nums text-zinc-600">
-                      {i + 1}
-                    </span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      placeholder={prev?.weight || "—"}
-                      value={entry.weight}
-                      onChange={(e) => {
-                        const updated = [...entries];
-                        while (updated.length <= i) updated.push({ weight: "", reps: "" });
-                        updated[i] = { ...updated[i], weight: e.target.value };
-                        onChange(name, updated);
-                      }}
-                      className="w-16 rounded bg-white/5 px-2 py-1.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
-                    />
-                    <span className="text-xs text-zinc-600">lb</span>
-                    <span className="text-xs text-zinc-600">&times;</span>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      placeholder={prev?.reps || "—"}
-                      value={entry.reps}
-                      onChange={(e) => {
-                        const updated = [...entries];
-                        while (updated.length <= i) updated.push({ weight: "", reps: "" });
-                        updated[i] = { ...updated[i], reps: e.target.value };
-                        onChange(name, updated);
-                      }}
-                      className="w-14 rounded bg-white/5 px-2 py-1.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
-                    />
-                    <span className="text-xs text-zinc-600">reps</span>
+                  <div key={i}>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-4 text-center text-xs tabular-nums text-zinc-600">
+                        {i + 1}
+                      </span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        placeholder={prev?.weight || "—"}
+                        value={entry.weight}
+                        onChange={(e) => handleWeightChange(i, e.target.value)}
+                        className="w-20 rounded bg-white/5 px-2 py-2.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                      />
+                      <span className="text-xs text-zinc-600">lb</span>
+                      <span className="text-xs text-zinc-600">&times;</span>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        placeholder={prev?.reps || "—"}
+                        value={entry.reps}
+                        onChange={(e) => {
+                          const updated = [...entries];
+                          while (updated.length <= i) updated.push({ weight: "", reps: "" });
+                          updated[i] = { ...updated[i], reps: e.target.value };
+                          onChange(name, updated);
+                        }}
+                        className="w-16 rounded bg-white/5 px-2 py-2.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                      />
+                      <span className="text-xs text-zinc-600">reps</span>
+                      <button
+                        onClick={() => toggleNote(i)}
+                        className={`ml-auto flex h-7 w-7 items-center justify-center rounded transition-colors ${
+                          entry.note || noteOpen === i ? "text-zinc-400" : "text-zinc-700"
+                        } active:text-zinc-300`}
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+                        </svg>
+                      </button>
+                    </div>
+                    {/* Per-set note input */}
+                    {noteOpen === i && (
+                      <div className="ml-5 mt-1 mb-1">
+                        <input
+                          type="text"
+                          placeholder="Note (e.g. press failed rep 4)"
+                          value={entry.note ?? ""}
+                          onChange={(e) => {
+                            const updated = [...entries];
+                            while (updated.length <= i) updated.push({ weight: "", reps: "" });
+                            updated[i] = { ...updated[i], note: e.target.value || undefined };
+                            onChange(name, updated);
+                          }}
+                          className="w-full rounded bg-white/5 px-2.5 py-1.5 text-sm text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}

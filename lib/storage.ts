@@ -45,7 +45,8 @@ export function clearDraft(): void {
 function getLocalSessions(): WorkoutSession[] {
   try {
     const raw = localStorage.getItem(SESSIONS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const sessions: WorkoutSession[] = raw ? JSON.parse(raw) : [];
+    return sessions.sort((a, b) => b.date.localeCompare(a.date));
   } catch {
     return [];
   }

@@ -2,6 +2,23 @@
 
 import { useState, useMemo } from "react";
 import type { WorkoutSession } from "@/lib/storage";
+import { workoutPlan } from "@/lib/workout-data";
+
+// Canonical exercise order from workout plan
+const exerciseOrder: Record<string, number> = (() => {
+  const order: Record<string, number> = {};
+  let idx = 0;
+  for (const ex of workoutPlan.complex.exercises) order[ex.name] = idx++;
+  for (const day of workoutPlan.days) {
+    for (const ss of day.supersets) {
+      for (const ex of ss.exercises) {
+        if (!(ex.name in order)) order[ex.name] = idx++;
+      }
+    }
+    if (!(day.finisher.name in order)) order[day.finisher.name] = idx++;
+  }
+  return order;
+})();
 
 type Metric = "weight" | "reps";
 
@@ -19,7 +36,9 @@ export default function ProgressChart({ sessions }: { sessions: WorkoutSession[]
         if (sets?.some((e) => e.weight || e.reps)) names.add(name);
       }
     }
-    return Array.from(names);
+    return Array.from(names).sort(
+      (a, b) => (exerciseOrder[a] ?? 999) - (exerciseOrder[b] ?? 999)
+    );
   }, [sessions]);
 
   const [selected, setSelected] = useState<string>(exerciseNames[0] ?? "");
@@ -27,7 +46,7 @@ export default function ProgressChart({ sessions }: { sessions: WorkoutSession[]
 
   const dataPoints = useMemo(() => {
     if (!selected) return [];
-    // Oldest first, last 10
+    // Sessions are newest-first, reverse for chronological chart, take last 10
     const relevant = [...sessions]
       .filter((s) => s.exercises[selected]?.some((e) => e.weight || e.reps))
       .reverse()
@@ -55,8 +74,26 @@ export default function ProgressChart({ sessions }: { sessions: WorkoutSession[]
   const chartH = H - PAD.top - PAD.bottom;
 
   const values = dataPoints.map((d) => d.value);
-  const minV = Math.min(...values, 0);
-  const maxV = Math.max(...values, 1);
+  const rawMin = Math.min(...values);
+  const rawMax = Math.max(...values);
+
+  // Pick a nice step size, then round min/max to it
+  function niceStep(range: number): number {
+    if (range <= 0) return 5;
+    const rough = range / 3;
+    const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+    const norm = rough / mag;
+    if (norm <= 1.5) return mag;
+    if (norm <= 3.5) return 2.5 * mag;
+    if (norm <= 7.5) return 5 * mag;
+    return 10 * mag;
+  }
+
+  const dataRange = rawMax - rawMin;
+  const pad = dataRange > 0 ? dataRange * 0.15 : Math.max(rawMax * 0.2, 5);
+  const step = niceStep(dataRange + pad * 2);
+  const minV = Math.floor((rawMin - pad) / step) * step;
+  const maxV = Math.ceil((rawMax + pad) / step) * step;
   const range = maxV - minV || 1;
 
   function x(i: number) {
@@ -68,12 +105,11 @@ export default function ProgressChart({ sessions }: { sessions: WorkoutSession[]
 
   const polyline = dataPoints.map((d, i) => `${x(i)},${y(d.value)}`).join(" ");
 
-  // Y-axis grid: 3-4 lines
-  const gridCount = 3;
-  const gridLines = Array.from({ length: gridCount + 1 }, (_, i) => {
-    const v = minV + (range / gridCount) * i;
-    return { v, yPos: y(v) };
-  });
+  // Y-axis grid at nice step intervals
+  const gridLines: { v: number; yPos: number }[] = [];
+  for (let v = minV; v <= maxV; v += step) {
+    gridLines.push({ v, yPos: y(v) });
+  }
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-4">

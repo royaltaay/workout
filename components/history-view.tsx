@@ -3,7 +3,29 @@
 import { useEffect, useState, useRef } from "react";
 import { getSessions, deleteSession, type WorkoutSession } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
+import { workoutPlan } from "@/lib/workout-data";
 import ProgressChart from "./progress-chart";
+
+// Build a canonical exercise order from the workout plan so history cards
+// always display exercises in the same order as the workout structure.
+const exerciseOrder: Record<string, number> = (() => {
+  const order: Record<string, number> = {};
+  let idx = 0;
+  // Complex exercises first
+  for (const ex of workoutPlan.complex.exercises) {
+    order[ex.name] = idx++;
+  }
+  // Per-day supersets then finisher
+  for (const day of workoutPlan.days) {
+    for (const ss of day.supersets) {
+      for (const ex of ss.exercises) {
+        if (!(ex.name in order)) order[ex.name] = idx++;
+      }
+    }
+    if (!(day.finisher.name in order)) order[day.finisher.name] = idx++;
+  }
+  return order;
+})();
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -27,7 +49,9 @@ function SessionCard({
   const [expanded, setExpanded] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const deleteTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const exerciseNames = Object.keys(session.exercises);
+  const exerciseNames = Object.keys(session.exercises).sort(
+    (a, b) => (exerciseOrder[a] ?? 999) - (exerciseOrder[b] ?? 999)
+  );
 
   function handleDelete() {
     if (!deleteConfirm) {

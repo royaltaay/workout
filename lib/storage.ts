@@ -3,6 +3,7 @@ import { getSupabase, ensureAuth } from "./supabase";
 export type SetEntry = {
   weight: string;
   reps: string;
+  note?: string;
 };
 
 export type WorkoutSession = {
@@ -44,7 +45,8 @@ export function clearDraft(): void {
 function getLocalSessions(): WorkoutSession[] {
   try {
     const raw = localStorage.getItem(SESSIONS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const sessions: WorkoutSession[] = raw ? JSON.parse(raw) : [];
+    return sessions.sort((a, b) => b.date.localeCompare(a.date));
   } catch {
     return [];
   }
@@ -53,6 +55,11 @@ function getLocalSessions(): WorkoutSession[] {
 function saveLocalSession(session: WorkoutSession): void {
   const sessions = getLocalSessions();
   sessions.push(session);
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+}
+
+function deleteLocalSession(id: string): void {
+  const sessions = getLocalSessions().filter((s) => s.id !== id);
   localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
 }
 
@@ -107,6 +114,14 @@ export async function getLastSession(
     .filter((s) => s.day === day)
     .sort((a, b) => b.date.localeCompare(a.date));
   return sessions[0] ?? null;
+}
+
+export async function deleteSession(id: string): Promise<void> {
+  const sb = getSupabase();
+  if (sb && (await ensureAuth())) {
+    await sb.from("workout_sessions").delete().eq("id", id);
+  }
+  deleteLocalSession(id);
 }
 
 export async function exportSessions(): Promise<string> {

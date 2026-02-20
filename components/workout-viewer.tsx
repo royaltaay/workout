@@ -808,6 +808,16 @@ export default function WorkoutViewer() {
     };
   }, []);
 
+  // Dev: expose seed helpers on window
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      import("@/lib/seed").then(({ seed, clearSeed }) => {
+        Object.assign(window, { __seed: seed, __clearSeed: clearSeed });
+        console.log("Dev helpers ready: __seed() / __clearSeed()");
+      });
+    }
+  }, []);
+
   // Session elapsed timer
   useEffect(() => {
     if (!sessionStart || allComplete) return;

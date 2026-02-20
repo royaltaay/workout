@@ -70,13 +70,13 @@ function SessionCard({
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center gap-3 px-4 py-3 text-left"
       >
-        <span className="shrink-0 rounded-full border border-white/20 px-2.5 py-0.5 text-xs font-medium text-zinc-300">
-          {session.day}
-        </span>
-        <span className="flex-1 text-sm text-zinc-300">{formatDate(session.date)}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-zinc-300">{session.day.split(" — ")[1] ?? session.day}</p>
+          <p className="mt-0.5 text-xs text-zinc-600">{formatDate(session.date)}</p>
+        </div>
         <span className="text-xs text-zinc-500">{formatDuration(session.duration)}</span>
         <svg
-          className={`h-4 w-4 text-zinc-500 transition-transform duration-200 ease-out ${expanded ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform duration-200 ease-out ${expanded ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

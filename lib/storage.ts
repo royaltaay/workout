@@ -75,7 +75,7 @@ export async function getSessions(): Promise<WorkoutSession[]> {
       .select("id, date, day, duration, exercises")
       .order("date", { ascending: false });
 
-    if (!error && data) return data as WorkoutSession[];
+    if (!error && data && data.length > 0) return data as WorkoutSession[];
   }
   return getLocalSessions();
 }

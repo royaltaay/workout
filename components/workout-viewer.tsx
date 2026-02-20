@@ -163,9 +163,18 @@ function TempoBadge({ tempo }: { tempo: string }) {
   );
 }
 
+function parseUnit(reps: string): string {
+  const match = reps.match(/[a-zA-Z]+$/);
+  if (!match) return "reps";
+  const unit = match[0].toLowerCase();
+  if (unit === "yd" || unit === "m" || unit === "ft" || unit === "sec" || unit === "min") return unit;
+  return "reps";
+}
+
 function ExerciseDetail({
   name,
   sets,
+  repsLabel,
   entries,
   onChange,
   previous,
@@ -175,6 +184,7 @@ function ExerciseDetail({
 }: {
   name: string;
   sets: number;
+  repsLabel?: string;
   entries: SetEntry[];
   onChange: (name: string, entries: SetEntry[]) => void;
   previous: SetEntry[] | undefined;
@@ -268,7 +278,7 @@ function ExerciseDetail({
                         placeholder={prev?.weight || "—"}
                         value={entry.weight}
                         onChange={(e) => handleWeightChange(i, e.target.value)}
-                        className="w-20 rounded bg-white/5 px-2 py-2.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                        className="w-20 rounded bg-white/5 px-2 py-2.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:outline-1 focus:outline-white/20"
                       />
                       <span className="text-xs text-zinc-600">lb</span>
                       <span className="text-xs text-zinc-600">&times;</span>
@@ -283,9 +293,9 @@ function ExerciseDetail({
                           updated[i] = { ...updated[i], reps: e.target.value };
                           onChange(name, updated);
                         }}
-                        className="w-16 rounded bg-white/5 px-2 py-2.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                        className="w-16 rounded bg-white/5 px-2 py-2.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:outline-1 focus:outline-white/20"
                       />
-                      <span className="text-xs text-zinc-600">reps</span>
+                      <span className="text-xs text-zinc-600">{repsLabel ?? "reps"}</span>
                       <button
                         onClick={() => toggleNote(i)}
                         className={`ml-auto flex h-7 w-7 items-center justify-center rounded transition-colors ${
@@ -310,7 +320,7 @@ function ExerciseDetail({
                             updated[i] = { ...updated[i], note: e.target.value || undefined };
                             onChange(name, updated);
                           }}
-                          className="w-full rounded bg-white/5 px-2.5 py-1.5 text-sm text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-white/20"
+                          className="w-full rounded bg-white/5 px-2.5 py-1.5 text-sm text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:outline-1 focus:outline-white/20"
                         />
                       </div>
                     )}
@@ -381,6 +391,7 @@ function ComplexCard({
             <ExerciseDetail
               name={ex.name}
               sets={complex.rounds}
+              repsLabel={parseUnit(ex.reps)}
               entries={logs[ex.name] ?? []}
               onChange={onLogChange}
               previous={previousLogs?.[ex.name]}
@@ -439,6 +450,7 @@ function SupersetCard({
             <ExerciseDetail
               name={ex.name}
               sets={superset.rounds}
+              repsLabel={parseUnit(ex.reps)}
               entries={logs[ex.name] ?? []}
               onChange={onLogChange}
               previous={previousLogs?.[ex.name]}
@@ -493,6 +505,7 @@ function FinisherCard({
         <ExerciseDetail
           name={finisher.name}
           sets={finisher.sets}
+          repsLabel={parseUnit(finisher.reps)}
           entries={logs[finisher.name] ?? []}
           onChange={onLogChange}
           previous={previousLogs?.[finisher.name]}
@@ -777,10 +790,10 @@ export default function WorkoutViewer() {
               return cur < ctx.countMax ? { ...c, [ctx.countKey]: cur + 1 } : c;
             });
           }
-          // Auto-dismiss after 10 seconds
+          // Auto-dismiss after 5 seconds
           dismissRef.current = setTimeout(() => {
             setTimer((t) => (t?.finished ? null : t));
-          }, 10000);
+          }, 5000);
           return { ...prev, seconds: 0, finished: true };
         }
         return { ...prev, seconds: next };
@@ -1035,8 +1048,8 @@ export default function WorkoutViewer() {
                 onClick={cancelTimer}
                 className="flex w-full items-center justify-between"
               >
-                <span className={`font-mono text-xl font-semibold tabular-nums ${timer.finished ? "text-red-400 animate-pulse" : timer.seconds <= timer.total - timer.lower && timer.total > timer.lower ? "text-red-400" : "text-white"}`}>
-                  {timer.finished ? "GO" : formatTime(timer.seconds)}
+                <span className={`font-mono text-xl font-semibold tabular-nums ${timer.finished || timer.seconds <= 0 ? "text-red-400" : timer.seconds <= timer.total - timer.lower && timer.total > timer.lower ? "text-red-400" : "text-white"}`}>
+                  {timer.finished || timer.seconds <= 0 ? "GO" : formatTime(timer.seconds)}
                 </span>
                 <div className="flex items-center gap-3">
                   {/* Progress bar */}

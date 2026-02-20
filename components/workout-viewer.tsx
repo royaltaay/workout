@@ -8,6 +8,7 @@ import {
   type Exercise,
   type Day,
 } from "@/lib/workout-data";
+import { parseExerciseUnit } from "@/lib/units";
 import {
   type SetEntry,
   getDraft,
@@ -161,14 +162,6 @@ function TempoBadge({ tempo }: { tempo: string }) {
       {tempo}
     </span>
   );
-}
-
-function parseUnit(reps: string): string {
-  const match = reps.match(/[a-zA-Z]+$/);
-  if (!match) return "reps";
-  const unit = match[0].toLowerCase();
-  if (unit === "yd" || unit === "m" || unit === "ft" || unit === "sec" || unit === "min") return unit;
-  return "reps";
 }
 
 function ExerciseDetail({
@@ -391,7 +384,7 @@ function ComplexCard({
             <ExerciseDetail
               name={ex.name}
               sets={complex.rounds}
-              repsLabel={parseUnit(ex.reps)}
+              repsLabel={parseExerciseUnit(ex.reps).short}
               entries={logs[ex.name] ?? []}
               onChange={onLogChange}
               previous={previousLogs?.[ex.name]}
@@ -450,7 +443,7 @@ function SupersetCard({
             <ExerciseDetail
               name={ex.name}
               sets={superset.rounds}
-              repsLabel={parseUnit(ex.reps)}
+              repsLabel={parseExerciseUnit(ex.reps).short}
               entries={logs[ex.name] ?? []}
               onChange={onLogChange}
               previous={previousLogs?.[ex.name]}
@@ -505,7 +498,7 @@ function FinisherCard({
         <ExerciseDetail
           name={finisher.name}
           sets={finisher.sets}
-          repsLabel={parseUnit(finisher.reps)}
+          repsLabel={parseExerciseUnit(finisher.reps).short}
           entries={logs[finisher.name] ?? []}
           onChange={onLogChange}
           previous={previousLogs?.[finisher.name]}

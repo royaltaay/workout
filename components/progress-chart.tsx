@@ -3,42 +3,32 @@
 import { useState, useMemo } from "react";
 import type { WorkoutSession } from "@/lib/storage";
 import { workoutPlan } from "@/lib/workout-data";
+import { parseExerciseUnit } from "@/lib/units";
 
-// Canonical exercise order + unit from workout plan
-const exerciseOrder: Record<string, number> = {};
-const exerciseUnit: Record<string, string> = {};
-
-function parseRepsUnit(reps: string): string {
-  const match = reps.match(/[a-zA-Z]+$/);
-  if (!match) return "Reps";
-  const u = match[0].toLowerCase();
-  if (u === "yd") return "Distance (yd)";
-  if (u === "m") return "Distance (m)";
-  if (u === "ft") return "Distance (ft)";
-  if (u === "sec" || u === "min") return "Time";
-  return "Reps";
-}
-
-(() => {
+// Canonical exercise order + unit label from workout plan
+const { exerciseOrder, exerciseUnit } = (() => {
+  const order: Record<string, number> = {};
+  const unit: Record<string, string> = {};
   let idx = 0;
   for (const ex of workoutPlan.complex.exercises) {
-    exerciseOrder[ex.name] = idx++;
-    exerciseUnit[ex.name] = parseRepsUnit(ex.reps);
+    order[ex.name] = idx++;
+    unit[ex.name] = parseExerciseUnit(ex.reps).label;
   }
   for (const day of workoutPlan.days) {
     for (const ss of day.supersets) {
       for (const ex of ss.exercises) {
-        if (!(ex.name in exerciseOrder)) {
-          exerciseOrder[ex.name] = idx++;
-          exerciseUnit[ex.name] = parseRepsUnit(ex.reps);
+        if (!(ex.name in order)) {
+          order[ex.name] = idx++;
+          unit[ex.name] = parseExerciseUnit(ex.reps).label;
         }
       }
     }
-    if (!(day.finisher.name in exerciseOrder)) {
-      exerciseOrder[day.finisher.name] = idx++;
-      exerciseUnit[day.finisher.name] = parseRepsUnit(day.finisher.reps);
+    if (!(day.finisher.name in order)) {
+      order[day.finisher.name] = idx++;
+      unit[day.finisher.name] = parseExerciseUnit(day.finisher.reps).label;
     }
   }
+  return { exerciseOrder: order, exerciseUnit: unit };
 })();
 
 function formatDate(iso: string): string {

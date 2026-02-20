@@ -4,20 +4,41 @@ import { useState, useMemo } from "react";
 import type { WorkoutSession } from "@/lib/storage";
 import { workoutPlan } from "@/lib/workout-data";
 
-// Canonical exercise order from workout plan
-const exerciseOrder: Record<string, number> = (() => {
-  const order: Record<string, number> = {};
+// Canonical exercise order + unit from workout plan
+const exerciseOrder: Record<string, number> = {};
+const exerciseUnit: Record<string, string> = {};
+
+function parseRepsUnit(reps: string): string {
+  const match = reps.match(/[a-zA-Z]+$/);
+  if (!match) return "Reps";
+  const u = match[0].toLowerCase();
+  if (u === "yd") return "Distance (yd)";
+  if (u === "m") return "Distance (m)";
+  if (u === "ft") return "Distance (ft)";
+  if (u === "sec" || u === "min") return "Time";
+  return "Reps";
+}
+
+(() => {
   let idx = 0;
-  for (const ex of workoutPlan.complex.exercises) order[ex.name] = idx++;
+  for (const ex of workoutPlan.complex.exercises) {
+    exerciseOrder[ex.name] = idx++;
+    exerciseUnit[ex.name] = parseRepsUnit(ex.reps);
+  }
   for (const day of workoutPlan.days) {
     for (const ss of day.supersets) {
       for (const ex of ss.exercises) {
-        if (!(ex.name in order)) order[ex.name] = idx++;
+        if (!(ex.name in exerciseOrder)) {
+          exerciseOrder[ex.name] = idx++;
+          exerciseUnit[ex.name] = parseRepsUnit(ex.reps);
+        }
       }
     }
-    if (!(day.finisher.name in order)) order[day.finisher.name] = idx++;
+    if (!(day.finisher.name in exerciseOrder)) {
+      exerciseOrder[day.finisher.name] = idx++;
+      exerciseUnit[day.finisher.name] = parseRepsUnit(day.finisher.reps);
+    }
   }
-  return order;
 })();
 
 function formatDate(iso: string): string {
@@ -135,7 +156,7 @@ export default function ProgressChart({ sessions }: { sessions: WorkoutSession[]
             </span>
             <span className="flex items-center gap-1">
               <span className="inline-block h-1.5 w-3 rounded-full bg-zinc-400" />
-              <span className="text-zinc-500">Reps</span>
+              <span className="text-zinc-500">{exerciseUnit[selected] ?? "Reps"}</span>
             </span>
           </div>
         )}

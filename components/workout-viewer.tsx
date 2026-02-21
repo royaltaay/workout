@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import HistoryView from "./history-view";
 import AccountView from "./account-view";
+import SplashScreen from "./splash-screen";
 
 function parseRest(rest: string): { lower: number; upper: number } {
   const m = rest.match(/(\d+)[–-](\d+)/);
@@ -583,7 +584,8 @@ function DayContent({
 }
 
 export default function WorkoutViewer() {
-  const { user, isAnonymous } = useAuth();
+  const { user, isAnonymous, loading } = useAuth();
+  const [showSplash, setShowSplash] = useState<boolean | null>(null);
   const [activeView, setActiveView] = useState<"workout" | "history" | "account">("workout");
   const [activeDay, setActiveDay] = useState(0);
   const [hydrated, setHydrated] = useState(false);
@@ -633,6 +635,9 @@ export default function WorkoutViewer() {
     setActiveDay(getTodayTab());
     setHydrated(true);
     setExerciseLogs(getDraft());
+    // Show splash if user hasn't dismissed it before
+    const dismissed = localStorage.getItem("dungym-splash-dismissed");
+    setShowSplash(!dismissed);
   }, []);
 
   // Load previous session (async — Supabase with localStorage fallback)
@@ -875,6 +880,28 @@ export default function WorkoutViewer() {
     offsetRef.current = 0;
     setOffsetX(0);
     setIsSwiping(false);
+  }
+
+  // Show splash for anonymous users who haven't dismissed it
+  // Wait for both auth loading and splash state hydration before deciding
+  if (loading || showSplash === null) {
+    return null;
+  }
+
+  if (showSplash && isAnonymous) {
+    return (
+      <SplashScreen
+        onViewProgram={() => {
+          localStorage.setItem("dungym-splash-dismissed", "1");
+          setShowSplash(false);
+        }}
+        onSignIn={() => {
+          localStorage.setItem("dungym-splash-dismissed", "1");
+          setShowSplash(false);
+          setActiveView("account");
+        }}
+      />
+    );
   }
 
   return (

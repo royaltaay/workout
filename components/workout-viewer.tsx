@@ -392,12 +392,12 @@ function ComplexCard({
   onAuthPrompt?: () => void;
 }) {
   const { complex } = workoutPlan;
-  const allDone = !readOnly && completed >= complex.rounds;
+  const allDone = completed >= complex.rounds;
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">The Complex</h2>
-        {!readOnly && <RoundDots total={complex.rounds} completed={completed} onTap={onTap} label="Rounds" />}
+        <RoundDots total={complex.rounds} completed={completed} onTap={onTap} label="Rounds" />
       </div>
       <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {complex.exercises.map((ex: ComplexExercise) => (
@@ -427,7 +427,7 @@ function ComplexCard({
           </div>
         ))}
       </div>
-      {!readOnly && <RestButton rest={complex.rest} onStart={onStartTimer} />}
+      <RestButton rest={complex.rest} onStart={onStartTimer} />
     </div>
   );
 }
@@ -457,12 +457,12 @@ function SupersetCard({
   readOnly?: boolean;
   onAuthPrompt?: () => void;
 }) {
-  const allDone = !readOnly && completed >= superset.rounds;
+  const allDone = completed >= superset.rounds;
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-white">{superset.name}</h3>
-        {!readOnly && <RoundDots total={superset.rounds} completed={completed} onTap={onTap} label="Rounds" />}
+        <RoundDots total={superset.rounds} completed={completed} onTap={onTap} label="Rounds" />
       </div>
       <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {superset.exercises.map((ex: Exercise) => (
@@ -490,7 +490,7 @@ function SupersetCard({
           </div>
         ))}
       </div>
-      {!readOnly && <RestButton rest={superset.rest} onStart={onStartTimer} />}
+      <RestButton rest={superset.rest} onStart={onStartTimer} />
     </div>
   );
 }
@@ -520,12 +520,12 @@ function FinisherCard({
   readOnly?: boolean;
   onAuthPrompt?: () => void;
 }) {
-  const allDone = !readOnly && completed >= finisher.sets;
+  const allDone = completed >= finisher.sets;
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-white">Finisher</h3>
-        {!readOnly && <RoundDots total={finisher.sets} completed={completed} onTap={onTap} label="Sets" />}
+        <RoundDots total={finisher.sets} completed={completed} onTap={onTap} label="Sets" />
       </div>
       <div className={`transition-opacity ${allDone ? "opacity-40" : ""}`}>
         <ExerciseDetail
@@ -553,7 +553,7 @@ function FinisherCard({
           </p>
         </ExerciseDetail>
       </div>
-      {!readOnly && <RestButton rest={finisher.rest} onStart={onStartTimer} />}
+      <RestButton rest={finisher.rest} onStart={onStartTimer} />
     </div>
   );
 }
@@ -1118,17 +1118,7 @@ export default function WorkoutViewer() {
         {/* Session bar — integrated above tabs */}
         {activeView === "workout" && (
           <div className="flex h-14 items-center border-t border-white/10 px-4">
-            {isAnonymous ? (
-              <button
-                onClick={() => setActiveView("account")}
-                className="flex w-full items-center justify-center gap-2 text-sm text-zinc-500 transition-colors active:text-white"
-              >
-                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                </svg>
-                Sign in to start tracking
-              </button>
-            ) : timer ? (
+            {timer ? (
               /* Rest timer takes over the bar */
               <button
                 onClick={cancelTimer}

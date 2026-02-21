@@ -25,9 +25,9 @@ export default function SplashScreen({
         </svg>
         <h1 className="mt-3 text-3xl font-bold text-white">Dungym</h1>
         <p className="mt-6 text-base leading-relaxed text-zinc-400">
-          One kettlebell complex. Three days a week.
+          A complete strength program built around the kettlebell.
           <br />
-          Simple programming that builds real strength.
+          Three days a week. Simple and repeatable.
         </p>
       </div>
 
@@ -40,10 +40,10 @@ export default function SplashScreen({
           <span className="mt-0.5 text-sm text-red-500/70">&#9632;</span>
           <div>
             <p className="text-sm font-medium text-zinc-300">
-              The Complex — every session
+              The Complex
             </p>
             <p className="mt-0.5 text-sm text-zinc-500">
-              Swings, cleans, squats, presses, windmills. 3 rounds.
+              Swings, cleans, squats, presses, windmills. The foundation of every session.
             </p>
           </div>
         </div>
@@ -52,10 +52,10 @@ export default function SplashScreen({
           <span className="mt-0.5 text-sm text-red-500/70">&#9632;</span>
           <div>
             <p className="text-sm font-medium text-zinc-300">
-              Push / Pull / Carry split
+              Superset + Finisher
             </p>
             <p className="mt-0.5 text-sm text-zinc-500">
-              Targeted strength work after the complex. Mon, Wed, Fri.
+              Push, pull, and carry work that rounds out each day. Mon, Wed, Fri.
             </p>
           </div>
         </div>
@@ -64,10 +64,10 @@ export default function SplashScreen({
           <span className="mt-0.5 text-sm text-red-500/70">&#9632;</span>
           <div>
             <p className="text-sm font-medium text-zinc-300">
-              Tempo controlled reps
+              Tempo controlled
             </p>
             <p className="mt-0.5 text-sm text-zinc-500">
-              Every rep has a purpose. Eccentric loading that builds strength.
+              Every rep has a prescribed tempo. Eccentric loading that builds real strength.
             </p>
           </div>
         </div>

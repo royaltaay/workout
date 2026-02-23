@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import HistoryView from "./history-view";
 import AccountView from "./account-view";
+import SplashScreen from "./splash-screen";
 
 function parseRest(rest: string): { lower: number; upper: number } {
   const m = rest.match(/(\d+)[–-](\d+)/);
@@ -174,6 +175,8 @@ function ExerciseDetail({
   expanded,
   onToggle,
   children,
+  readOnly,
+  onAuthPrompt,
 }: {
   name: string;
   sets: number;
@@ -184,6 +187,8 @@ function ExerciseDetail({
   expanded: boolean;
   onToggle: () => void;
   children: React.ReactNode;
+  readOnly?: boolean;
+  onAuthPrompt?: () => void;
 }) {
   const detail = exerciseDetails[name];
   const [noteOpen, setNoteOpen] = useState<number | null>(null);
@@ -254,7 +259,18 @@ function ExerciseDetail({
               </div>
             )}
 
-            {/* Set inputs */}
+            {/* Set inputs — or sign-in prompt for anonymous users */}
+            {readOnly ? (
+              <button
+                onClick={onAuthPrompt}
+                className="flex w-full items-center gap-2 rounded-lg bg-white/5 px-3 py-2.5 text-sm text-zinc-500 transition-colors active:bg-white/10 active:text-zinc-300"
+              >
+                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+                Sign in to log your sets
+              </button>
+            ) : (
             <div className="space-y-1">
               {Array.from({ length: sets }, (_, i) => {
                 const entry = entries[i] ?? { weight: "", reps: "" };
@@ -321,6 +337,7 @@ function ExerciseDetail({
                 );
               })}
             </div>
+            )}
           </div>
         </div>
       </div>
@@ -360,6 +377,8 @@ function ComplexCard({
   logs,
   onLogChange,
   previousLogs,
+  readOnly,
+  onAuthPrompt,
 }: {
   completed: number;
   onTap: () => void;
@@ -369,6 +388,8 @@ function ComplexCard({
   logs: Record<string, SetEntry[]>;
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
+  readOnly?: boolean;
+  onAuthPrompt?: () => void;
 }) {
   const { complex } = workoutPlan;
   const allDone = completed >= complex.rounds;
@@ -390,6 +411,8 @@ function ComplexCard({
               previous={previousLogs?.[ex.name]}
               expanded={openExercise === ex.name}
               onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
+              readOnly={readOnly}
+              onAuthPrompt={onAuthPrompt}
             >
               <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
                 <span className="capitalize">{ex.bell}</span>
@@ -419,6 +442,8 @@ function SupersetCard({
   logs,
   onLogChange,
   previousLogs,
+  readOnly,
+  onAuthPrompt,
 }: {
   superset: Day["supersets"][number];
   completed: number;
@@ -429,6 +454,8 @@ function SupersetCard({
   logs: Record<string, SetEntry[]>;
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
+  readOnly?: boolean;
+  onAuthPrompt?: () => void;
 }) {
   const allDone = completed >= superset.rounds;
   return (
@@ -449,6 +476,8 @@ function SupersetCard({
               previous={previousLogs?.[ex.name]}
               expanded={openExercise === ex.name}
               onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
+              readOnly={readOnly}
+              onAuthPrompt={onAuthPrompt}
             >
               <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
                 <span>{ex.reps}</span>
@@ -476,6 +505,8 @@ function FinisherCard({
   logs,
   onLogChange,
   previousLogs,
+  readOnly,
+  onAuthPrompt,
 }: {
   finisher: Day["finisher"];
   completed: number;
@@ -486,6 +517,8 @@ function FinisherCard({
   logs: Record<string, SetEntry[]>;
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
+  readOnly?: boolean;
+  onAuthPrompt?: () => void;
 }) {
   const allDone = completed >= finisher.sets;
   return (
@@ -504,6 +537,8 @@ function FinisherCard({
           previous={previousLogs?.[finisher.name]}
           expanded={openExercise === finisher.name}
           onToggle={() => setOpenExercise(openExercise === finisher.name ? null : finisher.name)}
+          readOnly={readOnly}
+          onAuthPrompt={onAuthPrompt}
         >
           <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
             <span>{finisher.reps}</span>
@@ -533,6 +568,8 @@ function DayContent({
   logs,
   onLogChange,
   previousLogs,
+  readOnly,
+  onAuthPrompt,
 }: {
   day: Day;
   counts: Record<string, number>;
@@ -543,6 +580,8 @@ function DayContent({
   logs: Record<string, SetEntry[]>;
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
+  readOnly?: boolean;
+  onAuthPrompt?: () => void;
 }) {
   return (
     <div className="min-w-full px-1">
@@ -562,6 +601,8 @@ function DayContent({
             logs={logs}
             onLogChange={onLogChange}
             previousLogs={previousLogs}
+            readOnly={readOnly}
+            onAuthPrompt={onAuthPrompt}
           />
         ))}
       </div>
@@ -576,6 +617,8 @@ function DayContent({
           logs={logs}
           onLogChange={onLogChange}
           previousLogs={previousLogs}
+          readOnly={readOnly}
+          onAuthPrompt={onAuthPrompt}
         />
       </div>
     </div>
@@ -583,7 +626,8 @@ function DayContent({
 }
 
 export default function WorkoutViewer() {
-  const { user, isAnonymous } = useAuth();
+  const { user, isAnonymous, loading } = useAuth();
+  const [showSplash, setShowSplash] = useState<boolean | null>(null);
   const [activeView, setActiveView] = useState<"workout" | "history" | "account">("workout");
   const [activeDay, setActiveDay] = useState(0);
   const [hydrated, setHydrated] = useState(false);
@@ -633,6 +677,9 @@ export default function WorkoutViewer() {
     setActiveDay(getTodayTab());
     setHydrated(true);
     setExerciseLogs(getDraft());
+    // Show splash if user hasn't dismissed it before
+    const dismissed = localStorage.getItem("dungym-splash-dismissed");
+    setShowSplash(!dismissed);
   }, []);
 
   // Load previous session (async — Supabase with localStorage fallback)
@@ -877,6 +924,28 @@ export default function WorkoutViewer() {
     setIsSwiping(false);
   }
 
+  // Show splash for anonymous users who haven't dismissed it
+  // Wait for both auth loading and splash state hydration before deciding
+  if (loading || showSplash === null) {
+    return null;
+  }
+
+  if (showSplash && isAnonymous) {
+    return (
+      <SplashScreen
+        onViewProgram={() => {
+          localStorage.setItem("dungym-splash-dismissed", "1");
+          setShowSplash(false);
+        }}
+        onSignIn={() => {
+          localStorage.setItem("dungym-splash-dismissed", "1");
+          setShowSplash(false);
+          setActiveView("account");
+        }}
+      />
+    );
+  }
+
   return (
     <div
       className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-[calc(2rem+env(safe-area-inset-top))] pb-0 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))]"
@@ -955,6 +1024,8 @@ export default function WorkoutViewer() {
                 logs={exerciseLogs}
                 onLogChange={updateLog}
                 previousLogs={previousSession}
+                readOnly={isAnonymous}
+                onAuthPrompt={() => setActiveView("account")}
               />
             </div>
 
@@ -986,6 +1057,8 @@ export default function WorkoutViewer() {
                     logs={exerciseLogs}
                     onLogChange={updateLog}
                     previousLogs={previousSession}
+                    readOnly={isAnonymous}
+                    onAuthPrompt={() => setActiveView("account")}
                   />
                 ))}
               </div>
@@ -1147,7 +1220,7 @@ export default function WorkoutViewer() {
             <span className="text-[10px] font-medium">Workout</span>
           </button>
           <button
-            onClick={() => setActiveView("history")}
+            onClick={() => setActiveView(isAnonymous ? "account" : "history")}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 transition-colors ${
               activeView === "history" ? "text-white" : "text-zinc-600"
             }`}

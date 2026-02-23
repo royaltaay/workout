@@ -74,7 +74,7 @@ export const exerciseDetails: Record<string, ExerciseDetail> = {
   "Bench Press": {
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     instructions:
-      "Retract your shoulder blades and arch slightly. Lower the bar with control to your mid-chest, then press evenly.",
+      "Retract your shoulder blades and arch slightly. Lower the weight with control to your mid-chest, then press evenly.",
   },
   "Single-Arm KB Row": {
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -101,7 +101,7 @@ export const exerciseDetails: Record<string, ExerciseDetail> = {
     instructions:
       "Hold a kettlebell at your chest. Shift your weight to one side, sitting deep into the hip while the other leg stays straight.",
   },
-  "Barbell RDL": {
+  RDL: {
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     instructions:
       "Keep a soft knee and hinge at the hips, pushing your glutes back. Lower until you feel a deep hamstring stretch, then drive up.",
@@ -225,7 +225,7 @@ export const workoutPlan: WorkoutPlan = {
           rounds: 3,
           exercises: [
             {
-              name: "Barbell RDL",
+              name: "RDL",
               reps: "8–10",
               tempo: "3-1-1-0",
               rpe: "7–8",

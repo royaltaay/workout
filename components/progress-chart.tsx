@@ -48,6 +48,7 @@ function niceStep(range: number): number {
 }
 
 function computeAxis(values: number[]) {
+  if (values.length === 0) return { minV: 0, maxV: 1, range: 1, gridLines: [0, 1] };
   const rawMin = Math.min(...values);
   const rawMax = Math.max(...values);
   const dataRange = rawMax - rawMin;

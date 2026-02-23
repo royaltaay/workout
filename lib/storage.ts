@@ -75,7 +75,11 @@ export async function getSessions(): Promise<WorkoutSession[]> {
       .select("id, date, day, duration, exercises")
       .order("date", { ascending: false });
 
-    if (!error && data && data.length > 0) return data as WorkoutSession[];
+    if (!error && data) {
+      // If Supabase has sessions, use them; otherwise check localStorage
+      // (covers offline-first data or dev seed data)
+      return data.length > 0 ? data as WorkoutSession[] : getLocalSessions();
+    }
   }
   return getLocalSessions();
 }

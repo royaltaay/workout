@@ -36,13 +36,24 @@ for (const day of workoutPlan.days) {
   legacyDayToId[day.title] = day.id;
 }
 
+/** Normalize dashes (em dash, en dash, hyphen) for comparison */
+function normalizeDashes(s: string): string {
+  return s.replace(/[\u2014\u2013\u2012\u2015-]/g, "-");
+}
+
 /** Resolve a stored day string to a stable day ID */
 function resolveDayId(raw: string): string {
   // Direct lookup handles exact matches for id, label, or title
   if (legacyDayToId[raw]) return legacyDayToId[raw];
 
+  // Try matching with normalized dashes (handles em/en dash mismatches)
+  const normalizedRaw = normalizeDashes(raw);
+  for (const [key, id] of Object.entries(legacyDayToId)) {
+    if (normalizeDashes(key) === normalizedRaw) return id;
+  }
+
   // Try matching by day number (e.g. "Day 1 — Push / Anti-Extension" variants)
-  const numMatch = raw.match(/Day (\d)/);
+  const numMatch = raw.match(/Day\s*(\d)/i);
   if (numMatch) {
     for (const day of workoutPlan.days) {
       if (day.label === `Day ${numMatch[1]}`) return day.id;
@@ -55,6 +66,11 @@ function resolveDayId(raw: string): string {
     // Extract focus keyword from title: "Day 1 — Push / Anti-Extension" → "Push"
     const focus = day.title.split("—")[1]?.split("/")[0]?.trim();
     if (focus && rawLower.includes(focus.toLowerCase())) return day.id;
+  }
+
+  // Try matching by day ID as substring (e.g. raw contains "push", "pull", "carry")
+  for (const day of workoutPlan.days) {
+    if (rawLower.includes(day.id)) return day.id;
   }
 
   // Can't resolve — return as-is (won't match any day, but data isn't lost)

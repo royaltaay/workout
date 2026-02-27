@@ -16,6 +16,7 @@ export default function AccountView() {
   const [error, setError] = useState<string | null>(null);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -95,20 +96,26 @@ export default function AccountView() {
 
   async function handleManage() {
     setPortalLoading(true);
+    setPortalError(null);
     try {
       const sb = getSupabase();
-      if (!sb) return;
+      if (!sb) { setPortalError("Unable to connect"); return; }
       const { data: { session } } = await sb.auth.getSession();
-      if (!session?.access_token) return;
+      if (!session?.access_token) { setPortalError("Please sign in again"); return; }
 
       const res = await fetch("/api/portal", {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      const { url } = await res.json();
-      if (url) window.location.href = url;
+      const body = await res.json();
+      if (body.url) {
+        window.location.href = body.url;
+        return;
+      }
+      setPortalError(body.error ?? "Unable to open subscription portal");
     } catch (err) {
       console.error("Portal error:", err);
+      setPortalError("Something went wrong. Try again.");
     } finally {
       setPortalLoading(false);
     }
@@ -242,13 +249,18 @@ export default function AccountView() {
             </div>
 
             {hasAccess && (
-              <button
-                onClick={handleManage}
-                disabled={portalLoading}
-                className="mt-3 w-full rounded-xl border border-white/10 py-3 text-sm font-medium text-zinc-400 transition-colors active:text-white disabled:opacity-40"
-              >
-                {portalLoading ? "Loading..." : "Manage subscription"}
-              </button>
+              <>
+                <button
+                  onClick={handleManage}
+                  disabled={portalLoading}
+                  className="mt-3 w-full rounded-xl border border-white/10 py-3 text-sm font-medium text-zinc-400 transition-colors active:text-white disabled:opacity-40"
+                >
+                  {portalLoading ? "Loading..." : "Manage subscription"}
+                </button>
+                {portalError && (
+                  <p className="mt-2 text-center text-xs text-red-400">{portalError}</p>
+                )}
+              </>
             )}
 
             {!hasAccess && (

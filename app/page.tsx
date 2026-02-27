@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import LandingPage from "@/components/landing-page";
+import AuthRedirect from "@/components/auth-redirect";
 import { homePageContent } from "@/lib/landing-pages";
 
 export const metadata: Metadata = {
@@ -13,12 +14,14 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <LandingPage
-      headline={homePageContent.headline}
-      subheadline={homePageContent.subheadline}
-      heroDescription={homePageContent.heroDescription}
-      features={homePageContent.features}
-      faq={homePageContent.faq}
-    />
+    <AuthRedirect>
+      <LandingPage
+        headline={homePageContent.headline}
+        subheadline={homePageContent.subheadline}
+        heroDescription={homePageContent.heroDescription}
+        features={homePageContent.features}
+        faq={homePageContent.faq}
+      />
+    </AuthRedirect>
   );
 }

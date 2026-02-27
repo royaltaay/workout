@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Dungym — Kettlebell Strength Program You Can Do at Home",
+    default: "Dungym | Kettlebell Strength Program You Can Do at Home",
     template: "%s | Dungym",
   },
   description:
@@ -22,14 +22,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Dungym",
-    title: "Dungym — Kettlebell Strength Program You Can Do at Home",
+    title: "Dungym | Kettlebell Strength Program You Can Do at Home",
     description:
       "A 3-day-a-week kettlebell strength program built around a functional complex plus hypertrophy supersets. Do it in your garage. No gym required.",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dungym — Kettlebell Strength Program You Can Do at Home",
+    title: "Dungym | Kettlebell Strength Program You Can Do at Home",
     description:
       "A 3-day-a-week kettlebell strength program built around a functional complex plus hypertrophy supersets.",
     images: ["/og-image.jpg"],

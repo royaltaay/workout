@@ -19,15 +19,15 @@ export type LandingPageData = {
 
 // The canonical home page content
 export const homePageContent: Omit<LandingPageData, "slug"> = {
-  title: "Dungym — Kettlebell Strength Program You Can Do at Home",
-  metaTitle: "Dungym — Kettlebell Strength Program You Can Do at Home",
+  title: "Dungym | Kettlebell Strength Program You Can Do at Home",
+  metaTitle: "Dungym | Kettlebell Strength Program You Can Do at Home",
   metaDescription:
     "A 3-day-a-week kettlebell strength program built around a functional complex plus hypertrophy supersets. Do it in your garage, your basement, or anywhere. No gym required.",
   headline: "Strength training that fits your life.",
   subheadline:
     "A 3-day kettlebell program built around a functional complex, supplemented with hypertrophy work. Do it in your garage.",
   heroDescription:
-    "Dungym is an opinionated workout plan. Three sessions a week. Every session starts with a kettlebell complex — swings, cleans, squats, presses, windmills — that builds functional strength and endurance simultaneously. Then you finish with a traditional hypertrophy superset: bench press, pull-ups, RDLs, carries. The whole thing takes about 45 minutes.",
+    "Dungym is an opinionated workout plan. Three sessions a week. Every session starts with a kettlebell complex (swings, cleans, squats, presses, windmills) that builds functional strength and endurance simultaneously. Then you finish with a traditional hypertrophy superset: bench press, pull-ups, RDLs, carries. About 40 minutes per session.",
   features: [
     {
       title: "Kettlebell complex every session",
@@ -52,7 +52,7 @@ export const homePageContent: Omit<LandingPageData, "slug"> = {
     {
       title: "Minimal equipment",
       description:
-        "Two kettlebells (heavy and light), a bench, and a pull-up bar. That's it. No cable machines, no gym membership.",
+        "One kettlebell is all you need to start. Add a bench and a pull-up bar when you're ready. No cable machines, no gym membership.",
     },
     {
       title: "Track your progress",
@@ -64,17 +64,17 @@ export const homePageContent: Omit<LandingPageData, "slug"> = {
     {
       question: "What equipment do I need?",
       answer:
-        "Two kettlebells (one heavy, one light), a flat bench, and a pull-up bar. A set of dumbbells is helpful for RDLs and carries but not required — kettlebells work fine.",
+        "One kettlebell to start. A second (lighter) bell, a flat bench, and a pull-up bar round out the full setup. Dumbbells are helpful for RDLs and carries but not required.",
     },
     {
       question: "How long does each workout take?",
       answer:
-        "About 45 minutes including warm-up. The complex takes about 15 minutes, the superset takes about 20, and the finisher wraps it up.",
+        "About 40 minutes including warm-up. The complex takes about 15 minutes, the superset takes about 20, and the finisher wraps it up.",
     },
     {
       question: "Is this for beginners?",
       answer:
-        "You should be comfortable with basic kettlebell movements — swings, cleans, and presses. If you can swing a kettlebell safely, you can do this program. The tempo work will teach you the rest.",
+        "You should be comfortable with basic kettlebell movements: swings, cleans, and presses. If you can swing a kettlebell safely, you can do this program. The tempo work will teach you the rest.",
     },
     {
       question: "How do I progress?",
@@ -84,7 +84,7 @@ export const homePageContent: Omit<LandingPageData, "slug"> = {
     {
       question: "Can I do this at home?",
       answer:
-        "That's the whole point. The name comes from training in a garage — the dungeon. All you need is enough space to swing a kettlebell and a pull-up bar.",
+        "That's the whole point. The name comes from training in a garage (the dungeon). All you need is enough space to swing a kettlebell and a pull-up bar.",
     },
     {
       question: "What makes this different from other kettlebell programs?",
@@ -109,15 +109,15 @@ export const homePageContent: Omit<LandingPageData, "slug"> = {
 export const landingPages: LandingPageData[] = [
   {
     slug: "kettlebell-workout-plan",
-    title: "Kettlebell Workout Plan — 3 Days a Week | Dungym",
-    metaTitle: "Kettlebell Workout Plan — 3 Days a Week | Dungym",
+    title: "Kettlebell Workout Plan, 3 Days a Week | Dungym",
+    metaTitle: "Kettlebell Workout Plan, 3 Days a Week | Dungym",
     metaDescription:
       "A structured kettlebell workout plan you can follow 3 days a week. Built around a functional complex with swings, cleans, presses, and windmills plus hypertrophy supersets.",
     headline: "A kettlebell workout plan that actually builds strength.",
     subheadline:
       "Three days a week. A functional complex plus hypertrophy work. Follow the plan, track your progress.",
     heroDescription:
-      "Most kettlebell programs are just random circuits. Dungym is a structured 3-day program where every session starts with a kettlebell complex — swings, cleans, front squats, presses, and windmills — then adds traditional strength work like bench press, pull-ups, and RDLs. Prescribed tempo on every rep. Real progression.",
+      "Most kettlebell programs are just random circuits. Dungym is a structured 3-day program where every session starts with a kettlebell complex (swings, cleans, front squats, presses, and windmills) then adds traditional strength work like bench press, pull-ups, and RDLs. Prescribed tempo on every rep. Real progression.",
     features: [
       {
         title: "Structured, not random",
@@ -154,12 +154,12 @@ export const landingPages: LandingPageData[] = [
       {
         question: "What does a typical kettlebell workout look like?",
         answer:
-          "Warm-up (5 min of hip 90/90s and arm bars), then 3 rounds of the kettlebell complex (swings, clean-squat-press, windmills), then a superset of two strength exercises for 3 rounds, then a finisher. About 45 minutes total.",
+          "Warm-up (5 min of hip 90/90s and arm bars), then 3 rounds of the kettlebell complex (swings, clean-squat-press, windmills), then a superset of two strength exercises for 3 rounds, then a finisher. About 40 minutes total.",
       },
       {
         question: "How heavy should my kettlebell be?",
         answer:
-          "For the complex: your heavy bell should make round 3 challenging but not sloppy. Most men start with a 24kg heavy and 16kg light. Most women start with a 16kg heavy and 12kg light. Adjust based on your press strength.",
+          "Your bell should make round 3 challenging but not sloppy. Most men start with a 24kg. Most women start with a 16kg. Adjust based on your press strength. A lighter second bell is helpful for windmills but not required.",
       },
       {
         question: "Can I do this 4 or 5 days a week?",
@@ -177,20 +177,20 @@ export const landingPages: LandingPageData[] = [
   },
   {
     slug: "home-gym-workout-program",
-    title: "Home Gym Workout Program — Minimal Equipment | Dungym",
-    metaTitle: "Home Gym Workout Program — Minimal Equipment | Dungym",
+    title: "Home Gym Workout Program, Minimal Equipment | Dungym",
+    metaTitle: "Home Gym Workout Program, Minimal Equipment | Dungym",
     metaDescription:
-      "A complete home gym workout program that needs just kettlebells, a bench, and a pull-up bar. Three days a week, 45 minutes per session. Built for garage gyms.",
+      "A complete home gym workout program that needs just a kettlebell, a bench, and a pull-up bar. Three days a week, 40 minutes per session. Built for garage gyms.",
     headline: "A complete workout program for your home gym.",
     subheadline:
-      "Two kettlebells, a bench, and a pull-up bar. Three days a week. That's all you need.",
+      "One kettlebell, a bench, and a pull-up bar. Three days a week. That's all you need.",
     heroDescription:
-      "You don't need a commercial gym to get strong. Dungym was built in a garage — that's where the name comes from. Every session uses kettlebells for the functional complex, then basic equipment (bench, pull-up bar, dumbbells) for strength supersets. 45 minutes, three days a week. No machines, no cables, no excuses.",
+      "You don't need a commercial gym to get strong. Dungym was built in a garage. That's where the name comes from. Every session uses a kettlebell for the functional complex, then basic equipment (bench, pull-up bar) for strength supersets. 40 minutes, three days a week. No machines, no cables, no excuses.",
     features: [
       {
         title: "Built for garage gyms",
         description:
-          "The program was designed and tested in a garage. Two kettlebells, a flat bench, a pull-up bar, and some floor space. That's the whole setup.",
+          "The program was designed and tested in a garage. A kettlebell, a flat bench, a pull-up bar, and some floor space. That's the whole setup.",
       },
       {
         title: "No machines needed",
@@ -198,9 +198,9 @@ export const landingPages: LandingPageData[] = [
           "Every exercise uses free weights or bodyweight. Bench press, pull-ups, kettlebell swings, rows, RDLs, farmer's carries. Nothing requires a cable stack.",
       },
       {
-        title: "45 minutes per session",
+        title: "40 minutes per session",
         description:
-          "Walk into your garage, warm up for 5 minutes, train for 40. No commute, no waiting for equipment, no distractions.",
+          "Walk into your garage, warm up for 5 minutes, train for 35. No commute, no waiting for equipment, no distractions.",
       },
       {
         title: "Strength and conditioning",
@@ -222,7 +222,7 @@ export const landingPages: LandingPageData[] = [
       {
         question: "What's the minimum equipment I need?",
         answer:
-          "Two kettlebells (one heavy, one light), a flat bench, and a pull-up bar. A pair of dumbbells helps for RDLs and farmer's carries but isn't required.",
+          "One kettlebell to start. A flat bench and a pull-up bar complete the setup. A second lighter bell and a pair of dumbbells are nice to have but not required.",
       },
       {
         question: "How much space do I need?",
@@ -232,7 +232,7 @@ export const landingPages: LandingPageData[] = [
       {
         question: "Is this as effective as a gym program?",
         answer:
-          "For building functional strength, conditioning, and lean muscle — yes. You won't isolate small muscles like you would with cable machines, but the compound movements and kettlebell work build more practical strength.",
+          "For building functional strength, conditioning, and lean muscle, yes. You won't isolate small muscles like you would with cable machines, but the compound movements and kettlebell work build more practical strength.",
       },
     ],
     keywords: [
@@ -245,15 +245,15 @@ export const landingPages: LandingPageData[] = [
   },
   {
     slug: "3-day-workout-plan",
-    title: "3-Day Workout Plan — Full Body Strength | Dungym",
-    metaTitle: "3-Day Workout Plan — Full Body Strength | Dungym",
+    title: "3-Day Workout Plan, Full Body Strength | Dungym",
+    metaTitle: "3-Day Workout Plan, Full Body Strength | Dungym",
     metaDescription:
-      "A 3-day-a-week workout plan combining kettlebell complexes with traditional strength training. Push, pull, and carry splits. 45 minutes per session.",
+      "A 3-day-a-week workout plan combining kettlebell complexes with traditional strength training. Push, pull, and carry splits. 40 minutes per session.",
     headline: "Three days a week. That's all you need.",
     subheadline:
       "Monday push. Wednesday pull. Friday carry. A kettlebell complex every session, plus hypertrophy supersets.",
     heroDescription:
-      "You don't need to train 6 days a week. Dungym is a 3-day program where every session counts. Each day opens with a kettlebell complex for conditioning, then moves to a focused superset — push day, pull day, carry day. Tempo-controlled reps, built-in rest timers, and progress tracking. About 45 minutes per session.",
+      "You don't need to train 6 days a week. Dungym is a 3-day program where every session counts. Each day opens with a kettlebell complex for conditioning, then moves to a focused superset (push day, pull day, carry day). Tempo-controlled reps, built-in rest timers, and progress tracking. About 40 minutes per session.",
     features: [
       {
         title: "Push / Pull / Carry split",
@@ -271,9 +271,9 @@ export const landingPages: LandingPageData[] = [
           "Train Monday, Wednesday, Friday. Rest Tuesday, Thursday, Saturday, Sunday. Recovery is when adaptation happens.",
       },
       {
-        title: "45-minute sessions",
+        title: "40-minute sessions",
         description:
-          "5-minute warm-up, 15-minute complex, 20-minute superset, 5-minute finisher. Dense, efficient training.",
+          "5-minute warm-up, 15-minute complex, 15-minute superset, 5-minute finisher. Dense, efficient training.",
       },
       {
         title: "Sustainable for years",
@@ -295,7 +295,7 @@ export const landingPages: LandingPageData[] = [
       {
         question: "What should I do on rest days?",
         answer:
-          "Rest. Light walking, mobility work, or Zone 2 cardio are fine. Don't add extra lifting — the program is designed around the recovery built into the schedule.",
+          "Rest. Light walking, mobility work, or Zone 2 cardio are fine. Don't add extra lifting. The program is designed around the recovery built into the schedule.",
       },
       {
         question: "Can I change the days?",
@@ -336,7 +336,7 @@ export const landingPages: LandingPageData[] = [
       {
         title: "Mobility built into the program",
         description:
-          "Windmills, Cossack squats, dead bugs, and warm-up flows. You don't need a separate mobility routine — it's in the training.",
+          "Windmills, Cossack squats, dead bugs, and warm-up flows. You don't need a separate mobility routine. It's in the training.",
       },
       {
         title: "Anti-rotation and anti-extension",
@@ -351,14 +351,14 @@ export const landingPages: LandingPageData[] = [
       {
         title: "Minimal equipment, maximum transfer",
         description:
-          "Kettlebells, a bench, and a bar. No machines that lock you into fixed movement paths. Every rep requires stabilization.",
+          "A kettlebell, a bench, and a bar. No machines that lock you into fixed movement paths. Every rep requires stabilization.",
       },
     ],
     faq: [
       {
         question: "What is functional strength training?",
         answer:
-          "Training that builds strength in movement patterns you use in daily life — hinging, squatting, pressing, pulling, carrying, and rotating. Dungym covers all of these patterns across the three training days.",
+          "Training that builds strength in movement patterns you use in daily life: hinging, squatting, pressing, pulling, carrying, and rotating. Dungym covers all of these patterns across the three training days.",
       },
       {
         question: "Will this help with sports performance?",
@@ -381,16 +381,16 @@ export const landingPages: LandingPageData[] = [
   },
   {
     slug: "kettlebell-complex-workout",
-    title: "Kettlebell Complex Workout — Build Strength & Conditioning | Dungym",
+    title: "Kettlebell Complex Workout, Build Strength and Conditioning | Dungym",
     metaTitle:
-      "Kettlebell Complex Workout — Build Strength & Conditioning | Dungym",
+      "Kettlebell Complex Workout, Build Strength and Conditioning | Dungym",
     metaDescription:
       "A kettlebell complex workout combining swings, cleans, front squats, presses, and windmills. Three rounds to build strength, conditioning, and mobility simultaneously.",
     headline: "One complex. Total-body training.",
     subheadline:
       "Swings, cleans, front squats, presses, windmills. Three rounds. The foundation of every Dungym session.",
     heroDescription:
-      "A kettlebell complex is a series of movements performed back-to-back without putting the bell down. The Dungym complex chains single-arm swings, a clean into front squat into press, and windmills — 3 rounds per arm. It takes about 15 minutes and builds strength, conditioning, and mobility simultaneously. Then you move to a hypertrophy superset for targeted muscle work.",
+      "A kettlebell complex is a series of movements performed back-to-back without putting the bell down. The Dungym complex chains single-arm swings, a clean into front squat into press, and windmills. 3 rounds per arm. It takes about 15 minutes and builds strength, conditioning, and mobility simultaneously. Then you move to a hypertrophy superset for targeted muscle work.",
     features: [
       {
         title: "Five movements, one flow",
@@ -408,9 +408,9 @@ export const landingPages: LandingPageData[] = [
           "Horizontal pull (swings), vertical press, hip hinge (windmill), squat, and lateral stability. One complex trains your body in all planes of movement.",
       },
       {
-        title: "Heavy and light bells",
+        title: "One bell is enough",
         description:
-          "Swings and clean-squat-press use the heavy bell for power. Windmills use the light bell for mobility and control. Different tools for different goals.",
+          "The complex uses a single kettlebell. Swings and clean-squat-press use your working weight. Windmills can use the same bell at lighter effort or a second lighter bell.",
       },
       {
         title: "Plus hypertrophy work",
@@ -432,7 +432,7 @@ export const landingPages: LandingPageData[] = [
       {
         question: "How heavy should the kettlebell be for the complex?",
         answer:
-          "Heavy bell (for swings and clean-squat-press): should make round 3 challenging but clean. If your press breaks down, go lighter. Light bell (for windmills): should allow slow, controlled movement. Most men: 24kg/16kg. Most women: 16kg/12kg.",
+          "It should make round 3 challenging but clean. If your press breaks down, go lighter. Most men start with a 24kg. Most women start with a 16kg.",
       },
       {
         question: "How long does the complex take?",

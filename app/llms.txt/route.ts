@@ -21,16 +21,16 @@ The program runs 3 days per week:
 ## The Kettlebell Complex (every session)
 
 3 rounds, 90-120 sec rest between rounds:
-1. Single-Arm Swings — 10/arm, heavy bell, explosive
-2. SA Clean → Front Squat → Press — 5/arm, heavy bell, controlled
-3. Windmill — 5-8/side, light bell, slow tempo (3-1-3-1)
+1. Single-Arm Swings: 10/arm, explosive
+2. SA Clean to Front Squat to Press: 5/arm, controlled
+3. Windmill: 5-8/side, slow tempo (3-1-3-1)
 
 ## Equipment Required
 
-- Two kettlebells (one heavy, one light)
+- One kettlebell (minimum to start)
 - Flat bench
 - Pull-up bar
-- Optional: dumbbells for RDLs and carries
+- Optional: a second lighter kettlebell, dumbbells for RDLs and carries
 
 ## Key Features
 
@@ -38,13 +38,14 @@ The program runs 3 days per week:
 - RPE-based intensity guidance
 - Built-in rest timer and progress tracking
 - Works in a garage, basement, or home gym
-- About 45 minutes per session
+- About 40 minutes per session
+- $4/mo for tracking and progress charts
 
 ## Progression
 
-- Progress the heavy bell when 3 rounds feel controlled
+- Move up one bell size when 3 rounds feel controlled
 - Increase superset weight when hitting top of rep range with clean tempo
-- Light bell should allow slow, controlled windmills — no grinding
+- Windmills should be slow and controlled, never grinding
 
 ## Links
 

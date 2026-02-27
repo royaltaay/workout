@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { SubscriptionProvider } from "@/lib/subscription-context";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,21 +9,29 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Dungym",
-  description: "A workout program by Taylor Prince",
+  title: {
+    default: "Dungym — Kettlebell Strength Program You Can Do at Home",
+    template: "%s | Dungym",
+  },
+  description:
+    "A 3-day-a-week kettlebell strength program built around a functional complex plus hypertrophy supersets. Do it in your garage. No gym required.",
   icons: {
     icon: "/icon.png",
     apple: "/apple-icon.png",
   },
   openGraph: {
-    title: "Dungym",
-    description: "A workout program by Taylor Prince",
-    images: [{ url: "/og-image.jpg" }],
+    type: "website",
+    siteName: "Dungym",
+    title: "Dungym — Kettlebell Strength Program You Can Do at Home",
+    description:
+      "A 3-day-a-week kettlebell strength program built around a functional complex plus hypertrophy supersets. Do it in your garage. No gym required.",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dungym",
-    description: "A workout program by Taylor Prince",
+    title: "Dungym — Kettlebell Strength Program You Can Do at Home",
+    description:
+      "A 3-day-a-week kettlebell strength program built around a functional complex plus hypertrophy supersets.",
     images: ["/og-image.jpg"],
   },
   manifest: "/manifest.json",
@@ -30,6 +39,10 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Dungym",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -61,7 +74,9 @@ export default function RootLayout({
           </svg>
           <span className="mt-3 text-lg font-bold text-white">Dungym</span>
         </div>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <SubscriptionProvider>{children}</SubscriptionProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dungym
+
+A kettlebell workout program by Taylor Prince. Built with Next.js 16, Tailwind 4, Supabase, and Stripe.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.local.example` to `.env.local` and fill in your keys.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run this SQL in the Supabase SQL Editor to create the subscriptions table:
 
-## Learn More
+```sql
+create table public.subscriptions (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  status text not null default 'free',
+  current_period_end timestamptz,
+  updated_at timestamptz default now()
+);
 
-To learn more about Next.js, take a look at the following resources:
+alter table public.subscriptions enable row level security;
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+create policy "Users can read own subscription"
+  on public.subscriptions for select
+  using (auth.uid() = user_id);
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Dev Console Commands
 
-## Deploy on Vercel
+Reset the splash screen (shows on next refresh):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```js
+localStorage.removeItem("dungym-splash-dismissed")
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Clear all local workout data:
+
+```js
+localStorage.removeItem("dungym-draft")
+localStorage.removeItem("dungym-sessions")
+```
+
+Sign out the anonymous session (useful for testing auth):
+
+```js
+localStorage.removeItem("sb-azvlkwsgqfwukbtdzoez-auth-token")
+```
+
+## Stripe Webhook
+
+The webhook endpoint is at `/api/webhooks/stripe`. Configure this URL in the Stripe dashboard:
+
+```
+https://dungym.app/api/webhooks/stripe
+```
+
+Events to listen for:
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`

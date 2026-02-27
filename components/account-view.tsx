@@ -121,6 +121,11 @@ export default function AccountView() {
           <div className="animate-in">
             <h2 className="text-lg font-semibold text-white">Account</h2>
             <p className="mt-1 text-sm text-zinc-400">{user?.email}</p>
+            {process.env.NEXT_PUBLIC_OWNER_EMAIL && process.env.NEXT_PUBLIC_OWNER_PASSWORD && (
+              <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+                Auto-signed in — remove OWNER env vars once email auth is live.
+              </p>
+            )}
             <button
               onClick={handleSignOut}
               className="mt-8 w-full rounded-xl border border-white/10 py-3 text-sm font-medium text-zinc-400 transition-colors active:text-white"

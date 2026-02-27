@@ -49,6 +49,18 @@ export async function verifyOtp(email: string, token: string): Promise<{ error: 
   return { error: error?.message ?? null };
 }
 
+export async function signInWithPassword(
+  email: string,
+  password: string,
+): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: "Supabase not configured" };
+
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (!error) authReady = true;
+  return { error: error?.message ?? null };
+}
+
 export async function signOut(): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;

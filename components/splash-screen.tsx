@@ -37,7 +37,7 @@ export default function SplashScreen({
         style={{ animationDelay: "100ms" }}
       >
         <div className="flex gap-3">
-          <span className="mt-0.5 text-sm text-red-500/70">&#9632;</span>
+          <span className="mt-0.5 text-sm text-red-500/70">&#9670;</span>
           <div>
             <p className="text-sm font-medium text-zinc-300">The Complex</p>
             <p className="mt-0.5 text-sm text-zinc-500">
@@ -47,7 +47,7 @@ export default function SplashScreen({
         </div>
 
         <div className="flex gap-3">
-          <span className="mt-0.5 text-sm text-red-500/70">&#9632;</span>
+          <span className="mt-0.5 text-sm text-red-500/70">&#9670;</span>
           <div>
             <p className="text-sm font-medium text-zinc-300">Superset + Finisher</p>
             <p className="mt-0.5 text-sm text-zinc-500">
@@ -57,7 +57,7 @@ export default function SplashScreen({
         </div>
 
         <div className="flex gap-3">
-          <span className="mt-0.5 text-sm text-red-500/70">&#9632;</span>
+          <span className="mt-0.5 text-sm text-red-500/70">&#9670;</span>
           <div>
             <p className="text-sm font-medium text-zinc-300">Tempo controlled</p>
             <p className="mt-0.5 text-sm text-zinc-500">
@@ -79,7 +79,7 @@ export default function SplashScreen({
           onClick={onSignIn}
           className="mt-3 w-full py-2 text-center text-sm text-zinc-500 transition-colors active:text-white"
         >
-          Sign in for tracking & progress
+          Subscribe for tracking & progress
         </button>
       </div>
     </div>

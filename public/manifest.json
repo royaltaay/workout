@@ -1,8 +1,8 @@
 {
   "name": "Dungym",
   "short_name": "Dungym",
-  "description": "A workout program by Taylor Prince",
-  "start_url": "/",
+  "description": "A 3-day kettlebell strength program. Functional complex plus hypertrophy supersets.",
+  "start_url": "/program",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",

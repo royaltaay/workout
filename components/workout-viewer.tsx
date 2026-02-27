@@ -19,10 +19,12 @@ import {
   getLastSession,
 } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
+import { useSubscription } from "@/lib/subscription-context";
 import HistoryView from "./history-view";
 import StatsView from "./stats-view";
 import AccountView from "./account-view";
 import SplashScreen from "./splash-screen";
+import UpgradeModal from "./upgrade-modal";
 
 function parseRest(rest: string): { lower: number; upper: number } {
   const m = rest.match(/(\d+)[–-](\d+)/);
@@ -179,6 +181,7 @@ function ExerciseDetail({
   onToggle,
   children,
   readOnly,
+  readOnlyLabel,
   onAuthPrompt,
 }: {
   id: string;
@@ -192,6 +195,7 @@ function ExerciseDetail({
   onToggle: () => void;
   children: React.ReactNode;
   readOnly?: boolean;
+  readOnlyLabel?: string;
   onAuthPrompt?: () => void;
 }) {
   const detail = exerciseDetails[id];
@@ -272,7 +276,7 @@ function ExerciseDetail({
                 <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
-                Sign in to log your sets
+                {readOnlyLabel ?? "Sign in to log your sets"}
               </button>
             ) : (
             <div className="space-y-1">
@@ -382,6 +386,7 @@ function ComplexCard({
   onLogChange,
   previousLogs,
   readOnly,
+  readOnlyLabel,
   onAuthPrompt,
 }: {
   completed: number;
@@ -393,6 +398,7 @@ function ComplexCard({
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
   readOnly?: boolean;
+  readOnlyLabel?: string;
   onAuthPrompt?: () => void;
 }) {
   const { complex } = workoutPlan;
@@ -417,6 +423,7 @@ function ComplexCard({
               expanded={openExercise === ex.id}
               onToggle={() => setOpenExercise(openExercise === ex.id ? null : ex.id)}
               readOnly={readOnly}
+              readOnlyLabel={readOnlyLabel}
               onAuthPrompt={onAuthPrompt}
             >
               <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
@@ -448,6 +455,7 @@ function SupersetCard({
   onLogChange,
   previousLogs,
   readOnly,
+  readOnlyLabel,
   onAuthPrompt,
 }: {
   superset: Day["supersets"][number];
@@ -460,6 +468,7 @@ function SupersetCard({
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
   readOnly?: boolean;
+  readOnlyLabel?: string;
   onAuthPrompt?: () => void;
 }) {
   const allDone = completed >= superset.rounds;
@@ -483,6 +492,7 @@ function SupersetCard({
               expanded={openExercise === ex.id}
               onToggle={() => setOpenExercise(openExercise === ex.id ? null : ex.id)}
               readOnly={readOnly}
+              readOnlyLabel={readOnlyLabel}
               onAuthPrompt={onAuthPrompt}
             >
               <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
@@ -512,6 +522,7 @@ function FinisherCard({
   onLogChange,
   previousLogs,
   readOnly,
+  readOnlyLabel,
   onAuthPrompt,
 }: {
   finisher: Day["finisher"];
@@ -524,6 +535,7 @@ function FinisherCard({
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
   readOnly?: boolean;
+  readOnlyLabel?: string;
   onAuthPrompt?: () => void;
 }) {
   const allDone = completed >= finisher.sets;
@@ -545,6 +557,7 @@ function FinisherCard({
           expanded={openExercise === finisher.id}
           onToggle={() => setOpenExercise(openExercise === finisher.id ? null : finisher.id)}
           readOnly={readOnly}
+          readOnlyLabel={readOnlyLabel}
           onAuthPrompt={onAuthPrompt}
         >
           <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
@@ -576,6 +589,7 @@ function DayContent({
   onLogChange,
   previousLogs,
   readOnly,
+  readOnlyLabel,
   onAuthPrompt,
 }: {
   day: Day;
@@ -588,6 +602,7 @@ function DayContent({
   onLogChange: (name: string, entries: SetEntry[]) => void;
   previousLogs: Record<string, SetEntry[]> | undefined;
   readOnly?: boolean;
+  readOnlyLabel?: string;
   onAuthPrompt?: () => void;
 }) {
   return (
@@ -609,6 +624,7 @@ function DayContent({
             onLogChange={onLogChange}
             previousLogs={previousLogs}
             readOnly={readOnly}
+            readOnlyLabel={readOnlyLabel}
             onAuthPrompt={onAuthPrompt}
           />
         ))}
@@ -625,6 +641,7 @@ function DayContent({
           onLogChange={onLogChange}
           previousLogs={previousLogs}
           readOnly={readOnly}
+          readOnlyLabel={readOnlyLabel}
           onAuthPrompt={onAuthPrompt}
         />
       </div>
@@ -634,7 +651,9 @@ function DayContent({
 
 export default function WorkoutViewer() {
   const { user, isAnonymous, loading } = useAuth();
+  const { hasAccess, loading: subLoading, refresh: refreshSubscription } = useSubscription();
   const [showSplash, setShowSplash] = useState<boolean | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activeView, setActiveView] = useState<"workout" | "history" | "stats" | "account">("workout");
   const [activeDay, setActiveDay] = useState(0);
   const [hydrated, setHydrated] = useState(false);
@@ -681,7 +700,8 @@ export default function WorkoutViewer() {
 
   // Set correct day and load draft on mount (client-side only, after hydration)
   useEffect(() => {
-    setActiveDay(getTodayTab());
+    const canAccessAllDays = !isAnonymous && hasAccess;
+    setActiveDay(canAccessAllDays ? getTodayTab() : 0);
     setHydrated(true);
     setExerciseLogs(getDraft());
     // Show splash if user hasn't dismissed it before
@@ -881,8 +901,22 @@ export default function WorkoutViewer() {
     return () => clearInterval(sessionRef.current);
   }, [sessionStart, sessionBank, allComplete]);
 
+  const readOnly = isAnonymous || !hasAccess;
+  const readOnlyLabel = isAnonymous ? "Subscribe to log your sets" : "Subscribe to log your sets";
+
+  function handleAuthPrompt() {
+    if (isAnonymous) {
+      setActiveView("account");
+    } else {
+      setShowUpgradeModal(true);
+    }
+  }
 
   function selectDay(index: number) {
+    if (index > 0 && readOnly) {
+      handleAuthPrompt();
+      return;
+    }
     setHydrated(true);
     setActiveDay(index);
     offsetRef.current = 0;
@@ -906,7 +940,8 @@ export default function WorkoutViewer() {
     if (touchRef.current.direction !== "h") return;
 
     const day = activeDayRef.current;
-    const atEdge = (day === 0 && dx > 0) || (day === workoutPlan.days.length - 1 && dx < 0);
+    const lockedRight = readOnly && day === 0 && dx < 0;
+    const atEdge = (day === 0 && dx > 0) || (day === workoutPlan.days.length - 1 && dx < 0) || lockedRight;
     offsetRef.current = atEdge ? dx * 0.2 : dx;
     setOffsetX(offsetRef.current);
   }
@@ -931,9 +966,19 @@ export default function WorkoutViewer() {
     setIsSwiping(false);
   }
 
+  // Refresh subscription after returning from Stripe checkout
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("upgraded")) {
+      refreshSubscription();
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [refreshSubscription]);
+
   // Show splash for anonymous users who haven't dismissed it
-  // Wait for both auth loading and splash state hydration before deciding
-  if (loading || showSplash === null) {
+  // Wait for auth, subscription loading, and splash state hydration
+  if (loading || subLoading || showSplash === null) {
     return null;
   }
 
@@ -986,14 +1031,17 @@ export default function WorkoutViewer() {
             <div className="flex items-center gap-1">
               {workoutPlan.days.map((d, i) => {
                 const isActive = hydrated && i === activeDay;
+                const isLocked = readOnly && i > 0;
                 return (
                   <button
                     key={d.label}
                     onClick={() => selectDay(i)}
-                    className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
-                      isActive
-                        ? "border-red-500/40 bg-[#1a1a1a] text-white"
-                        : "border-white/10 text-zinc-500 active:text-zinc-300"
+                    className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
+                      isLocked
+                        ? "border-white/5 text-zinc-700"
+                        : isActive
+                          ? "border-red-500/40 bg-[#1a1a1a] text-white"
+                          : "border-white/10 text-zinc-500 active:text-zinc-300"
                     }`}
                   >
                     {d.label}
@@ -1033,8 +1081,9 @@ export default function WorkoutViewer() {
                 logs={exerciseLogs}
                 onLogChange={updateLog}
                 previousLogs={previousSession}
-                readOnly={isAnonymous}
-                onAuthPrompt={() => setActiveView("account")}
+                readOnly={readOnly}
+                readOnlyLabel={readOnlyLabel}
+                onAuthPrompt={handleAuthPrompt}
               />
             </div>
 
@@ -1066,8 +1115,9 @@ export default function WorkoutViewer() {
                     logs={exerciseLogs}
                     onLogChange={updateLog}
                     previousLogs={previousSession}
-                    readOnly={isAnonymous}
-                    onAuthPrompt={() => setActiveView("account")}
+                    readOnly={readOnly}
+                    readOnlyLabel={readOnlyLabel}
+                    onAuthPrompt={handleAuthPrompt}
                   />
                 ))}
               </div>
@@ -1229,7 +1279,11 @@ export default function WorkoutViewer() {
             <span className="text-[10px] font-medium">Workout</span>
           </button>
           <button
-            onClick={() => setActiveView(isAnonymous ? "account" : "history")}
+            onClick={() => {
+              if (isAnonymous) { setActiveView("account"); }
+              else if (!hasAccess) { setShowUpgradeModal(true); }
+              else { setActiveView("history"); }
+            }}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 transition-colors ${
               activeView === "history" ? "text-white" : "text-zinc-600"
             }`}
@@ -1268,13 +1322,17 @@ export default function WorkoutViewer() {
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={activeView === "account" ? 2.5 : 1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
-                <span className="text-[10px] font-medium">Sign in</span>
+                <span className="text-[10px] font-medium">Subscribe</span>
               </>
             )}
           </button>
         </div>
       </nav>
 
+      {/* Upgrade modal */}
+      {showUpgradeModal && (
+        <UpgradeModal onDismiss={() => setShowUpgradeModal(false)} />
+      )}
     </div>
   );
 }

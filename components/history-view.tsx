@@ -3,23 +3,22 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { getSessions, deleteSession, type WorkoutSession } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
-import { workoutPlan } from "@/lib/workout-data";
+import { workoutPlan, exerciseIdToName, dayById } from "@/lib/workout-data";
 
-// Build a canonical exercise order from the workout plan so history cards
-// always display exercises in the same order as the workout structure.
+// Build a canonical exercise order from the workout plan, keyed by exercise ID.
 const exerciseOrder: Record<string, number> = (() => {
   const order: Record<string, number> = {};
   let idx = 0;
   for (const ex of workoutPlan.complex.exercises) {
-    order[ex.name] = idx++;
+    order[ex.id] = idx++;
   }
   for (const day of workoutPlan.days) {
     for (const ss of day.supersets) {
       for (const ex of ss.exercises) {
-        if (!(ex.name in order)) order[ex.name] = idx++;
+        if (!(ex.id in order)) order[ex.id] = idx++;
       }
     }
-    if (!(day.finisher.name in order)) order[day.finisher.name] = idx++;
+    if (!(day.finisher.id in order)) order[day.finisher.id] = idx++;
   }
   return order;
 })();
@@ -61,7 +60,8 @@ function formatVolume(vol: number): string {
   return `${Math.round(vol)} lb`;
 }
 
-type DayFilter = "All" | "Push" | "Pull" | "Carry";
+// "All" or a day ID (e.g. "push", "pull", "carry")
+type DayFilter = string;
 
 // ---------------------------------------------------------------------------
 // Calendar
@@ -256,7 +256,10 @@ function SessionCard({
     onDelete(session.id);
   }
 
-  const dayLabel = session.day.split(" — ")[1] ?? session.day;
+  const dayData = dayById[session.day];
+  const dayLabel = dayData
+    ? dayData.title.split(" — ")[1] ?? dayData.label
+    : session.day;
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a]">
@@ -290,14 +293,14 @@ function SessionCard({
       >
         <div className="overflow-hidden">
           <div className="space-y-3 border-t border-white/5 px-4 pb-4 pt-3">
-            {exerciseNames.map((name) => {
-              const sets = session.exercises[name];
+            {exerciseNames.map((id) => {
+              const sets = session.exercises[id];
               if (!sets?.length) return null;
               const filledSets = sets.filter((s) => s.weight || s.reps);
               if (!filledSets.length) return null;
               return (
-                <div key={name}>
-                  <p className="text-sm font-medium text-white">{name}</p>
+                <div key={id}>
+                  <p className="text-sm font-medium text-white">{exerciseIdToName[id] ?? id}</p>
                   <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
                     {filledSets.map((s, i) => (
                       <span key={i} className="text-xs text-zinc-500">
@@ -355,11 +358,11 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
     });
   }, []);
 
-  // Apply day-type filter
+  // Apply day-type filter — sessions are normalized so s.day is a stable ID
   const typeFiltered = useMemo(() => {
     if (!sessions) return [];
     if (filter === "All") return sessions;
-    return sessions.filter((s) => s.day.includes(filter));
+    return sessions.filter((s) => s.day === filter);
   }, [sessions, filter]);
 
   // Apply date selection on top of type filter
@@ -380,7 +383,14 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
     setSessions((prev) => prev?.filter((s) => s.id !== id) ?? null);
   }
 
-  const filters: DayFilter[] = ["All", "Push", "Pull", "Carry"];
+  // Derive filter options from workout plan — no hardcoded day names
+  const filters: Array<{ id: DayFilter; label: string }> = [
+    { id: "All", label: "All" },
+    ...workoutPlan.days.map((d) => ({
+      id: d.id,
+      label: d.title.split("—")[1]?.split("/")[0]?.trim() ?? d.label,
+    })),
+  ];
 
   return (
     <div className="pb-4 pt-2">
@@ -429,15 +439,15 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
           <div className={`flex gap-1.5 ${firstLoad.current ? "animate-in" : ""}`} style={firstLoad.current ? { animationDelay: "50ms" } : undefined}>
             {filters.map((f) => (
               <button
-                key={f}
-                onClick={() => { setFilter(f); setSelectedDate(null); }}
+                key={f.id}
+                onClick={() => { setFilter(f.id); setSelectedDate(null); }}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                  filter === f
+                  filter === f.id
                     ? "border-red-500/40 bg-[#1a1a1a] text-white"
                     : "border-white/10 text-zinc-500 active:text-zinc-300"
                 }`}
               >
-                {f}
+                {f.label}
               </button>
             ))}
           </div>
@@ -458,7 +468,7 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
           {/* Session list */}
           {filtered.length === 0 ? (
             <p className="py-8 text-center text-xs text-zinc-600">
-              {selectedDate ? "No workouts on this date" : `No ${filter} sessions yet`}
+              {selectedDate ? "No workouts on this date" : `No ${dayById[filter]?.title.split("—")[1]?.split("/")[0]?.trim() ?? filter} sessions yet`}
             </p>
           ) : (
             <div className="space-y-2">

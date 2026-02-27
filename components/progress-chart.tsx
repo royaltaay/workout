@@ -2,30 +2,30 @@
 
 import { useState, useMemo } from "react";
 import type { WorkoutSession } from "@/lib/storage";
-import { workoutPlan } from "@/lib/workout-data";
+import { workoutPlan, exerciseIdToName } from "@/lib/workout-data";
 import { parseExerciseUnit } from "@/lib/units";
 
-// Canonical exercise order + unit label from workout plan
+// Canonical exercise order + unit label from workout plan, keyed by exercise ID
 const { exerciseOrder, exerciseUnit } = (() => {
   const order: Record<string, number> = {};
   const unit: Record<string, string> = {};
   let idx = 0;
   for (const ex of workoutPlan.complex.exercises) {
-    order[ex.name] = idx++;
-    unit[ex.name] = parseExerciseUnit(ex.reps).label;
+    order[ex.id] = idx++;
+    unit[ex.id] = parseExerciseUnit(ex.reps).label;
   }
   for (const day of workoutPlan.days) {
     for (const ss of day.supersets) {
       for (const ex of ss.exercises) {
-        if (!(ex.name in order)) {
-          order[ex.name] = idx++;
-          unit[ex.name] = parseExerciseUnit(ex.reps).label;
+        if (!(ex.id in order)) {
+          order[ex.id] = idx++;
+          unit[ex.id] = parseExerciseUnit(ex.reps).label;
         }
       }
     }
-    if (!(day.finisher.name in order)) {
-      order[day.finisher.name] = idx++;
-      unit[day.finisher.name] = parseExerciseUnit(day.finisher.reps).label;
+    if (!(day.finisher.id in order)) {
+      order[day.finisher.id] = idx++;
+      unit[day.finisher.id] = parseExerciseUnit(day.finisher.reps).label;
     }
   }
   return { exerciseOrder: order, exerciseUnit: unit };
@@ -65,20 +65,21 @@ function computeAxis(values: number[]) {
 }
 
 export default function ProgressChart({ sessions }: { sessions: WorkoutSession[] }) {
-  const exerciseNames = useMemo(() => {
-    const names = new Set<string>();
+  // Build list of exercise IDs that have data
+  const exerciseIds = useMemo(() => {
+    const ids = new Set<string>();
     for (const s of sessions) {
-      for (const name of Object.keys(s.exercises)) {
-        const sets = s.exercises[name];
-        if (sets?.some((e) => e.weight || e.reps)) names.add(name);
+      for (const id of Object.keys(s.exercises)) {
+        const sets = s.exercises[id];
+        if (sets?.some((e) => e.weight || e.reps)) ids.add(id);
       }
     }
-    return Array.from(names).sort(
+    return Array.from(ids).sort(
       (a, b) => (exerciseOrder[a] ?? 999) - (exerciseOrder[b] ?? 999)
     );
   }, [sessions]);
 
-  const [selected, setSelected] = useState<string>(exerciseNames[0] ?? "");
+  const [selected, setSelected] = useState<string>(exerciseIds[0] ?? "");
 
   const dataPoints = useMemo(() => {
     if (!selected) return [];
@@ -97,7 +98,7 @@ export default function ProgressChart({ sessions }: { sessions: WorkoutSession[]
     });
   }, [sessions, selected]);
 
-  if (exerciseNames.length === 0) return null;
+  if (exerciseIds.length === 0) return null;
 
   const hasWeight = dataPoints.some((d) => d.weight > 0);
   const hasReps = dataPoints.some((d) => d.reps > 0);
@@ -153,19 +154,19 @@ export default function ProgressChart({ sessions }: { sessions: WorkoutSession[]
         )}
       </div>
 
-      {/* Exercise picker */}
+      {/* Exercise picker — display names, keyed by ID */}
       <div className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-1 scrollbar-hide">
-        {exerciseNames.map((name) => (
+        {exerciseIds.map((id) => (
           <button
-            key={name}
-            onClick={() => setSelected(name)}
+            key={id}
+            onClick={() => setSelected(id)}
             className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-              selected === name
+              selected === id
                 ? "border-red-500/40 bg-[#1a1a1a] text-white"
                 : "border-white/10 text-zinc-500 active:text-zinc-300"
             }`}
           >
-            {name}
+            {exerciseIdToName[id] ?? id}
           </button>
         ))}
       </div>

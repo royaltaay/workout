@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { getSessions, type WorkoutSession } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
+import { workoutPlan, exerciseIdToName } from "@/lib/workout-data";
 import ProgressChart from "./progress-chart";
 
 // ---------------------------------------------------------------------------
@@ -208,15 +209,21 @@ function WeeklyActivity({ sessions }: { sessions: WorkoutSession[] }) {
 
 function DayDistribution({ sessions }: { sessions: WorkoutSession[] }) {
   const dist = useMemo(() => {
-    const days: Record<string, number> = { Push: 0, Pull: 0, Carry: 0 };
+    // Count sessions per day ID — derived from workout plan, not hardcoded
+    const counts: Record<string, number> = {};
+    for (const day of workoutPlan.days) counts[day.id] = 0;
     for (const s of sessions) {
-      // Support both old ("Push / Anti-Extension") and new ("Day 1") labels
-      if (s.day.includes("Push") || s.day === "Day 1") days.Push++;
-      else if (s.day.includes("Pull") || s.day === "Day 2") days.Pull++;
-      else if (s.day.includes("Carry") || s.day === "Day 3") days.Carry++;
+      if (counts[s.day] !== undefined) counts[s.day]++;
     }
-    const max = Math.max(...Object.values(days), 1);
-    return Object.entries(days).map(([name, count]) => ({ name, count, pct: count / max }));
+    const max = Math.max(...Object.values(counts), 1);
+    return workoutPlan.days.map((day) => {
+      const focusLabel = day.title.split("—")[1]?.split("/")[0]?.trim() ?? day.label;
+      return {
+        name: focusLabel,
+        count: counts[day.id] ?? 0,
+        pct: (counts[day.id] ?? 0) / max,
+      };
+    });
   }, [sessions]);
 
   return (
@@ -260,7 +267,7 @@ function PersonalRecords({ sessions }: { sessions: WorkoutSession[] }) {
         {displayed.map((pr) => (
           <div key={pr.exercise} className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-zinc-300">{pr.exercise}</p>
+              <p className="truncate text-sm text-zinc-300">{exerciseIdToName[pr.exercise] ?? pr.exercise}</p>
               <p className="text-xs text-zinc-600">{formatDate(pr.date)}</p>
             </div>
             <div className="text-right">

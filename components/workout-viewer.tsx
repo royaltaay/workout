@@ -7,6 +7,7 @@ import {
   type ComplexExercise,
   type Exercise,
   type Day,
+  dayById,
 } from "@/lib/workout-data";
 import { parseExerciseUnit } from "@/lib/units";
 import {
@@ -167,6 +168,7 @@ function TempoBadge({ tempo }: { tempo: string }) {
 }
 
 function ExerciseDetail({
+  id,
   name,
   sets,
   repsLabel,
@@ -179,11 +181,12 @@ function ExerciseDetail({
   readOnly,
   onAuthPrompt,
 }: {
+  id: string;
   name: string;
   sets: number;
   repsLabel?: string;
   entries: SetEntry[];
-  onChange: (name: string, entries: SetEntry[]) => void;
+  onChange: (id: string, entries: SetEntry[]) => void;
   previous: SetEntry[] | undefined;
   expanded: boolean;
   onToggle: () => void;
@@ -191,7 +194,7 @@ function ExerciseDetail({
   readOnly?: boolean;
   onAuthPrompt?: () => void;
 }) {
-  const detail = exerciseDetails[name];
+  const detail = exerciseDetails[id];
   const [noteOpen, setNoteOpen] = useState<number | null>(null);
   const prevSet1Ref = useRef("");
 
@@ -213,7 +216,7 @@ function ExerciseDetail({
         }
       }
     }
-    onChange(name, updated);
+    onChange(id, updated);
   }
 
   function toggleNote(i: number) {
@@ -301,7 +304,7 @@ function ExerciseDetail({
                           const updated = [...entries];
                           while (updated.length <= i) updated.push({ weight: "", reps: "" });
                           updated[i] = { ...updated[i], reps: e.target.value };
-                          onChange(name, updated);
+                          onChange(id, updated);
                         }}
                         className="w-16 rounded bg-white/5 px-2 py-2.5 text-center text-base text-white placeholder:text-zinc-700 focus:outline-none focus:outline-1 focus:outline-white/20"
                       />
@@ -328,7 +331,7 @@ function ExerciseDetail({
                             const updated = [...entries];
                             while (updated.length <= i) updated.push({ weight: "", reps: "" });
                             updated[i] = { ...updated[i], note: e.target.value || undefined };
-                            onChange(name, updated);
+                            onChange(id, updated);
                           }}
                           className="w-full rounded bg-white/5 px-2.5 py-1.5 text-sm text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:outline-1 focus:outline-white/20"
                         />
@@ -402,16 +405,17 @@ function ComplexCard({
       </div>
       <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {complex.exercises.map((ex: ComplexExercise) => (
-          <div key={ex.name}>
+          <div key={ex.id}>
             <ExerciseDetail
+              id={ex.id}
               name={ex.name}
               sets={complex.rounds}
               repsLabel={parseExerciseUnit(ex.reps).short}
-              entries={logs[ex.name] ?? []}
+              entries={logs[ex.id] ?? []}
               onChange={onLogChange}
-              previous={previousLogs?.[ex.name]}
-              expanded={openExercise === ex.name}
-              onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
+              previous={previousLogs?.[ex.id]}
+              expanded={openExercise === ex.id}
+              onToggle={() => setOpenExercise(openExercise === ex.id ? null : ex.id)}
               readOnly={readOnly}
               onAuthPrompt={onAuthPrompt}
             >
@@ -467,16 +471,17 @@ function SupersetCard({
       </div>
       <div className={`space-y-5 transition-opacity ${allDone ? "opacity-40" : ""}`}>
         {superset.exercises.map((ex: Exercise) => (
-          <div key={ex.name}>
+          <div key={ex.id}>
             <ExerciseDetail
+              id={ex.id}
               name={ex.name}
               sets={superset.rounds}
               repsLabel={parseExerciseUnit(ex.reps).short}
-              entries={logs[ex.name] ?? []}
+              entries={logs[ex.id] ?? []}
               onChange={onLogChange}
-              previous={previousLogs?.[ex.name]}
-              expanded={openExercise === ex.name}
-              onToggle={() => setOpenExercise(openExercise === ex.name ? null : ex.name)}
+              previous={previousLogs?.[ex.id]}
+              expanded={openExercise === ex.id}
+              onToggle={() => setOpenExercise(openExercise === ex.id ? null : ex.id)}
               readOnly={readOnly}
               onAuthPrompt={onAuthPrompt}
             >
@@ -530,14 +535,15 @@ function FinisherCard({
       </div>
       <div className={`transition-opacity ${allDone ? "opacity-40" : ""}`}>
         <ExerciseDetail
+          id={finisher.id}
           name={finisher.name}
           sets={finisher.sets}
           repsLabel={parseExerciseUnit(finisher.reps).short}
-          entries={logs[finisher.name] ?? []}
+          entries={logs[finisher.id] ?? []}
           onChange={onLogChange}
-          previous={previousLogs?.[finisher.name]}
-          expanded={openExercise === finisher.name}
-          onToggle={() => setOpenExercise(openExercise === finisher.name ? null : finisher.name)}
+          previous={previousLogs?.[finisher.id]}
+          expanded={openExercise === finisher.id}
+          onToggle={() => setOpenExercise(openExercise === finisher.id ? null : finisher.id)}
           readOnly={readOnly}
           onAuthPrompt={onAuthPrompt}
         >
@@ -594,9 +600,9 @@ function DayContent({
           <SupersetCard
             key={s.name}
             superset={s}
-            completed={counts[`superset-${day.label}-${s.name}`] ?? 0}
-            onTap={() => onTap(`superset-${day.label}-${s.name}`, s.rounds)}
-            onStartTimer={(rest) => onStartTimer(rest, `superset-${day.label}-${s.name}`, s.rounds)}
+            completed={counts[`superset-${day.id}-${s.name}`] ?? 0}
+            onTap={() => onTap(`superset-${day.id}-${s.name}`, s.rounds)}
+            onStartTimer={(rest) => onStartTimer(rest, `superset-${day.id}-${s.name}`, s.rounds)}
             openExercise={openExercise}
             setOpenExercise={setOpenExercise}
             logs={logs}
@@ -610,9 +616,9 @@ function DayContent({
       <div className="mt-4">
         <FinisherCard
           finisher={day.finisher}
-          completed={counts[`finisher-${day.label}`] ?? 0}
-          onTap={() => onTap(`finisher-${day.label}`, day.finisher.sets)}
-          onStartTimer={(rest) => onStartTimer(rest, `finisher-${day.label}`, day.finisher.sets)}
+          completed={counts[`finisher-${day.id}`] ?? 0}
+          onTap={() => onTap(`finisher-${day.id}`, day.finisher.sets)}
+          onStartTimer={(rest) => onStartTimer(rest, `finisher-${day.id}`, day.finisher.sets)}
           openExercise={openExercise}
           setOpenExercise={setOpenExercise}
           logs={logs}
@@ -669,9 +675,9 @@ export default function WorkoutViewer() {
   const allComplete = sessionStarted &&
     (counts["complex"] ?? 0) >= workoutPlan.complex.rounds &&
     activeDayData.supersets.every(s =>
-      (counts[`superset-${activeDayData.label}-${s.name}`] ?? 0) >= s.rounds
+      (counts[`superset-${activeDayData.id}-${s.name}`] ?? 0) >= s.rounds
     ) &&
-    (counts[`finisher-${activeDayData.label}`] ?? 0) >= activeDayData.finisher.sets;
+    (counts[`finisher-${activeDayData.id}`] ?? 0) >= activeDayData.finisher.sets;
 
   // Set correct day and load draft on mount (client-side only, after hydration)
   useEffect(() => {
@@ -686,7 +692,7 @@ export default function WorkoutViewer() {
   // Load previous session (async — Supabase with localStorage fallback)
   useEffect(() => {
     let cancelled = false;
-    getLastSession(workoutPlan.days[activeDay].label).then((prev) => {
+    getLastSession(workoutPlan.days[activeDay].id).then((prev) => {
       if (!cancelled) setPreviousSession(prev?.exercises);
     });
     return () => { cancelled = true; };
@@ -696,9 +702,9 @@ export default function WorkoutViewer() {
     sets.some((s) => s.weight || s.reps)
   );
 
-  function updateLog(name: string, entries: SetEntry[]) {
+  function updateLog(id: string, entries: SetEntry[]) {
     setExerciseLogs((prev) => {
-      const updated = { ...prev, [name]: entries };
+      const updated = { ...prev, [id]: entries };
       saveDraft(updated);
       return updated;
     });
@@ -746,7 +752,7 @@ export default function WorkoutViewer() {
     saveSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
-      day: activeDayData.label,
+      day: activeDayData.id,
       duration: sessionElapsed,
       exercises: logSnapshot,
     });

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { getSupabase, onAuthChange, signInWithEmail, verifyOtp as supabaseVerifyOtp, signOut as supabaseSignOut } from "./supabase";
+import { getSupabase, onAuthChange, signInWithEmail, signInWithPassword, verifyOtp as supabaseVerifyOtp, signOut as supabaseSignOut } from "./supabase";
 
 type AuthState = {
   user: User | null;
@@ -27,6 +27,8 @@ export function useAuth() {
 }
 
 const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true";
+const OWNER_EMAIL = process.env.NEXT_PUBLIC_OWNER_EMAIL ?? "";
+const OWNER_PASSWORD = process.env.NEXT_PUBLIC_OWNER_PASSWORD ?? "";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -36,9 +38,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const sb = getSupabase();
     if (sb) {
-      sb.auth.getSession().then(({ data: { session } }) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
+      sb.auth.getSession().then(async ({ data: { session } }) => {
+        if (session?.user) {
+          setUser(session.user);
+          setLoading(false);
+        } else if (OWNER_EMAIL && OWNER_PASSWORD) {
+          // Auto-sign in owner while email provider is being set up
+          const { error } = await signInWithPassword(OWNER_EMAIL, OWNER_PASSWORD);
+          if (error) console.warn("Owner auto-sign-in failed:", error);
+          // onAuthChange listener will update state
+        } else {
+          setLoading(false);
+        }
       });
     } else {
       setLoading(false);

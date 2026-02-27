@@ -32,11 +32,11 @@ const SESSIONS_KEY = "dungym-sessions";
 
 export function seed() {
   const sessions: WorkoutSession[] = [
-    // --- Monday/Tuesday sessions (Day 1) ---
+    // --- Day 1 sessions (Push) ---
     {
       id: id(),
       date: date(42),
-      day: "Monday — Upper Push / Pull",
+      day: "Day 1 — Push / Anti-Extension",
       duration: 3200,
       exercises: {
         "Single-Arm Swings": sets(50, 10, 3),
@@ -50,7 +50,7 @@ export function seed() {
     {
       id: id(),
       date: date(35),
-      day: "Monday — Upper Push / Pull",
+      day: "Day 1 — Push / Anti-Extension",
       duration: 3400,
       exercises: {
         "Single-Arm Swings": sets(55, 10, 3),
@@ -64,7 +64,7 @@ export function seed() {
     {
       id: id(),
       date: date(28),
-      day: "Monday — Upper Push / Pull",
+      day: "Day 1 — Push / Anti-Extension",
       duration: 3100,
       exercises: {
         "Single-Arm Swings": sets(55, 10, 3),
@@ -78,7 +78,7 @@ export function seed() {
     {
       id: id(),
       date: date(21),
-      day: "Monday — Upper Push / Pull",
+      day: "Day 1 — Push / Anti-Extension",
       duration: 3300,
       exercises: {
         "Single-Arm Swings": sets(60, 10, 3),
@@ -92,7 +92,7 @@ export function seed() {
     {
       id: id(),
       date: date(14),
-      day: "Monday — Upper Push / Pull",
+      day: "Day 1 — Push / Anti-Extension",
       duration: 3500,
       exercises: {
         "Single-Arm Swings": sets(60, 10, 3),
@@ -106,7 +106,7 @@ export function seed() {
     {
       id: id(),
       date: date(7),
-      day: "Monday — Upper Push / Pull",
+      day: "Day 1 — Push / Anti-Extension",
       duration: 3250,
       exercises: {
         "Single-Arm Swings": sets(65, 10, 3),
@@ -118,11 +118,11 @@ export function seed() {
       },
     },
 
-    // --- Wednesday/Thursday sessions (Day 2) ---
+    // --- Day 2 sessions (Pull) ---
     {
       id: id(),
       date: date(40),
-      day: "Wednesday — Pull / Core",
+      day: "Day 2 — Pull / Anti-Rotation",
       duration: 2900,
       exercises: {
         "Single-Arm Swings": sets(50, 10, 3),
@@ -136,7 +136,7 @@ export function seed() {
     {
       id: id(),
       date: date(33),
-      day: "Wednesday — Pull / Core",
+      day: "Day 2 — Pull / Anti-Rotation",
       duration: 3000,
       exercises: {
         "Single-Arm Swings": sets(55, 10, 3),
@@ -150,7 +150,7 @@ export function seed() {
     {
       id: id(),
       date: date(26),
-      day: "Wednesday — Pull / Core",
+      day: "Day 2 — Pull / Anti-Rotation",
       duration: 3100,
       exercises: {
         "Single-Arm Swings": sets(55, 10, 3),
@@ -164,7 +164,7 @@ export function seed() {
     {
       id: id(),
       date: date(19),
-      day: "Wednesday — Pull / Core",
+      day: "Day 2 — Pull / Anti-Rotation",
       duration: 3200,
       exercises: {
         "Single-Arm Swings": sets(60, 10, 3),
@@ -178,7 +178,7 @@ export function seed() {
     {
       id: id(),
       date: date(12),
-      day: "Wednesday — Pull / Core",
+      day: "Day 2 — Pull / Anti-Rotation",
       duration: 3300,
       exercises: {
         "Single-Arm Swings": sets(60, 10, 3),
@@ -190,11 +190,11 @@ export function seed() {
       },
     },
 
-    // --- Friday sessions (Day 3) ---
+    // --- Day 3 sessions (Carry) ---
     {
       id: id(),
       date: date(38),
-      day: "Friday — Carry / Total Body",
+      day: "Day 3 — Carry / Total Body",
       duration: 2800,
       exercises: {
         "Single-Arm Swings": sets(50, 10, 3),
@@ -208,7 +208,7 @@ export function seed() {
     {
       id: id(),
       date: date(31),
-      day: "Friday — Carry / Total Body",
+      day: "Day 3 — Carry / Total Body",
       duration: 3000,
       exercises: {
         "Single-Arm Swings": sets(55, 10, 3),
@@ -222,7 +222,7 @@ export function seed() {
     {
       id: id(),
       date: date(24),
-      day: "Friday — Carry / Total Body",
+      day: "Day 3 — Carry / Total Body",
       duration: 3100,
       exercises: {
         "Single-Arm Swings": sets(55, 10, 3),
@@ -236,7 +236,7 @@ export function seed() {
     {
       id: id(),
       date: date(17),
-      day: "Friday — Carry / Total Body",
+      day: "Day 3 — Carry / Total Body",
       duration: 3200,
       exercises: {
         "Single-Arm Swings": sets(60, 10, 3),
@@ -250,7 +250,7 @@ export function seed() {
     {
       id: id(),
       date: date(10),
-      day: "Friday — Carry / Total Body",
+      day: "Day 3 — Carry / Total Body",
       duration: 3400,
       exercises: {
         "Single-Arm Swings": sets(60, 10, 3),
@@ -264,7 +264,7 @@ export function seed() {
     {
       id: id(),
       date: date(3),
-      day: "Friday — Carry / Total Body",
+      day: "Day 3 — Carry / Total Body",
       duration: 3300,
       exercises: {
         "Single-Arm Swings": sets(65, 10, 3),

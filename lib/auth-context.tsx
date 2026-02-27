@@ -26,6 +26,8 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
-  const isAnonymous = !user || user.is_anonymous === true;
+  const isAnonymous = DEV_BYPASS ? false : !user || user.is_anonymous === true;
 
   return (
     <AuthContext.Provider

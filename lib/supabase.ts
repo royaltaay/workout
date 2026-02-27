@@ -16,11 +16,13 @@ export function getSupabase(): SupabaseClient | null {
 }
 
 let authReady = false;
+let explicitlySignedOut = false;
 
 export async function ensureAuth(): Promise<boolean> {
   const sb = getSupabase();
   if (!sb) return false;
   if (authReady) return true;
+  if (explicitlySignedOut) return false;
 
   const {
     data: { session },
@@ -37,6 +39,7 @@ export async function signInWithEmail(email: string): Promise<{ error: string | 
   const sb = getSupabase();
   if (!sb) return { error: "Supabase not configured" };
 
+  explicitlySignedOut = false;
   const { error } = await sb.auth.signInWithOtp({ email });
   return { error: error?.message ?? null };
 }
@@ -52,6 +55,7 @@ export async function verifyOtp(email: string, token: string): Promise<{ error: 
 export async function signOut(): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;
+  explicitlySignedOut = true;
   await sb.auth.signOut();
   authReady = false;
 }

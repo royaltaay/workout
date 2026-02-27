@@ -136,7 +136,7 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 
 function WeeklyActivity({ sessions }: { sessions: WorkoutSession[] }) {
   const maxPerWeek = 5; // max cells per row
-  const numWeeks = 12;
+  const numWeeks = 4;
 
   const weeks = useMemo(() => {
     const now = new Date();
@@ -147,7 +147,7 @@ function WeeklyActivity({ sessions }: { sessions: WorkoutSession[] }) {
     thisMonday.setHours(0, 0, 0, 0);
 
     const result: Array<{ label: string; count: number; isCurrent: boolean }> = [];
-    for (let w = numWeeks - 1; w >= 0; w--) {
+    for (let w = 0; w < numWeeks; w++) {
       const weekStart = new Date(thisMonday);
       weekStart.setDate(thisMonday.getDate() - w * 7);
       const weekEnd = new Date(weekStart);
@@ -210,9 +210,10 @@ function DayDistribution({ sessions }: { sessions: WorkoutSession[] }) {
   const dist = useMemo(() => {
     const days: Record<string, number> = { Push: 0, Pull: 0, Carry: 0 };
     for (const s of sessions) {
-      if (s.day.includes("Push")) days.Push++;
-      else if (s.day.includes("Pull")) days.Pull++;
-      else if (s.day.includes("Carry")) days.Carry++;
+      // Support both old ("Push / Anti-Extension") and new ("Day 1") labels
+      if (s.day.includes("Push") || s.day === "Day 1") days.Push++;
+      else if (s.day.includes("Pull") || s.day === "Day 2") days.Pull++;
+      else if (s.day.includes("Carry") || s.day === "Day 3") days.Carry++;
     }
     const max = Math.max(...Object.values(days), 1);
     return Object.entries(days).map(([name, count]) => ({ name, count, pct: count / max }));

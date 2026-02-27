@@ -962,8 +962,8 @@ export default function WorkoutViewer() {
         <header className="animate-in mb-6 flex items-center justify-between">
           <div className="flex items-center gap-1">
             <svg
-              width="36"
-              height="36"
+              width="28"
+              height="28"
               viewBox="0 0 32 32"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -974,17 +974,17 @@ export default function WorkoutViewer() {
               <rect x="14.75" y="19.5" width="2.5" height="6" rx="0.5" fill="#71717a" />
               <circle cx="16" cy="27.5" r="2" fill="#a1a1aa" />
             </svg>
-            <h1 className="text-2xl font-bold leading-none text-white">Dungym</h1>
+            <h1 className="text-xl font-bold leading-none text-white">Dungym</h1>
           </div>
           {activeView === "workout" && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               {workoutPlan.days.map((d, i) => {
                 const isActive = hydrated && i === activeDay;
                 return (
                   <button
                     key={d.label}
                     onClick={() => selectDay(i)}
-                    className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
+                    className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
                       isActive
                         ? "border-red-500/40 bg-[#1a1a1a] text-white"
                         : "border-white/10 text-zinc-500 active:text-zinc-300"

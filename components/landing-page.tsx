@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FaqAccordion } from "./faq-accordion";
 
@@ -103,251 +104,34 @@ function DungymLogo() {
   );
 }
 
-function ScreenFrame({ children, label }: { children: React.ReactNode; label: string }) {
+const screenshots = {
+  workout: { src: "/screenshots/workout1.webp", label: "Today's workout" },
+  tracking: { src: "/screenshots/workout2withrest.webp", label: "Track your sets" },
+  progress: { src: "/screenshots/stats1.webp", label: "Progress over time" },
+  history: { src: "/screenshots/history.webp", label: "Session history" },
+  stats: { src: "/screenshots/stats2.webp", label: "Stats & records" },
+} as const;
+
+type ScreenVariant = keyof typeof screenshots;
+
+function AppScreenshot({ variant }: { variant: ScreenVariant }) {
+  const { src, label } = screenshots[variant];
   return (
     <div className="flex w-[180px] flex-shrink-0 flex-col items-center gap-2">
       <p className="text-[10px] text-zinc-500">{label}</p>
       <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a]">
-        <div className="flex aspect-[9/16] flex-col p-3 text-[6.5px] leading-tight">
-          {children}
-        </div>
-        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
-      </div>
-    </div>
-  );
-}
-
-/* Round dots matching the real app's RoundDots component */
-function MiniDots({ total, completed }: { total: number; completed: number }) {
-  return (
-    <div className="flex gap-[2px]">
-      {Array.from({ length: total }).map((_, i) => (
-        <div
-          key={i}
-          className={`h-[4px] w-[4px] rounded-full ${
-            i < completed ? "bg-red-500" : "bg-white/10"
-          }`}
+        <Image
+          src={src}
+          alt={label}
+          width={393}
+          height={852}
+          unoptimized
+          className="block w-full"
         />
-      ))}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
+      </div>
     </div>
   );
-}
-
-function WorkoutScreen() {
-  return (
-    <ScreenFrame label="Today's workout">
-      {/* Day tabs - matching real app: rounded-full, border, active = border-red-500/40 */}
-      <div className="mb-2 flex gap-[3px]">
-        <span className="rounded-full border border-red-500/40 bg-[#1a1a1a] px-[6px] py-[2px] font-medium text-white">Day 1</span>
-        <span className="rounded-full border border-white/10 px-[6px] py-[2px] text-zinc-500">Day 2</span>
-        <span className="rounded-full border border-white/10 px-[6px] py-[2px] text-zinc-500">Day 3</span>
-      </div>
-
-      {/* The Complex card - matching real app card style */}
-      <div className="mb-2 rounded-lg border border-white/10 bg-[#1a1a1a] p-2">
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="font-semibold text-white">The Complex</span>
-          <MiniDots total={3} completed={2} />
-        </div>
-        {[
-          { name: "SA Swings", reps: "10/arm", done: true },
-          { name: "Clean→Squat→Press", reps: "5/arm", done: true },
-          { name: "Windmill", reps: "5/side", done: false },
-        ].map((ex) => (
-          <div key={ex.name} className="flex items-center justify-between py-[3px]">
-            <div className="flex items-center gap-1">
-              <span className={ex.done ? "text-zinc-500 line-through" : "font-medium text-white"}>{ex.name}</span>
-            </div>
-            <span className="text-zinc-600">{ex.reps}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Superset card */}
-      <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-2">
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="font-semibold text-white">Superset</span>
-          <MiniDots total={3} completed={0} />
-        </div>
-        {[
-          { name: "Bench Press", reps: "8-10" },
-          { name: "SA KB Row", reps: "8/arm" },
-        ].map((ex) => (
-          <div key={ex.name} className="flex items-center justify-between py-[3px]">
-            <span className="font-medium text-white">{ex.name}</span>
-            <span className="text-zinc-600">{ex.reps}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Finisher card */}
-      <div className="mt-2 rounded-lg border border-white/10 bg-[#1a1a1a] p-2">
-        <div className="mb-1 flex items-center justify-between">
-          <span className="font-semibold text-white">Finisher</span>
-          <MiniDots total={3} completed={0} />
-        </div>
-        <div className="flex items-center justify-between py-[3px]">
-          <span className="font-medium text-white">Hanging Leg Raises</span>
-          <span className="text-zinc-600">10-15</span>
-        </div>
-      </div>
-    </ScreenFrame>
-  );
-}
-
-function TrackingScreen() {
-  return (
-    <ScreenFrame label="Track your sets">
-      {/* Exercise header in card */}
-      <div className="mb-2 rounded-lg border border-white/10 bg-[#1a1a1a] p-2">
-        <div className="mb-1 flex items-center justify-between">
-          <span className="font-semibold text-white">Bench Press</span>
-          <MiniDots total={3} completed={2} />
-        </div>
-        <div className="mb-2 text-zinc-500">3-1-1-0 &middot; RPE 7-8</div>
-
-        {/* Set rows - matching real app: # | weight input | × | reps input */}
-        {[
-          { set: 1, weight: "135", reps: "10" },
-          { set: 2, weight: "135", reps: "8" },
-          { set: 3, weight: "", reps: "" },
-        ].map((s) => (
-          <div key={s.set} className="mb-[3px] flex items-center gap-[3px]">
-            <span className="w-[10px] text-center text-zinc-600">{s.set}</span>
-            <div className={`flex-1 rounded bg-white/5 px-1 py-[3px] text-center ${s.weight ? "text-white" : "text-zinc-700"}`}>
-              {s.weight || "lb"}
-            </div>
-            <span className="text-zinc-600">&times;</span>
-            <div className={`flex-1 rounded bg-white/5 px-1 py-[3px] text-center ${s.reps ? "text-white" : "text-zinc-700"}`}>
-              {s.reps || "reps"}
-            </div>
-          </div>
-        ))}
-
-        {/* Last session reference */}
-        <div className="mt-1.5 border-t border-white/5 pt-1.5 text-zinc-600">
-          Last: 135 &times; 10, 10, 8
-        </div>
-      </div>
-
-      {/* Rest timer */}
-      <div className="flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-[#1a1a1a] py-2">
-        {/* Clock icon */}
-        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-        <span className="font-bold text-red-400">1:12</span>
-        <span className="text-zinc-600">/ 1:30</span>
-      </div>
-
-      {/* SA KB Row below */}
-      <div className="mt-2 rounded-lg border border-white/10 bg-[#1a1a1a] p-2">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold text-white">SA KB Row</span>
-          <MiniDots total={3} completed={0} />
-        </div>
-        <div className="mt-0.5 text-zinc-500">8/arm &middot; 2-1-1-1</div>
-      </div>
-    </ScreenFrame>
-  );
-}
-
-function ProgressScreen() {
-  return (
-    <ScreenFrame label="Progress over time">
-      {/* Exercise picker pills */}
-      <div className="mb-2 flex gap-[3px]">
-        <span className="rounded-full border border-red-500/40 bg-[#1a1a1a] px-[6px] py-[2px] font-medium text-white">Bench</span>
-        <span className="rounded-full border border-white/10 px-[6px] py-[2px] text-zinc-500">Pull-Ups</span>
-        <span className="rounded-full border border-white/10 px-[6px] py-[2px] text-zinc-500">RDL</span>
-      </div>
-
-      {/* Chart card */}
-      <div className="mb-2 rounded-lg border border-white/10 bg-[#1a1a1a] p-2">
-        <svg viewBox="0 0 120 50" className="w-full" aria-hidden="true">
-          {/* Grid */}
-          <line x1="10" y1="10" x2="115" y2="10" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
-          <line x1="10" y1="25" x2="115" y2="25" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
-          <line x1="10" y1="40" x2="115" y2="40" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
-          {/* Weight line (red, strokeWidth=2 like real app) */}
-          <polyline
-            points="12,42 27,40 42,37 57,35 72,32 87,28 102,25 112,20"
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Weight dots (red outer, dark center like real app) */}
-          {[
-            [12, 42], [27, 40], [42, 37], [57, 35],
-            [72, 32], [87, 28], [102, 25], [112, 20],
-          ].map(([x, y]) => (
-            <g key={`w${x}`}>
-              <circle cx={x} cy={y} r="3" fill="#ef4444" />
-              <circle cx={x} cy={y} r="1.5" fill="#1a1a1a" />
-            </g>
-          ))}
-          {/* Reps line (gray dashed, strokeDasharray="4 3" like real app) */}
-          <polyline
-            points="12,22 27,24 42,22 57,20 72,22 87,18 102,20 112,16"
-            fill="none"
-            stroke="#a1a1aa"
-            strokeWidth="1.5"
-            strokeDasharray="4 3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Reps dots */}
-          {[
-            [12, 22], [27, 24], [42, 22], [57, 20],
-            [72, 22], [87, 18], [102, 20], [112, 16],
-          ].map(([x, y]) => (
-            <g key={`r${x}`}>
-              <circle cx={x} cy={y} r="2.5" fill="#a1a1aa" />
-              <circle cx={x} cy={y} r="1" fill="#1a1a1a" />
-            </g>
-          ))}
-          {/* X-axis labels */}
-          <text x="12" y="49" fill="#52525b" fontSize="4">Jan</text>
-          <text x="105" y="49" fill="#52525b" fontSize="4">Feb</text>
-        </svg>
-        {/* Legend */}
-        <div className="mt-1 flex gap-2 text-zinc-500">
-          <span className="flex items-center gap-[2px]">
-            <span className="inline-block h-[3px] w-[8px] rounded-full bg-red-500" />
-            Weight
-          </span>
-          <span className="flex items-center gap-[2px]">
-            <span className="inline-block h-[3px] w-[8px] rounded-full bg-zinc-500" />
-            Reps
-          </span>
-        </div>
-      </div>
-
-      {/* Session history cards */}
-      {[
-        { date: "Feb 24", vol: "3,360 lbs", dur: "42m" },
-        { date: "Feb 21", vol: "3,150 lbs", dur: "38m" },
-        { date: "Feb 17", vol: "2,880 lbs", dur: "40m" },
-      ].map((s) => (
-        <div key={s.date} className="mb-[3px] rounded-lg border border-white/10 bg-[#1a1a1a] px-2 py-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-300">{s.date}</span>
-            <span className="text-zinc-600">{s.vol}</span>
-          </div>
-          <div className="text-zinc-600">{s.dur}</div>
-        </div>
-      ))}
-    </ScreenFrame>
-  );
-}
-
-function AppScreenshot({ variant }: { variant: "workout" | "tracking" | "progress" }) {
-  if (variant === "workout") return <WorkoutScreen />;
-  if (variant === "tracking") return <TrackingScreen />;
-  return <ProgressScreen />;
 }
 
 function FeatureSection({
@@ -362,7 +146,7 @@ function FeatureSection({
   title: string;
   description: string;
   items: string[];
-  screenVariant: "workout" | "tracking" | "progress";
+  screenVariant: ScreenVariant;
   reverse?: boolean;
 }) {
   return (
@@ -427,29 +211,25 @@ export default function LandingPage({
       </nav>
 
       {/* Hero */}
-      <header className="px-6 pt-16 pb-12 text-center sm:pt-20 sm:pb-14">
-        <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
+      <header className="px-6 pt-20 pb-16 text-center sm:pt-24 sm:pb-20">
+        <h1 className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl">
           {headline}
         </h1>
-        <p className="mt-4 text-base text-zinc-400">
+        <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-zinc-400">
           {subheadline}
         </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <div className="mt-10">
           <Link
             href="/program"
-            className="rounded-xl bg-red-500 px-6 py-3 text-base font-semibold transition-colors hover:bg-red-600"
+            className="inline-block rounded-xl bg-red-500 px-7 py-3.5 text-base font-semibold transition-colors hover:bg-red-600"
           >
-            Try the First Workout
+            Start Training Free
           </Link>
-          <span className="text-sm text-zinc-500">
-            Free to start &middot;{" "}
-            <span className="text-zinc-300">$4/mo</span> for full access
-          </span>
         </div>
       </header>
 
       {/* App screenshots */}
-      <section className="overflow-hidden pb-8">
+      <section className="overflow-hidden pb-12">
         <div className="flex justify-center gap-4 px-6">
           <AppScreenshot variant="workout" />
           <AppScreenshot variant="tracking" />
@@ -461,22 +241,22 @@ export default function LandingPage({
 
       {/* Quick stats */}
       <section className="border-y border-white/5 py-10">
-        <div className="grid grid-cols-2 gap-8 px-6 text-center sm:grid-cols-4">
+        <div className="grid grid-cols-4 gap-4 px-6 text-center">
           <div>
             <p className="text-2xl font-bold text-white">3</p>
-            <p className="mt-1 text-xs text-zinc-500">days per week</p>
+            <p className="mt-1 text-[10px] text-zinc-500 sm:text-xs">days/week</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-white">40</p>
-            <p className="mt-1 text-xs text-zinc-500">min per session</p>
+            <p className="mt-1 text-[10px] text-zinc-500 sm:text-xs">min/session</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-white">1</p>
-            <p className="mt-1 text-xs text-zinc-500">kettlebell needed</p>
+            <p className="mt-1 text-[10px] text-zinc-500 sm:text-xs">kettlebell</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-white">$4</p>
-            <p className="mt-1 text-xs text-zinc-500">per month</p>
+            <p className="mt-1 text-[10px] text-zinc-500 sm:text-xs">per month</p>
           </div>
         </div>
       </section>
@@ -560,7 +340,7 @@ export default function LandingPage({
           "Track weight and reps over time",
           "Clear signal when it's time to progress",
         ]}
-        screenVariant="progress"
+        screenVariant="history"
         reverse
       />
 
@@ -602,17 +382,22 @@ export default function LandingPage({
           <h2 className="text-2xl font-bold text-white">
             Simple pricing. No gimmicks.
           </h2>
-          <p className="mt-3 text-sm text-zinc-400">
+          <p className="mx-auto mt-3 max-w-sm text-sm text-zinc-400">
             Browse the program for free. Subscribe to track your workouts
             and see your progress over time.
           </p>
 
-          <div className="mt-10 rounded-2xl border border-white/10 bg-[#1a1a1a] p-8">
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="text-4xl font-bold text-white">$4</span>
-              <span className="text-zinc-500">/mo</span>
+          <div className="mx-auto mt-10 max-w-sm rounded-2xl border border-white/10 bg-[#1a1a1a] px-6 py-8">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Monthly</p>
+            <div className="mt-3 flex items-baseline justify-center gap-1">
+              <span className="text-5xl font-bold tracking-tight text-white">$4</span>
+              <span className="text-sm text-zinc-500">/mo</span>
             </div>
-            <ul className="mt-6 space-y-3 text-left text-sm">
+            <p className="mt-2 text-xs text-zinc-600">Cancel anytime</p>
+
+            <div className="my-6 h-px bg-white/5" />
+
+            <ul className="space-y-2.5 text-sm">
               {[
                 "Full program access",
                 "Log sets, reps, and weight",
@@ -621,21 +406,21 @@ export default function LandingPage({
                 "Built-in rest timer",
                 "Works on any device",
               ].map((item) => (
-                <li key={item} className="flex items-center gap-3">
-                  <span className="text-red-500/70">&#9670;</span>
+                <li key={item} className="flex items-center gap-2.5">
+                  <svg className="h-3.5 w-3.5 shrink-0 text-red-500/70" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 1.5a6.5 6.5 0 110 13 6.5 6.5 0 010-13zm2.854 4.146a.5.5 0 00-.708 0L7 8.793 5.854 7.646a.5.5 0 10-.708.708l1.5 1.5a.5.5 0 00.708 0l3.5-3.5a.5.5 0 000-.708z" />
+                  </svg>
                   <span className="text-zinc-300">{item}</span>
                 </li>
               ))}
             </ul>
+
             <Link
               href="/program"
-              className="mt-8 block w-full rounded-xl bg-red-500 py-3.5 text-center text-base font-semibold transition-colors hover:bg-red-600"
+              className="mt-7 block rounded-xl bg-red-500 py-3 text-center text-sm font-semibold transition-colors hover:bg-red-600"
             >
               Start Training
             </Link>
-            <p className="mt-3 text-xs text-zinc-600">
-              Cancel anytime. No contracts.
-            </p>
           </div>
         </div>
       </section>
@@ -654,20 +439,16 @@ export default function LandingPage({
       <section className="border-t border-white/5 py-16">
         <div className="px-6 text-center">
           <h2 className="text-2xl font-bold">Ready to start?</h2>
-          <p className="mt-2 text-zinc-400">
+          <p className="mt-2 text-sm text-zinc-400">
             Try the first workout free. No sign-up required.
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-6">
             <Link
               href="/program"
-              className="rounded-xl bg-red-500 px-8 py-3.5 text-base font-semibold transition-colors hover:bg-red-600"
+              className="inline-block rounded-xl bg-red-500 px-7 py-3.5 text-base font-semibold transition-colors hover:bg-red-600"
             >
-              Try the First Workout
+              Start Training Free
             </Link>
-            <span className="text-sm text-zinc-500">
-              Free to start &middot;{" "}
-              <span className="text-zinc-300">$4/mo</span> for full access
-            </span>
           </div>
         </div>
       </section>

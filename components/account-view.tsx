@@ -43,25 +43,8 @@ export default function AccountView() {
       setVerifying(false);
       setError(result.error);
     } else {
-      // Auto-redirect to Stripe checkout after successful sign-in
-      try {
-        const sb = getSupabase();
-        if (!sb) { setVerifying(false); return; }
-        const { data: { session } } = await sb.auth.getSession();
-        if (!session?.access_token) { setVerifying(false); return; }
-
-        const res = await fetch("/api/checkout", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        const { url } = await res.json();
-        if (url) {
-          window.location.href = url;
-          return; // keep spinner while redirecting
-        }
-      } catch (err) {
-        console.error("Auto-checkout error:", err);
-      }
+      // Don't auto-redirect to checkout — let auth state settle first.
+      // User will see the account page with a subscribe button.
       setVerifying(false);
       setStep("email");
       setEmail("");

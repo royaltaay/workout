@@ -34,7 +34,7 @@ function JsonLd({
         price: "4",
         priceCurrency: "USD",
         description:
-          "Free to view the program. $4/mo for workout tracking, progress charts, and session history.",
+          "Free to try Day 1. $4/mo for the full program, workout tracking, and progress charts.",
       },
       author: {
         "@type": "Person",
@@ -383,8 +383,8 @@ export default function LandingPage({
             Simple pricing. No gimmicks.
           </h2>
           <p className="mx-auto mt-3 max-w-sm text-sm text-zinc-400">
-            Browse the program for free. Subscribe to track your workouts
-            and see your progress over time.
+            Try Day 1 free. Subscribe to unlock the full program
+            and track your progress.
           </p>
 
           <div className="mx-auto mt-10 max-w-sm rounded-2xl border border-white/10 bg-[#1a1a1a] px-6 py-8">

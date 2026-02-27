@@ -136,7 +136,7 @@ export default function AccountView() {
             <div className="animate-in">
               <h2 className="text-xl font-bold text-white">Track your progress</h2>
               <p className="mt-2 text-sm text-zinc-400">
-                The program is free to follow. Subscribe to make it yours.
+                Day 1 is free. Subscribe to unlock all 3 days and track your progress.
               </p>
 
               <div className="mt-6 space-y-3">

@@ -694,7 +694,8 @@ export default function WorkoutViewer() {
 
   // Set correct day and load draft on mount (client-side only, after hydration)
   useEffect(() => {
-    setActiveDay(getTodayTab());
+    const canAccessAllDays = !isAnonymous && hasAccess;
+    setActiveDay(canAccessAllDays ? getTodayTab() : 0);
     setHydrated(true);
     setExerciseLogs(getDraft());
     // Show splash if user hasn't dismissed it before
@@ -894,8 +895,22 @@ export default function WorkoutViewer() {
     return () => clearInterval(sessionRef.current);
   }, [sessionStart, sessionBank, allComplete]);
 
+  const readOnly = isAnonymous || !hasAccess;
+  const readOnlyLabel = isAnonymous ? "Subscribe to log your sets" : "Subscribe to log your sets";
+
+  function handleAuthPrompt() {
+    if (isAnonymous) {
+      setActiveView("account");
+    } else {
+      setShowUpgradeModal(true);
+    }
+  }
 
   function selectDay(index: number) {
+    if (index > 0 && readOnly) {
+      handleAuthPrompt();
+      return;
+    }
     setHydrated(true);
     setActiveDay(index);
     offsetRef.current = 0;
@@ -919,7 +934,8 @@ export default function WorkoutViewer() {
     if (touchRef.current.direction !== "h") return;
 
     const day = activeDayRef.current;
-    const atEdge = (day === 0 && dx > 0) || (day === workoutPlan.days.length - 1 && dx < 0);
+    const lockedRight = readOnly && day === 0 && dx < 0;
+    const atEdge = (day === 0 && dx > 0) || (day === workoutPlan.days.length - 1 && dx < 0) || lockedRight;
     offsetRef.current = atEdge ? dx * 0.2 : dx;
     setOffsetX(offsetRef.current);
   }
@@ -953,17 +969,6 @@ export default function WorkoutViewer() {
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, [refreshSubscription]);
-
-  const readOnly = isAnonymous || !hasAccess;
-  const readOnlyLabel = isAnonymous ? "Subscribe to log your sets" : "Subscribe to log your sets";
-
-  function handleAuthPrompt() {
-    if (isAnonymous) {
-      setActiveView("account");
-    } else {
-      setShowUpgradeModal(true);
-    }
-  }
 
   // Show splash for anonymous users who haven't dismissed it
   // Wait for auth, subscription loading, and splash state hydration
@@ -1020,14 +1025,17 @@ export default function WorkoutViewer() {
             <div className="flex items-center gap-1">
               {workoutPlan.days.map((d, i) => {
                 const isActive = hydrated && i === activeDay;
+                const isLocked = readOnly && i > 0;
                 return (
                   <button
                     key={d.label}
                     onClick={() => selectDay(i)}
-                    className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
-                      isActive
-                        ? "border-red-500/40 bg-[#1a1a1a] text-white"
-                        : "border-white/10 text-zinc-500 active:text-zinc-300"
+                    className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all active:scale-[0.97] ${
+                      isLocked
+                        ? "border-white/5 text-zinc-700"
+                        : isActive
+                          ? "border-red-500/40 bg-[#1a1a1a] text-white"
+                          : "border-white/10 text-zinc-500 active:text-zinc-300"
                     }`}
                   >
                     {d.label}

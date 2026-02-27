@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { getSessions, deleteSession, type WorkoutSession } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
 import { workoutPlan } from "@/lib/workout-data";
-import ProgressChart from "./progress-chart";
 
 // Build a canonical exercise order from the workout plan so history cards
 // always display exercises in the same order as the workout structure.
 const exerciseOrder: Record<string, number> = (() => {
   const order: Record<string, number> = {};
   let idx = 0;
-  // Complex exercises first
   for (const ex of workoutPlan.complex.exercises) {
     order[ex.name] = idx++;
   }
-  // Per-day supersets then finisher
   for (const day of workoutPlan.days) {
     for (const ss of day.supersets) {
       for (const ex of ss.exercises) {
@@ -39,6 +36,57 @@ function formatDuration(seconds: number): string {
   return `${h}h ${m % 60}m`;
 }
 
+/** Get the Monday of the week for a given date */
+function getWeekKey(iso: string): string {
+  const d = new Date(iso);
+  const day = d.getDay();
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - ((day + 6) % 7));
+  return monday.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function isThisWeek(iso: string): boolean {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+  return new Date(iso) >= monday;
+}
+
+function isLastWeek(iso: string): boolean {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const thisMonday = new Date(now);
+  thisMonday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+  thisMonday.setHours(0, 0, 0, 0);
+  const lastMonday = new Date(thisMonday);
+  lastMonday.setDate(thisMonday.getDate() - 7);
+  const d = new Date(iso);
+  return d >= lastMonday && d < thisMonday;
+}
+
+/** Compute total volume (weight × reps) for a session */
+function sessionVolume(session: WorkoutSession): number {
+  let vol = 0;
+  for (const sets of Object.values(session.exercises)) {
+    for (const set of sets) {
+      const w = parseFloat(set.weight) || 0;
+      const r = parseInt(set.reps) || 0;
+      if (w > 0 && r > 0) vol += w * r;
+    }
+  }
+  return vol;
+}
+
+function formatVolume(vol: number): string {
+  if (vol === 0) return "";
+  if (vol >= 1000) return `${(vol / 1000).toFixed(1)}K lb`;
+  return `${Math.round(vol)} lb`;
+}
+
+type DayFilter = "All" | "Push" | "Pull" | "Carry";
+
 function SessionCard({
   session,
   onDelete,
@@ -53,6 +101,8 @@ function SessionCard({
     (a, b) => (exerciseOrder[a] ?? 999) - (exerciseOrder[b] ?? 999)
   );
 
+  const vol = useMemo(() => sessionVolume(session), [session]);
+
   function handleDelete() {
     if (!deleteConfirm) {
       setDeleteConfirm(true);
@@ -64,6 +114,8 @@ function SessionCard({
     onDelete(session.id);
   }
 
+  const dayLabel = session.day.split(" — ")[1] ?? session.day;
+
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a]">
       <button
@@ -71,8 +123,13 @@ function SessionCard({
         className="flex w-full items-center gap-3 px-4 py-3 text-left"
       >
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-zinc-300">{session.day.split(" — ")[1] ?? session.day}</p>
-          <p className="mt-0.5 text-xs text-zinc-600">{formatDate(session.date)}</p>
+          <p className="text-sm font-medium text-zinc-300">{dayLabel}</p>
+          <div className="mt-0.5 flex items-center gap-2">
+            <span className="text-xs text-zinc-600">{formatDate(session.date)}</span>
+            {vol > 0 && (
+              <span className="text-xs text-zinc-600">· {formatVolume(vol)}</span>
+            )}
+          </div>
         </div>
         <span className="text-xs text-zinc-500">{formatDuration(session.duration)}</span>
         <svg
@@ -141,6 +198,7 @@ function SessionCard({
 export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) {
   const { isAnonymous } = useAuth();
   const [sessions, setSessions] = useState<WorkoutSession[] | null>(null);
+  const [filter, setFilter] = useState<DayFilter>("All");
   const firstLoad = useRef(true);
 
   useEffect(() => {
@@ -150,9 +208,38 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
     });
   }, []);
 
+  const filtered = useMemo(() => {
+    if (!sessions) return [];
+    if (filter === "All") return sessions;
+    return sessions.filter((s) => s.day.includes(filter));
+  }, [sessions, filter]);
+
+  // Group sessions by week
+  const grouped = useMemo(() => {
+    const groups: Array<{ label: string; sessions: WorkoutSession[] }> = [];
+    let currentLabel = "";
+
+    for (const s of filtered) {
+      let label: string;
+      if (isThisWeek(s.date)) label = "This Week";
+      else if (isLastWeek(s.date)) label = "Last Week";
+      else label = `Week of ${getWeekKey(s.date)}`;
+
+      if (label !== currentLabel) {
+        currentLabel = label;
+        groups.push({ label, sessions: [s] });
+      } else {
+        groups[groups.length - 1].sessions.push(s);
+      }
+    }
+    return groups;
+  }, [filtered]);
+
   function handleDelete(id: string) {
     setSessions((prev) => prev?.filter((s) => s.id !== id) ?? null);
   }
+
+  const filters: DayFilter[] = ["All", "Push", "Pull", "Carry"];
 
   return (
     <div className="pb-4 pt-2">
@@ -185,24 +272,43 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
         </div>
       )}
 
-      {/* Progress chart + session list */}
+      {/* Session list with filters */}
       {sessions !== null && sessions.length > 0 && (
         <div className="space-y-4">
-          {/* Progress chart — show when 2+ sessions */}
-          {sessions.length >= 2 && (
-            <div className={firstLoad.current ? "animate-in" : ""}>
-              <ProgressChart sessions={sessions} />
-            </div>
-          )}
-
-          {/* Session list */}
-          <div className="space-y-2">
-            {sessions.map((s, i) => (
-              <div key={s.id} className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: `${i * 50}ms` } : undefined}>
-                <SessionCard session={s} onDelete={handleDelete} />
-              </div>
+          {/* Filter pills */}
+          <div className={`flex gap-1.5 ${firstLoad.current ? "animate-in" : ""}`}>
+            {filters.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  filter === f
+                    ? "border-red-500/40 bg-[#1a1a1a] text-white"
+                    : "border-white/10 text-zinc-500 active:text-zinc-300"
+                }`}
+              >
+                {f}
+              </button>
             ))}
           </div>
+
+          {/* Grouped session list */}
+          {filtered.length === 0 ? (
+            <p className="py-8 text-center text-xs text-zinc-600">No {filter} sessions yet</p>
+          ) : (
+            grouped.map((group) => (
+              <div key={group.label}>
+                <p className="mb-2 text-xs font-medium text-zinc-600">{group.label}</p>
+                <div className="space-y-2">
+                  {group.sessions.map((s, i) => (
+                    <div key={s.id} className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: `${i * 50}ms` } : undefined}>
+                      <SessionCard session={s} onDelete={handleDelete} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 

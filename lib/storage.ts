@@ -99,15 +99,24 @@ export async function saveSession(session: WorkoutSession): Promise<void> {
   saveLocalSession(session);
 }
 
+/** Extract the focus type from a day title (e.g. "Push" from "Day 1 — Push / Anti-Extension") */
+function dayFocus(day: string): string {
+  const after = day.split("—")[1] ?? day;
+  const focus = after.split("/")[0]?.trim() ?? day;
+  return focus;
+}
+
 export async function getLastSession(
   day: string,
 ): Promise<WorkoutSession | null> {
+  const focus = dayFocus(day);
   const sb = getSupabase();
   if (sb && (await ensureAuth())) {
+    // Match on focus type so both old ("Monday — Push...") and new ("Day 1 — Push...") sessions match
     const { data, error } = await sb
       .from("workout_sessions")
       .select("id, date, day, duration, exercises")
-      .eq("day", day)
+      .ilike("day", `%${focus}%`)
       .order("date", { ascending: false })
       .limit(1);
 
@@ -115,7 +124,7 @@ export async function getLastSession(
   }
   // Fallback
   const sessions = getLocalSessions()
-    .filter((s) => s.day === day)
+    .filter((s) => dayFocus(s.day) === focus)
     .sort((a, b) => b.date.localeCompare(a.date));
   return sessions[0] ?? null;
 }

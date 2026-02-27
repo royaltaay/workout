@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { getSessions, deleteSession, type WorkoutSession } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
 import { workoutPlan } from "@/lib/workout-data";
@@ -24,6 +24,12 @@ const exerciseOrder: Record<string, number> = (() => {
   return order;
 })();
 
+/** YYYY-MM-DD in local time */
+function toDateKey(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
@@ -34,36 +40,6 @@ function formatDuration(seconds: number): string {
   if (m < 60) return `${m}m`;
   const h = Math.floor(m / 60);
   return `${h}h ${m % 60}m`;
-}
-
-/** Get the Monday of the week for a given date */
-function getWeekKey(iso: string): string {
-  const d = new Date(iso);
-  const day = d.getDay();
-  const monday = new Date(d);
-  monday.setDate(d.getDate() - ((day + 6) % 7));
-  return monday.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function isThisWeek(iso: string): boolean {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
-  monday.setHours(0, 0, 0, 0);
-  return new Date(iso) >= monday;
-}
-
-function isLastWeek(iso: string): boolean {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const thisMonday = new Date(now);
-  thisMonday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
-  thisMonday.setHours(0, 0, 0, 0);
-  const lastMonday = new Date(thisMonday);
-  lastMonday.setDate(thisMonday.getDate() - 7);
-  const d = new Date(iso);
-  return d >= lastMonday && d < thisMonday;
 }
 
 /** Compute total volume (weight × reps) for a session */
@@ -86,6 +62,172 @@ function formatVolume(vol: number): string {
 }
 
 type DayFilter = "All" | "Push" | "Pull" | "Carry";
+
+// ---------------------------------------------------------------------------
+// Calendar
+// ---------------------------------------------------------------------------
+
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+
+function WorkoutCalendar({
+  sessions,
+  selectedDate,
+  onSelectDate,
+}: {
+  sessions: WorkoutSession[];
+  selectedDate: string | null;
+  onSelectDate: (date: string | null) => void;
+}) {
+  const [viewMonth, setViewMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+
+  // Set of YYYY-MM-DD keys that have sessions
+  const workoutDates = useMemo(() => {
+    const dates = new Set<string>();
+    for (const s of sessions) dates.add(toDateKey(s.date));
+    return dates;
+  }, [sessions]);
+
+  const todayKey = toDateKey(new Date().toISOString());
+
+  // Build calendar grid for viewMonth
+  const calendarDays = useMemo(() => {
+    const { year, month } = viewMonth;
+    const firstDay = new Date(year, month, 1);
+    const startDow = firstDay.getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Previous month padding
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    const cells: Array<{ day: number; key: string; inMonth: boolean }> = [];
+
+    for (let i = startDow - 1; i >= 0; i--) {
+      const d = prevMonthDays - i;
+      const prevMonth = month === 0 ? 11 : month - 1;
+      const prevYear = month === 0 ? year - 1 : year;
+      const key = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      cells.push({ day: d, key, inMonth: false });
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      cells.push({ day: d, key, inMonth: true });
+    }
+
+    // Next month padding to fill last row
+    const remaining = 7 - (cells.length % 7);
+    if (remaining < 7) {
+      const nextMonth = month === 11 ? 0 : month + 1;
+      const nextYear = month === 11 ? year + 1 : year;
+      for (let d = 1; d <= remaining; d++) {
+        const key = `${nextYear}-${String(nextMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        cells.push({ day: d, key, inMonth: false });
+      }
+    }
+
+    return cells;
+  }, [viewMonth]);
+
+  const prevMonth = useCallback(() => {
+    setViewMonth((v) => {
+      if (v.month === 0) return { year: v.year - 1, month: 11 };
+      return { year: v.year, month: v.month - 1 };
+    });
+  }, []);
+
+  const nextMonth = useCallback(() => {
+    setViewMonth((v) => {
+      if (v.month === 11) return { year: v.year + 1, month: 0 };
+      return { year: v.year, month: v.month + 1 };
+    });
+  }, []);
+
+  function handleTap(key: string) {
+    if (selectedDate === key) {
+      onSelectDate(null);
+    } else if (workoutDates.has(key)) {
+      onSelectDate(key);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-4">
+      {/* Month nav */}
+      <div className="mb-3 flex items-center justify-between">
+        <button onClick={prevMonth} className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 active:text-zinc-300">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h3 className="text-sm font-medium text-zinc-300">
+          {MONTH_NAMES[viewMonth.month]} {viewMonth.year}
+        </h3>
+        <button onClick={nextMonth} className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 active:text-zinc-300">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Day-of-week headers */}
+      <div className="mb-1 grid grid-cols-7">
+        {DAY_LABELS.map((label, i) => (
+          <span key={i} className="text-center text-[10px] font-medium text-zinc-600">{label}</span>
+        ))}
+      </div>
+
+      {/* Date cells */}
+      <div className="grid grid-cols-7">
+        {calendarDays.map((cell) => {
+          const hasWorkout = workoutDates.has(cell.key);
+          const isSelected = selectedDate === cell.key;
+          const isToday = cell.key === todayKey;
+
+          return (
+            <button
+              key={cell.key}
+              onClick={() => handleTap(cell.key)}
+              className="flex flex-col items-center py-1"
+            >
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs transition-colors ${
+                  isSelected
+                    ? "bg-red-500 font-semibold text-white"
+                    : isToday
+                      ? "font-medium text-white ring-1 ring-white/20"
+                      : cell.inMonth
+                        ? hasWorkout
+                          ? "text-zinc-300"
+                          : "text-zinc-500"
+                        : "text-zinc-700"
+                }`}
+              >
+                {cell.day}
+              </span>
+              {/* Workout indicator dot */}
+              <span
+                className={`mt-0.5 h-1 w-1 rounded-full ${
+                  hasWorkout
+                    ? isSelected
+                      ? "bg-white"
+                      : "bg-red-500"
+                    : "bg-transparent"
+                }`}
+              />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Session Card
+// ---------------------------------------------------------------------------
 
 function SessionCard({
   session,
@@ -195,10 +337,15 @@ function SessionCard({
   );
 }
 
+// ---------------------------------------------------------------------------
+// History View
+// ---------------------------------------------------------------------------
+
 export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) {
   const { isAnonymous } = useAuth();
   const [sessions, setSessions] = useState<WorkoutSession[] | null>(null);
   const [filter, setFilter] = useState<DayFilter>("All");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const firstLoad = useRef(true);
 
   useEffect(() => {
@@ -208,32 +355,26 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
     });
   }, []);
 
-  const filtered = useMemo(() => {
+  // Apply day-type filter
+  const typeFiltered = useMemo(() => {
     if (!sessions) return [];
     if (filter === "All") return sessions;
     return sessions.filter((s) => s.day.includes(filter));
   }, [sessions, filter]);
 
-  // Group sessions by week
-  const grouped = useMemo(() => {
-    const groups: Array<{ label: string; sessions: WorkoutSession[] }> = [];
-    let currentLabel = "";
+  // Apply date selection on top of type filter
+  const filtered = useMemo(() => {
+    if (!selectedDate) return typeFiltered;
+    return typeFiltered.filter((s) => toDateKey(s.date) === selectedDate);
+  }, [typeFiltered, selectedDate]);
 
-    for (const s of filtered) {
-      let label: string;
-      if (isThisWeek(s.date)) label = "This Week";
-      else if (isLastWeek(s.date)) label = "Last Week";
-      else label = `Week of ${getWeekKey(s.date)}`;
-
-      if (label !== currentLabel) {
-        currentLabel = label;
-        groups.push({ label, sessions: [s] });
-      } else {
-        groups[groups.length - 1].sessions.push(s);
-      }
-    }
-    return groups;
-  }, [filtered]);
+  // Label for selected date
+  const selectedLabel = useMemo(() => {
+    if (!selectedDate) return null;
+    const [y, m, d] = selectedDate.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  }, [selectedDate]);
 
   function handleDelete(id: string) {
     setSessions((prev) => prev?.filter((s) => s.id !== id) ?? null);
@@ -272,15 +413,24 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
         </div>
       )}
 
-      {/* Session list with filters */}
+      {/* Calendar + session list */}
       {sessions !== null && sessions.length > 0 && (
         <div className="space-y-4">
+          {/* Calendar */}
+          <div className={firstLoad.current ? "animate-in" : ""}>
+            <WorkoutCalendar
+              sessions={typeFiltered}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
+          </div>
+
           {/* Filter pills */}
-          <div className={`flex gap-1.5 ${firstLoad.current ? "animate-in" : ""}`}>
+          <div className={`flex gap-1.5 ${firstLoad.current ? "animate-in" : ""}`} style={firstLoad.current ? { animationDelay: "50ms" } : undefined}>
             {filters.map((f) => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => { setFilter(f); setSelectedDate(null); }}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   filter === f
                     ? "border-red-500/40 bg-[#1a1a1a] text-white"
@@ -292,22 +442,32 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
             ))}
           </div>
 
-          {/* Grouped session list */}
+          {/* Selected date header */}
+          {selectedDate && (
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium text-zinc-400">{selectedLabel}</p>
+              <button
+                onClick={() => setSelectedDate(null)}
+                className="text-xs text-zinc-600 active:text-zinc-400"
+              >
+                Show all
+              </button>
+            </div>
+          )}
+
+          {/* Session list */}
           {filtered.length === 0 ? (
-            <p className="py-8 text-center text-xs text-zinc-600">No {filter} sessions yet</p>
+            <p className="py-8 text-center text-xs text-zinc-600">
+              {selectedDate ? "No workouts on this date" : `No ${filter} sessions yet`}
+            </p>
           ) : (
-            grouped.map((group) => (
-              <div key={group.label}>
-                <p className="mb-2 text-xs font-medium text-zinc-600">{group.label}</p>
-                <div className="space-y-2">
-                  {group.sessions.map((s, i) => (
-                    <div key={s.id} className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: `${i * 50}ms` } : undefined}>
-                      <SessionCard session={s} onDelete={handleDelete} />
-                    </div>
-                  ))}
+            <div className="space-y-2">
+              {filtered.map((s, i) => (
+                <div key={s.id} className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: `${(i + 2) * 50}ms` } : undefined}>
+                  <SessionCard session={s} onDelete={handleDelete} />
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       )}

@@ -151,8 +151,8 @@ export const workoutPlan: WorkoutPlan = {
   },
   days: [
     {
-      label: "Mon",
-      title: "Monday — Push / Anti-Extension",
+      label: "Day 1",
+      title: "Day 1 — Push / Anti-Extension",
       supersets: [
         {
           name: "Superset",
@@ -184,8 +184,8 @@ export const workoutPlan: WorkoutPlan = {
       },
     },
     {
-      label: "Wed",
-      title: "Wednesday — Pull / Anti-Rotation",
+      label: "Day 2",
+      title: "Day 2 — Pull / Anti-Rotation",
       supersets: [
         {
           name: "Superset",
@@ -217,8 +217,8 @@ export const workoutPlan: WorkoutPlan = {
       },
     },
     {
-      label: "Fri",
-      title: "Friday — Carry / Total Body",
+      label: "Day 3",
+      title: "Day 3 — Carry / Total Body",
       supersets: [
         {
           name: "Superset",

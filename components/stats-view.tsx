@@ -26,9 +26,8 @@ function computeStreaks(sessions: WorkoutSession[]): {
   current: number;
   longest: number;
   thisWeek: number;
-  thisMonth: number;
 } {
-  if (sessions.length === 0) return { current: 0, longest: 0, thisWeek: 0, thisMonth: 0 };
+  if (sessions.length === 0) return { current: 0, longest: 0, thisWeek: 0 };
 
   // Unique workout dates sorted ascending
   const uniqueDates = Array.from(new Set(sessions.map((s) => toDateKey(s.date)))).sort();
@@ -42,7 +41,6 @@ function computeStreaks(sessions: WorkoutSession[]): {
 
   let current = 0;
   if (daysSinceLast <= 3) {
-    // Still within an active streak window
     current = 1;
     for (let i = uniqueDates.length - 2; i >= 0; i--) {
       const gap = daysBetween(uniqueDates[i], uniqueDates[i + 1]);
@@ -72,11 +70,7 @@ function computeStreaks(sessions: WorkoutSession[]): {
   monday.setHours(0, 0, 0, 0);
   const thisWeek = sessions.filter((s) => new Date(s.date) >= monday).length;
 
-  // This month
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const thisMonth = sessions.filter((s) => new Date(s.date) >= monthStart).length;
-
-  return { current, longest, thisWeek, thisMonth };
+  return { current, longest, thisWeek };
 }
 
 function computePersonalRecords(sessions: WorkoutSession[]): Array<{
@@ -115,6 +109,11 @@ function formatDuration(seconds: number): string {
   return `${h}h ${m % 60}m`;
 }
 
+function formatVolume(vol: number): string {
+  if (vol >= 1_000_000) return `${Math.round(vol / 1_000).toLocaleString()} lb`;
+  return `${vol.toLocaleString()} lb`;
+}
+
 // ---------------------------------------------------------------------------
 // Stat card component
 // ---------------------------------------------------------------------------
@@ -123,82 +122,81 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] px-4 py-3">
       <p className="text-xs text-zinc-500">{label}</p>
-      <p className="mt-0.5 text-xl font-semibold text-white">{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-zinc-600">{sub}</p>}
+      <div className="mt-0.5 flex items-baseline gap-1.5">
+        <span className="text-xl font-semibold text-white">{value}</span>
+        {sub && <span className="text-xs text-zinc-600">{sub}</span>}
+      </div>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Heatmap — last 12 weeks
+// Activity — weekly workout bars (last 12 weeks)
 // ---------------------------------------------------------------------------
 
-function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
-  const weeks = 12;
-  const dateCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const s of sessions) {
-      const key = toDateKey(s.date);
-      counts[key] = (counts[key] ?? 0) + 1;
+function WeeklyActivity({ sessions }: { sessions: WorkoutSession[] }) {
+  const maxPerWeek = 5; // max cells per row
+  const numWeeks = 12;
+
+  const weeks = useMemo(() => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    // Start of this week (Monday)
+    const thisMonday = new Date(now);
+    thisMonday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+    thisMonday.setHours(0, 0, 0, 0);
+
+    const result: Array<{ label: string; count: number; isCurrent: boolean }> = [];
+    for (let w = numWeeks - 1; w >= 0; w--) {
+      const weekStart = new Date(thisMonday);
+      weekStart.setDate(thisMonday.getDate() - w * 7);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 7);
+
+      const count = sessions.filter((s) => {
+        const d = new Date(s.date);
+        return d >= weekStart && d < weekEnd;
+      }).length;
+
+      const label = weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      result.push({ label, count, isCurrent: w === 0 });
     }
-    return counts;
+    return result;
   }, [sessions]);
-
-  // Build grid: 12 weeks × 7 days, ending today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dayOfWeek = (today.getDay() + 6) % 7; // Mon=0
-  const startDate = new Date(today);
-  startDate.setDate(today.getDate() - (weeks * 7 - 1) - dayOfWeek);
-
-  const grid: Array<{ date: string; count: number; future: boolean }> = [];
-  const d = new Date(startDate);
-  for (let i = 0; i < weeks * 7 + dayOfWeek + 1; i++) {
-    const key = toDateKey(d.toISOString());
-    grid.push({ date: key, count: dateCounts[key] ?? 0, future: d > today });
-    d.setDate(d.getDate() + 1);
-  }
-
-  const dayLabels = ["M", "", "W", "", "F", "", ""];
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-4">
       <h3 className="mb-3 text-sm font-medium text-zinc-400">Activity</h3>
-      <div className="flex gap-1">
-        {/* Day labels */}
-        <div className="flex flex-col gap-[3px] pr-1">
-          {dayLabels.map((label, i) => (
-            <span key={i} className="flex h-[14px] items-center text-[9px] text-zinc-600">{label}</span>
-          ))}
-        </div>
-        {/* Weeks */}
-        <div className="flex gap-[3px] overflow-hidden">
-          {Array.from({ length: weeks + 1 }, (_, weekIdx) => {
-            const weekStart = weekIdx * 7;
-            return (
-              <div key={weekIdx} className="flex flex-col gap-[3px]">
-                {Array.from({ length: 7 }, (_, dayIdx) => {
-                  const cell = grid[weekStart + dayIdx];
-                  if (!cell || cell.future) {
-                    return <span key={dayIdx} className="h-[14px] w-[14px] rounded-[3px] bg-white/[0.03]" />;
-                  }
-                  return (
-                    <span
-                      key={dayIdx}
-                      className={`h-[14px] w-[14px] rounded-[3px] ${
-                        cell.count >= 2
-                          ? "bg-red-500"
-                          : cell.count === 1
-                            ? "bg-red-500/50"
-                            : "bg-white/[0.06]"
-                      }`}
-                    />
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
+      <div className="mb-1.5 flex items-center gap-2">
+        <span className="w-12 shrink-0 text-right text-[9px] text-zinc-600">Week</span>
+        <span className="flex-1 text-[9px] text-zinc-600">Workouts</span>
+        <span className="w-4 text-right text-[9px] text-zinc-600">#</span>
+      </div>
+      <div className="space-y-1.5">
+        {weeks.map((week, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className={`w-12 shrink-0 text-right text-[10px] ${week.isCurrent ? "text-zinc-400" : "text-zinc-600"}`}>
+              {week.label}
+            </span>
+            <div className="flex flex-1 gap-1">
+              {Array.from({ length: maxPerWeek }, (_, j) => (
+                <div
+                  key={j}
+                  className={`h-3 flex-1 rounded-sm ${
+                    j < week.count
+                      ? week.count >= 3
+                        ? "bg-red-500"
+                        : "bg-red-500/50"
+                      : "bg-white/[0.06]"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className={`w-4 text-right text-[10px] ${week.count > 0 ? "text-zinc-400" : "text-zinc-700"}`}>
+              {week.count}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -222,13 +220,13 @@ function DayDistribution({ sessions }: { sessions: WorkoutSession[] }) {
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-4">
-      <h3 className="mb-3 text-sm font-medium text-zinc-400">Day Breakdown</h3>
+      <h3 className="mb-3 text-sm font-medium text-zinc-400">Workout Balance</h3>
       <div className="space-y-2.5">
         {dist.map((d) => (
           <div key={d.name}>
             <div className="mb-1 flex items-baseline justify-between">
               <span className="text-xs font-medium text-zinc-300">{d.name}</span>
-              <span className="text-xs text-zinc-600">{d.count} sessions</span>
+              <span className="text-xs text-zinc-600">{d.count}</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
               <div
@@ -267,7 +265,7 @@ function PersonalRecords({ sessions }: { sessions: WorkoutSession[] }) {
             <div className="text-right">
               <span className="text-sm font-semibold text-white">{pr.weight} lb</span>
               {pr.reps && (
-                <span className="ml-1.5 text-xs text-zinc-500">× {pr.reps}</span>
+                <span className="ml-1.5 text-xs text-zinc-500">x {pr.reps}</span>
               )}
             </div>
           </div>
@@ -302,7 +300,7 @@ export default function StatsView({ onOpenAuth }: { onOpenAuth: () => void }) {
   }, []);
 
   const streaks = useMemo(
-    () => (sessions ? computeStreaks(sessions) : { current: 0, longest: 0, thisWeek: 0, thisMonth: 0 }),
+    () => (sessions ? computeStreaks(sessions) : { current: 0, longest: 0, thisWeek: 0 }),
     [sessions]
   );
 
@@ -324,9 +322,7 @@ export default function StatsView({ onOpenAuth }: { onOpenAuth: () => void }) {
         }
       }
     }
-    if (vol >= 1_000_000) return `${(vol / 1_000_000).toFixed(1)}M lb`;
-    if (vol >= 1_000) return `${(vol / 1_000).toFixed(1)}K lb`;
-    return `${Math.round(vol)} lb`;
+    return formatVolume(vol);
   }, [sessions]);
 
   return (
@@ -362,7 +358,7 @@ export default function StatsView({ onOpenAuth }: { onOpenAuth: () => void }) {
 
       {/* Stats content */}
       {sessions !== null && sessions.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Streak cards */}
           <div className={`grid grid-cols-2 gap-3 ${firstLoad.current ? "animate-in" : ""}`}>
             <StatCard
@@ -377,42 +373,34 @@ export default function StatsView({ onOpenAuth }: { onOpenAuth: () => void }) {
             />
           </div>
 
-          {/* Overview cards */}
+          {/* Overview cards — 2x3 grid */}
           <div className={`grid grid-cols-2 gap-3 ${firstLoad.current ? "animate-in" : ""}`} style={firstLoad.current ? { animationDelay: "50ms" } : undefined}>
             <StatCard label="Total Workouts" value={sessions.length} />
             <StatCard label="Avg Duration" value={avgDuration} />
-          </div>
-
-          <div className={`grid grid-cols-2 gap-3 ${firstLoad.current ? "animate-in" : ""}`} style={firstLoad.current ? { animationDelay: "75ms" } : undefined}>
             <StatCard label="This Week" value={streaks.thisWeek} />
-            <StatCard label="This Month" value={streaks.thisMonth} />
-          </div>
-
-          {/* Total Volume */}
-          <div className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: "100ms" } : undefined}>
-            <StatCard label="Total Volume Lifted" value={totalVolume} />
-          </div>
-
-          {/* Activity heatmap */}
-          <div className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: "125ms" } : undefined}>
-            <WorkoutHeatmap sessions={sessions} />
+            <StatCard label="All-Time Volume" value={totalVolume} />
           </div>
 
           {/* Day distribution */}
-          <div className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: "150ms" } : undefined}>
+          <div className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: "100ms" } : undefined}>
             <DayDistribution sessions={sessions} />
           </div>
 
           {/* Progress chart */}
           {sessions.length >= 2 && (
-            <div className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: "175ms" } : undefined}>
+            <div className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: "125ms" } : undefined}>
               <ProgressChart sessions={sessions} />
             </div>
           )}
 
           {/* Personal records */}
-          <div className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: "200ms" } : undefined}>
+          <div className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: "150ms" } : undefined}>
             <PersonalRecords sessions={sessions} />
+          </div>
+
+          {/* Weekly activity */}
+          <div className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: "175ms" } : undefined}>
+            <WeeklyActivity sessions={sessions} />
           </div>
         </div>
       )}

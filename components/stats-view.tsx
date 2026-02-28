@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { getSessions, type WorkoutSession } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
 import { workoutPlan, exerciseIdToName } from "@/lib/workout-data";
+import { getGuestPreviewSessions } from "@/lib/guest-preview-data";
 import ProgressChart from "./progress-chart";
 
 // ---------------------------------------------------------------------------
@@ -297,15 +298,21 @@ function PersonalRecords({ sessions }: { sessions: WorkoutSession[] }) {
 
 export default function StatsView({ onOpenAuth }: { onOpenAuth: () => void }) {
   const { isAnonymous } = useAuth();
+  const isPreview = isAnonymous;
   const [sessions, setSessions] = useState<WorkoutSession[] | null>(null);
   const firstLoad = useRef(true);
 
   useEffect(() => {
+    if (isPreview) {
+      setSessions(getGuestPreviewSessions());
+      setTimeout(() => { firstLoad.current = false; }, 600);
+      return;
+    }
     getSessions().then((s) => {
       setSessions(s);
       setTimeout(() => { firstLoad.current = false; }, 600);
     });
-  }, []);
+  }, [isPreview]);
 
   const streaks = useMemo(
     () => (sessions ? computeStreaks(sessions) : { current: 0, longest: 0, thisWeek: 0 }),
@@ -335,6 +342,20 @@ export default function StatsView({ onOpenAuth }: { onOpenAuth: () => void }) {
 
   return (
     <div className="pb-4 pt-2">
+      {/* Guest preview banner */}
+      {isPreview && sessions && sessions.length > 0 && (
+        <div className="mb-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+          <p className="text-sm font-medium text-zinc-300">Sample data</p>
+          <p className="mt-0.5 text-xs text-zinc-500">This is what your stats look like as you train.</p>
+          <button
+            onClick={onOpenAuth}
+            className="mt-2.5 rounded-lg bg-red-500 px-4 py-1.5 text-xs font-medium text-white transition-colors active:bg-red-600"
+          >
+            Sign up to track yours
+          </button>
+        </div>
+      )}
+
       {/* Loading */}
       {sessions === null && (
         <div className="flex justify-center py-20">

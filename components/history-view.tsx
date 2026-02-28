@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { getSessions, deleteSession, type WorkoutSession } from "@/lib/storage";
 import { useAuth } from "@/lib/auth-context";
 import { workoutPlan, exerciseIdToName, dayById } from "@/lib/workout-data";
+import { getGuestPreviewSessions } from "@/lib/guest-preview-data";
 
 // Build a canonical exercise order from the workout plan, keyed by exercise ID.
 const exerciseOrder: Record<string, number> = (() => {
@@ -232,9 +233,11 @@ function WorkoutCalendar({
 function SessionCard({
   session,
   onDelete,
+  readOnly,
 }: {
   session: WorkoutSession;
   onDelete: (id: string) => void;
+  readOnly?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -320,19 +323,21 @@ function SessionCard({
             })}
 
             {/* Delete button */}
-            <button
-              onClick={handleDelete}
-              className={`flex items-center gap-1.5 text-xs transition-colors ${
-                deleteConfirm
-                  ? "text-red-500"
-                  : "text-zinc-600 active:text-zinc-400"
-              }`}
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-              </svg>
-              {deleteConfirm ? "Tap again to delete" : "Delete session"}
-            </button>
+            {!readOnly && (
+              <button
+                onClick={handleDelete}
+                className={`flex items-center gap-1.5 text-xs transition-colors ${
+                  deleteConfirm
+                    ? "text-red-500"
+                    : "text-zinc-600 active:text-zinc-400"
+                }`}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+                {deleteConfirm ? "Tap again to delete" : "Delete session"}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -346,17 +351,23 @@ function SessionCard({
 
 export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) {
   const { isAnonymous } = useAuth();
+  const isPreview = isAnonymous;
   const [sessions, setSessions] = useState<WorkoutSession[] | null>(null);
   const [filter, setFilter] = useState<DayFilter>("All");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const firstLoad = useRef(true);
 
   useEffect(() => {
+    if (isPreview) {
+      setSessions(getGuestPreviewSessions());
+      setTimeout(() => { firstLoad.current = false; }, 600);
+      return;
+    }
     getSessions().then((s) => {
       setSessions(s);
       setTimeout(() => { firstLoad.current = false; }, 600);
     });
-  }, []);
+  }, [isPreview]);
 
   // Apply day-type filter — sessions are normalized so s.day is a stable ID
   const typeFiltered = useMemo(() => {
@@ -394,6 +405,20 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
 
   return (
     <div className="pb-4 pt-2">
+      {/* Guest preview banner */}
+      {isPreview && sessions && sessions.length > 0 && (
+        <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+          <p className="text-sm font-medium text-zinc-300">Sample data</p>
+          <p className="mt-0.5 text-xs text-zinc-500">This is what your history looks like as you train.</p>
+          <button
+            onClick={onOpenAuth}
+            className="mt-2.5 rounded-lg bg-red-500 px-4 py-1.5 text-xs font-medium text-white transition-colors active:bg-red-600"
+          >
+            Sign up to track yours
+          </button>
+        </div>
+      )}
+
       {/* Loading spinner */}
       {sessions === null && (
         <div className="flex justify-center py-20">
@@ -474,7 +499,7 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
             <div className="space-y-2">
               {filtered.map((s, i) => (
                 <div key={s.id} className={firstLoad.current ? "animate-in" : ""} style={firstLoad.current ? { animationDelay: `${(i + 2) * 50}ms` } : undefined}>
-                  <SessionCard session={s} onDelete={handleDelete} />
+                  <SessionCard session={s} onDelete={handleDelete} readOnly={isPreview} />
                 </div>
               ))}
             </div>

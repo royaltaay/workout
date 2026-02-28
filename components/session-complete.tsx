@@ -220,145 +220,241 @@ async function renderShareCard(
   stats: { duration: string; volume: string; sets: number; exercises: number },
   prs: NewPR[],
   streak: number,
+  allSessions: WorkoutSession[],
 ): Promise<Blob> {
-  // 9:16 story ratio at 2x for sharp rendering
+  // 4:5 ratio (Instagram post)
   const W = 1080;
-  const H = 1920;
-  const PAD = 90;
+  const H = 1350;
+  const PAD = 72;
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
+  const FONT = "-apple-system, BlinkMacSystemFont, sans-serif";
+
+  // Rounded rect helper
+  function roundRect(
+    rx: number,
+    ry: number,
+    rw: number,
+    rh: number,
+    r: number,
+  ) {
+    ctx.beginPath();
+    ctx.moveTo(rx + r, ry);
+    ctx.lineTo(rx + rw - r, ry);
+    ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + r);
+    ctx.lineTo(rx + rw, ry + rh - r);
+    ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - r, ry + rh);
+    ctx.lineTo(rx + r, ry + rh);
+    ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - r);
+    ctx.lineTo(rx, ry + r);
+    ctx.quadraticCurveTo(rx, ry, rx + r, ry);
+    ctx.closePath();
+  }
 
   // Background
   ctx.fillStyle = "#0a0a0a";
   ctx.fillRect(0, 0, W, H);
 
   // Red glow at top
-  const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, 700);
-  glow.addColorStop(0, "rgba(239, 68, 68, 0.15)");
-  glow.addColorStop(0.5, "rgba(239, 68, 68, 0.04)");
+  const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, 600);
+  glow.addColorStop(0, "rgba(239, 68, 68, 0.14)");
+  glow.addColorStop(0.6, "rgba(239, 68, 68, 0.03)");
   glow.addColorStop(1, "rgba(239, 68, 68, 0)");
   ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, W, 700);
+  ctx.fillRect(0, 0, W, 600);
 
-  // Secondary glow at bottom for depth
-  const glow2 = ctx.createRadialGradient(W / 2, H, 0, W / 2, H, 500);
-  glow2.addColorStop(0, "rgba(239, 68, 68, 0.06)");
-  glow2.addColorStop(1, "rgba(239, 68, 68, 0)");
-  ctx.fillStyle = glow2;
-  ctx.fillRect(0, H - 500, W, 500);
-
-  let y = 140;
+  let y = 80;
 
   // DUNGYM wordmark
-  ctx.fillStyle = "#ef4444"; // red-500
-  ctx.font = "bold 32px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.letterSpacing = "6px";
+  ctx.fillStyle = "#ef4444";
+  ctx.font = `bold 28px ${FONT}`;
+  ctx.letterSpacing = "5px";
   ctx.fillText("DUNGYM", PAD, y);
   ctx.letterSpacing = "0px";
 
   // Day label + date
-  y += 80;
+  y += 56;
   const dayLabel = getDayLabel(session.day);
   const dateStr = new Date(session.date).toLocaleDateString("en-US", {
     weekday: "long",
     month: "short",
     day: "numeric",
   });
-  ctx.fillStyle = "#a1a1aa"; // zinc-400
-  ctx.font = "500 28px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillStyle = "#a1a1aa";
+  ctx.font = `500 24px ${FONT}`;
   ctx.fillText(`${dayLabel}  ·  ${dateStr}`, PAD, y);
 
   // Red accent line
-  y += 60;
+  y += 44;
   ctx.fillStyle = "#ef4444";
-  ctx.fillRect(PAD, y, 60, 4);
+  ctx.fillRect(PAD, y, 48, 3);
 
-  // Stats — big and bold, stacked vertically for readability
-  y += 80;
+  // --- Stat cards (2x2 grid) mirroring the modal ---
+  y += 36;
   const statItems = [
-    { label: "DURATION", value: stats.duration },
-    { label: "VOLUME", value: stats.volume === "—" ? "—" : `${stats.volume} lb` },
-    { label: "SETS", value: String(stats.sets) },
-    { label: "EXERCISES", value: String(stats.exercises) },
+    { label: "Duration", value: stats.duration },
+    { label: "Volume", value: stats.volume === "—" ? "—" : stats.volume, unit: stats.volume !== "—" ? " lb" : "" },
+    { label: "Sets", value: String(stats.sets) },
+    { label: "Exercises", value: String(stats.exercises) },
   ];
 
-  // 2x2 grid with generous spacing
-  const colW = (W - PAD * 2) / 2;
-  const rowH = 160;
+  const cardGap = 20;
+  const cardW = (W - PAD * 2 - cardGap) / 2;
+  const cardH = 120;
+  const cardRadius = 24;
+
   for (let i = 0; i < statItems.length; i++) {
     const col = i % 2;
     const row = Math.floor(i / 2);
-    const x = PAD + col * colW;
-    const sy = y + row * rowH;
+    const cx = PAD + col * (cardW + cardGap);
+    const cy = y + row * (cardH + cardGap);
+
+    // Card background
+    roundRect(cx, cy, cardW, cardH, cardRadius);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+    ctx.fill();
+    // Card border
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
     // Value
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 56px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(statItems[i].value, x, sy);
+    ctx.font = `bold 44px ${FONT}`;
+    ctx.fillText(statItems[i].value, cx + 28, cy + 56);
+
+    // Unit suffix
+    if ("unit" in statItems[i] && statItems[i].unit) {
+      const valWidth = ctx.measureText(statItems[i].value).width;
+      ctx.fillStyle = "#71717a";
+      ctx.font = `600 22px ${FONT}`;
+      ctx.fillText(statItems[i].unit!, cx + 28 + valWidth + 4, cy + 56);
+    }
 
     // Label
-    ctx.fillStyle = "#71717a"; // zinc-500
-    ctx.font = "600 20px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.letterSpacing = "2px";
-    ctx.fillText(statItems[i].label, x, sy + 40);
-    ctx.letterSpacing = "0px";
+    ctx.fillStyle = "#71717a";
+    ctx.font = `600 18px ${FONT}`;
+    ctx.fillText(statItems[i].label, cx + 28, cy + 88);
   }
 
-  y += rowH * 2 + 40;
+  y += (cardH + cardGap) * 2 + 16;
 
-  // PRs
+  // --- PRs ---
   if (prs.length > 0) {
-    ctx.fillStyle = "rgba(239, 68, 68, 0.15)";
-    ctx.fillRect(PAD, y, W - PAD * 2, 1);
-    y += 50;
+    const prCardH = 48 + prs.slice(0, 3).length * 44 + 20;
+    roundRect(PAD, y, W - PAD * 2, prCardH, cardRadius);
+    ctx.fillStyle = "rgba(239, 68, 68, 0.06)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(239, 68, 68, 0.20)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
-    ctx.fillStyle = "#ef4444"; // red-500
-    ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.letterSpacing = "3px";
-    ctx.fillText("PERSONAL RECORDS", PAD, y);
+    // PR header
+    ctx.fillStyle = "#ef4444";
+    ctx.font = `bold 16px ${FONT}`;
+    ctx.letterSpacing = "2px";
+    ctx.fillText(prs.length === 1 ? "NEW PERSONAL RECORD" : "NEW PERSONAL RECORDS", PAD + 28, y + 36);
     ctx.letterSpacing = "0px";
-    y += 50;
 
+    // PR rows
+    let pry = y + 72;
     for (const pr of prs.slice(0, 3)) {
       ctx.fillStyle = "#ffffff";
-      ctx.font = "600 30px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillText(getExerciseName(pr.exercise), PAD, y);
+      ctx.font = `500 24px ${FONT}`;
+      ctx.fillText(getExerciseName(pr.exercise), PAD + 28, pry);
 
       ctx.fillStyle = "#ef4444";
-      ctx.font = "bold 30px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.font = `bold 24px ${FONT}`;
       const weightStr = `${pr.weight} lb`;
-      const weightW = ctx.measureText(weightStr).width;
-      ctx.fillText(weightStr, W - PAD - weightW, y);
-      y += 48;
+      const ww = ctx.measureText(weightStr).width;
+      ctx.fillText(weightStr, W - PAD - 28 - ww, pry);
+      pry += 44;
     }
-    y += 20;
+    y += prCardH + 16;
   }
 
-  // Streak
-  if (streak >= 2) {
-    ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
-    ctx.fillRect(PAD, y, W - PAD * 2, 1);
-    y += 55;
+  // --- Volume chart (last 8 sessions as bars) ---
+  const volumeHistory = [...allSessions]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-8)
+    .map((s) => ({
+      vol: computeVolume(s.exercises),
+      isCurrent: s.id === session.id,
+      date: s.date,
+    }));
+
+  if (volumeHistory.length >= 2) {
+    const chartPad = 28;
+    const chartH = 130;
+    const chartCardH = chartH + 72;
+    roundRect(PAD, y, W - PAD * 2, chartCardH, cardRadius);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Chart label
+    ctx.fillStyle = "#71717a";
+    ctx.font = `600 16px ${FONT}`;
+    ctx.letterSpacing = "1px";
+    ctx.fillText("VOLUME", PAD + chartPad, y + 30);
+    ctx.letterSpacing = "0px";
+
+    const barAreaX = PAD + chartPad;
+    const barAreaW = W - PAD * 2 - chartPad * 2;
+    const barAreaY = y + 46;
+    const barAreaH = chartH - 6;
+    const maxVol = Math.max(...volumeHistory.map((v) => v.vol), 1);
+    const barW = Math.min(
+      (barAreaW - (volumeHistory.length - 1) * 8) / volumeHistory.length,
+      60,
+    );
+    const totalBarsW = volumeHistory.length * barW + (volumeHistory.length - 1) * 8;
+    const barsStartX = barAreaX + (barAreaW - totalBarsW) / 2;
+
+    for (let i = 0; i < volumeHistory.length; i++) {
+      const v = volumeHistory[i];
+      const barH = Math.max((v.vol / maxVol) * barAreaH, 4);
+      const bx = barsStartX + i * (barW + 8);
+      const by = barAreaY + barAreaH - barH;
+
+      roundRect(bx, by, barW, barH, 6);
+      ctx.fillStyle = v.isCurrent ? "#ef4444" : "rgba(255, 255, 255, 0.10)";
+      ctx.fill();
+    }
+
+    y += chartCardH + 16;
+  }
+
+  // --- Streak ---
+  if (streak >= 2 && y < H - 160) {
+    const streakH = 72;
+    roundRect(PAD, y, W - PAD * 2, streakH, cardRadius);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(239, 68, 68, 0.10)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 48px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(`${streak}`, PAD, y);
+    ctx.font = `bold 32px ${FONT}`;
+    ctx.fillText(`${streak}`, PAD + 28, y + 46);
+    const numW = ctx.measureText(`${streak}`).width;
     ctx.fillStyle = "#a1a1aa";
-    ctx.font = "500 28px -apple-system, BlinkMacSystemFont, sans-serif";
-    const numWidth = ctx.measureText(`${streak}`).width;
-    ctx.fillText(" session streak", PAD + numWidth, y);
+    ctx.font = `500 22px ${FONT}`;
+    ctx.fillText(" session streak", PAD + 28 + numW, y + 46);
   }
 
-  // Footer — prominent URL
-  ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
-  ctx.fillRect(PAD, H - 140, W - PAD * 2, 1);
-
+  // --- Footer — DUNGYM.APP ---
   ctx.fillStyle = "#ef4444";
-  ctx.font = "bold 28px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.letterSpacing = "3px";
-  ctx.fillText("DUNGYM.APP", PAD, H - 80);
+  ctx.font = `bold 24px ${FONT}`;
+  ctx.letterSpacing = "4px";
+  const footerText = "DUNGYM.APP";
+  const footerW = ctx.measureText(footerText).width;
+  ctx.fillText(footerText, (W - footerW) / 2, H - 56);
   ctx.letterSpacing = "0px";
 
   return new Promise((resolve) => {
@@ -378,6 +474,7 @@ export default function SessionComplete({
   const [prs, setPrs] = useState<NewPR[]>([]);
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
+  const [allSessions, setAllSessions] = useState<WorkoutSession[]>([]);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
   const dismissing = useRef(false);
@@ -392,6 +489,7 @@ export default function SessionComplete({
   // Load history for PRs and streak
   useEffect(() => {
     getSessions().then((all) => {
+      setAllSessions(all);
       setTotalSessions(all.length);
       setPrs(findNewPRs(session, all));
       setStreak(computeStreak(all));
@@ -420,6 +518,7 @@ export default function SessionComplete({
         { duration: durationStr, volume: volumeStr, sets, exercises },
         prs,
         streak,
+        allSessions,
       );
       const file = new File([blob], "dungym-session.png", {
         type: "image/png",
@@ -453,7 +552,7 @@ export default function SessionComplete({
       }
     }
     setSharing(false);
-  }, [session, durationStr, volumeStr, sets, exercises, prs, streak]);
+  }, [session, durationStr, volumeStr, sets, exercises, prs, streak, allSessions]);
 
   const { title, subtitle } = getHeadline(prs, streak, totalSessions);
 

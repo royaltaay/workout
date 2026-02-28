@@ -1123,46 +1123,6 @@ export default function WorkoutViewer() {
               </div>
             </div>
 
-            {/* Progression notes */}
-            <div className="animate-in mt-8 space-y-2" style={{ animationDelay: "350ms" }}>
-              <Collapsible title="Progression Notes">
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-sm font-medium text-zinc-300">Heavy Bell</h4>
-                    <p className="mt-0.5 text-sm text-zinc-500">
-                      Should make round 3 challenging but clean. If form breaks on the
-                      press, size down.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-zinc-300">Light Bell</h4>
-                    <p className="mt-0.5 text-sm text-zinc-500">
-                      Windmills should be slow and controlled. No grinding.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-zinc-300">Moving Up</h4>
-                    <p className="mt-0.5 text-sm text-zinc-500">
-                      Progress heavy bell first. When 3 rounds feel controlled, bump up
-                      one size.
-                    </p>
-                  </div>
-                </div>
-              </Collapsible>
-
-              <Collapsible title="Tempo Guide">
-                <p className="text-sm text-zinc-400">
-                  {workoutPlan.tempoExplanation}
-                </p>
-              </Collapsible>
-            </div>
-
-            <p className="mt-8 mb-6 text-center text-sm text-zinc-500">
-              A workout program by{" "}
-              <a href="mailto:tprince09@gmail.com" className="text-red-500/60">
-                Taylor Prince
-              </a>
-            </p>
           </>
         ) : (
           <HistoryView onOpenAuth={() => setActiveView("account")} />
@@ -1315,7 +1275,7 @@ export default function WorkoutViewer() {
                 <span className={`flex h-5 w-5 items-center justify-center text-xs font-semibold ${activeView === "account" ? "text-white" : "text-zinc-400"}`}>
                   {user.email[0].toUpperCase()}
                 </span>
-                <span className="text-[10px] font-medium">Account</span>
+                <span className="text-[10px] font-medium">More</span>
               </>
             ) : (
               <>

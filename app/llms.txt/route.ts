@@ -39,7 +39,7 @@ The program runs 3 days per week:
 - Built-in rest timer and progress tracking
 - Works in a garage, basement, or home gym
 - About 40 minutes per session
-- $4/mo for tracking and progress charts
+- $5/mo for tracking and progress charts
 
 ## Progression
 

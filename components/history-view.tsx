@@ -485,7 +485,7 @@ export default function HistoryView({ onOpenAuth }: { onOpenAuth: () => void }) 
       {/* Credit */}
       <p className={`mt-8 border-t border-white/5 pt-4 text-center text-sm text-zinc-500 ${firstLoad.current ? "animate-in" : ""}`} style={firstLoad.current ? { animationDelay: "200ms" } : undefined}>
         A workout program by{" "}
-        <a href="mailto:tprince09@gmail.com" className="text-red-500/60">
+        <a href="mailto:hello@taylormakeit.com" className="text-red-500/60">
           Taylor Prince
         </a>
       </p>

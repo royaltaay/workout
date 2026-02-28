@@ -4,6 +4,16 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useSubscription } from "@/lib/subscription-context";
 import { getSupabase } from "@/lib/supabase";
+import { workoutPlan } from "@/lib/workout-data";
+
+/** Get a fresh access token, refreshing if needed */
+async function getFreshToken(): Promise<string | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  // refreshSession() returns a fresh JWT even if the current one expired
+  const { data } = await sb.auth.refreshSession();
+  return data.session?.access_token ?? null;
+}
 
 export default function AccountView() {
   const { user, isAnonymous, signIn, verifyOtp, signOut } = useAuth();
@@ -59,14 +69,12 @@ export default function AccountView() {
   async function handleUpgrade() {
     setUpgradeLoading(true);
     try {
-      const sb = getSupabase();
-      if (!sb) return;
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session?.access_token) return;
+      const token = await getFreshToken();
+      if (!token) return;
 
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const { url } = await res.json();
       if (url) window.location.href = url;
@@ -81,14 +89,12 @@ export default function AccountView() {
     setPortalLoading(true);
     setPortalError(null);
     try {
-      const sb = getSupabase();
-      if (!sb) { setPortalError("Unable to connect"); return; }
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session?.access_token) { setPortalError("Please sign in again"); return; }
+      const token = await getFreshToken();
+      if (!token) { setPortalError("Please sign in again"); return; }
 
       const res = await fetch("/api/portal", {
         method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const body = await res.json();
       if (body.url) {
@@ -213,14 +219,14 @@ export default function AccountView() {
                   disabled={verifying || code.length < 8}
                   className="w-full rounded-xl bg-white py-3 text-sm font-semibold text-black transition-opacity disabled:opacity-40"
                 >
-                  {verifying ? "Verifying..." : "Verify & subscribe"}
+                  {verifying ? "Verifying..." : "Verify"}
                 </button>
               </form>
             </div>
           )
         ) : (
           <div className="animate-in">
-            <h2 className="text-lg font-semibold text-white">Account</h2>
+            <h2 className="text-lg font-semibold text-white">More</h2>
             <p className="mt-1 text-sm text-zinc-400">{user?.email}</p>
 
             {/* Subscription status */}
@@ -271,12 +277,61 @@ export default function AccountView() {
               </div>
             )}
 
+            {/* Contact */}
+            <a
+              href="mailto:hello@taylormakeit.com"
+              className="mt-3 flex w-full items-center justify-center rounded-xl border border-white/10 py-3 text-sm font-medium text-zinc-400 transition-colors active:text-white"
+            >
+              Contact
+            </a>
+
             <button
               onClick={handleSignOut}
               className="mt-3 w-full rounded-xl border border-white/10 py-3 text-sm font-medium text-zinc-400 transition-colors active:text-white"
             >
               Sign out
             </button>
+
+            {/* Program reference */}
+            <div className="mt-8 space-y-3">
+              <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-4">
+                <h3 className="text-sm font-medium text-zinc-300">Progression Notes</h3>
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <h4 className="text-xs font-medium text-zinc-400">Heavy Bell</h4>
+                    <p className="mt-0.5 text-sm text-zinc-500">
+                      Should make round 3 challenging but clean. If form breaks on the press, size down.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-medium text-zinc-400">Light Bell</h4>
+                    <p className="mt-0.5 text-sm text-zinc-500">
+                      Windmills should be slow and controlled. No grinding.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-medium text-zinc-400">Moving Up</h4>
+                    <p className="mt-0.5 text-sm text-zinc-500">
+                      Progress heavy bell first. When 3 rounds feel controlled, bump up one size.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-4">
+                <h3 className="text-sm font-medium text-zinc-300">Tempo Guide</h3>
+                <p className="mt-2 text-sm text-zinc-500">
+                  {workoutPlan.tempoExplanation}
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-8 mb-4 text-center text-sm text-zinc-500">
+              A workout program by{" "}
+              <a href="mailto:hello@taylormakeit.com" className="text-red-500/60">
+                Taylor Prince
+              </a>
+            </p>
           </div>
         )}
       </div>

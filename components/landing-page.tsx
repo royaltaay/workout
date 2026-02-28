@@ -31,10 +31,10 @@ function JsonLd({
       description,
       offers: {
         "@type": "Offer",
-        price: "4",
+        price: "5",
         priceCurrency: "USD",
         description:
-          "Free to try Day 1. $4/mo for the full program, workout tracking, and progress charts.",
+          "Free to try Day 1. $5/mo for the full program, workout tracking, and progress charts.",
       },
       author: {
         "@type": "Person",
@@ -255,7 +255,7 @@ export default function LandingPage({
             <p className="mt-1 text-[10px] text-zinc-500 sm:text-xs">kettlebell</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">$4</p>
+            <p className="text-2xl font-bold text-white">$5</p>
             <p className="mt-1 text-[10px] text-zinc-500 sm:text-xs">per month</p>
           </div>
         </div>
@@ -390,7 +390,7 @@ export default function LandingPage({
           <div className="mx-auto mt-10 max-w-sm rounded-2xl border border-white/10 bg-[#1a1a1a] px-6 py-8">
             <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Monthly</p>
             <div className="mt-3 flex items-baseline justify-center gap-1">
-              <span className="text-5xl font-bold tracking-tight text-white">$4</span>
+              <span className="text-5xl font-bold tracking-tight text-white">$5</span>
               <span className="text-sm text-zinc-500">/mo</span>
             </div>
             <p className="mt-2 text-xs text-zinc-600">Cancel anytime</p>

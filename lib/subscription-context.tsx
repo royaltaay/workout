@@ -66,7 +66,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, [authLoading, fetchSubscription]);
 
   // For canceled subscriptions, check if still within the paid period
+  const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true";
   const hasAccess =
+    DEV_BYPASS ||
     status === "trial" ||
     status === "active" ||
     (status === "canceled" &&

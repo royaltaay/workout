@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (!sub?.stripe_customer_id) {
-      return NextResponse.json({ error: "No subscription found" }, { status: 404 });
+      return NextResponse.json({ error: "No billing portal — your subscription is managed directly" }, { status: 404 });
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";

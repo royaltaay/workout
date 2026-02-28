@@ -23,7 +23,6 @@ import { useSubscription } from "@/lib/subscription-context";
 import HistoryView from "./history-view";
 import StatsView from "./stats-view";
 import AccountView from "./account-view";
-import SplashScreen from "./splash-screen";
 import UpgradeModal from "./upgrade-modal";
 
 function parseRest(rest: string): { lower: number; upper: number } {
@@ -652,7 +651,6 @@ function DayContent({
 export default function WorkoutViewer() {
   const { user, isAnonymous, loading } = useAuth();
   const { hasAccess, loading: subLoading, refresh: refreshSubscription } = useSubscription();
-  const [showSplash, setShowSplash] = useState<boolean | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activeView, setActiveView] = useState<"workout" | "history" | "stats" | "account">("workout");
   const [activeDay, setActiveDay] = useState(0);
@@ -704,9 +702,6 @@ export default function WorkoutViewer() {
     setActiveDay(canAccessAllDays ? getTodayTab() : 0);
     setHydrated(true);
     setExerciseLogs(getDraft());
-    // Show splash if user hasn't dismissed it before
-    const dismissed = localStorage.getItem("dungym-splash-dismissed");
-    setShowSplash(!dismissed);
   }, []);
 
   // Load previous session (async — Supabase with localStorage fallback)
@@ -976,26 +971,9 @@ export default function WorkoutViewer() {
     }
   }, [refreshSubscription]);
 
-  // Show splash for anonymous users who haven't dismissed it
-  // Wait for auth, subscription loading, and splash state hydration
-  if (loading || subLoading || showSplash === null) {
+  // Wait for auth and subscription loading
+  if (loading || subLoading) {
     return null;
-  }
-
-  if (showSplash && isAnonymous) {
-    return (
-      <SplashScreen
-        onViewProgram={() => {
-          localStorage.setItem("dungym-splash-dismissed", "1");
-          setShowSplash(false);
-        }}
-        onSignIn={() => {
-          localStorage.setItem("dungym-splash-dismissed", "1");
-          setShowSplash(false);
-          setActiveView("account");
-        }}
-      />
-    );
   }
 
   return (

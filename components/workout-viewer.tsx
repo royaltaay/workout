@@ -1218,8 +1218,7 @@ export default function WorkoutViewer() {
           </button>
           <button
             onClick={() => {
-              if (isAnonymous) { setActiveView("account"); }
-              else if (!hasAccess) { setShowUpgradeModal(true); }
+              if (!isAnonymous && !hasAccess) { setShowUpgradeModal(true); }
               else { setActiveView("history"); }
             }}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 transition-colors ${
@@ -1232,7 +1231,10 @@ export default function WorkoutViewer() {
             <span className="text-[10px] font-medium">History</span>
           </button>
           <button
-            onClick={() => setActiveView(isAnonymous ? "account" : "stats")}
+            onClick={() => {
+              if (!isAnonymous && !hasAccess) { setShowUpgradeModal(true); }
+              else { setActiveView("stats"); }
+            }}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 transition-colors ${
               activeView === "stats" ? "text-white" : "text-zinc-600"
             }`}

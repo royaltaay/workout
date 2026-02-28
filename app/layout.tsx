@@ -9,6 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://dungym.com"
+  ),
   title: {
     default: "Dungym | Kettlebell Strength Program You Can Do at Home",
     template: "%s | Dungym",
@@ -25,14 +28,28 @@ export const metadata: Metadata = {
     title: "Dungym | Kettlebell Strength Program You Can Do at Home",
     description:
       "A 3-day-a-week kettlebell strength program built around a functional complex plus hypertrophy supersets. Do it in your garage. No gym required.",
-    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Dungym - Kettlebell Strength Program",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Dungym | Kettlebell Strength Program You Can Do at Home",
     description:
       "A 3-day-a-week kettlebell strength program built around a functional complex plus hypertrophy supersets.",
-    images: ["/og-image.jpg"],
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Dungym - Kettlebell Strength Program",
+      },
+    ],
   },
   manifest: "/manifest.json",
   appleWebApp: {
@@ -43,6 +60,13 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

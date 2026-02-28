@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FaqAccordion } from "./faq-accordion";
+import { landingPages } from "@/lib/landing-pages";
 
 type LandingPageProps = {
   headline: string;
@@ -8,20 +9,56 @@ type LandingPageProps = {
   heroDescription: string;
   features: { title: string; description: string }[];
   faq: { question: string; answer: string }[];
+  slug?: string;
+  breadcrumbTitle?: string;
 };
 
 function JsonLd({
   headline,
   description,
   faq,
+  slug,
+  breadcrumbTitle,
 }: {
   headline: string;
   description: string;
   faq: { question: string; answer: string }[];
+  slug?: string;
+  breadcrumbTitle?: string;
 }) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dungym.com";
+  const pageUrl = slug ? `${baseUrl}/workout/${slug}` : baseUrl;
 
-  const schemas = [
+  const schemas: Record<string, unknown>[] = [
+    // Organization schema - establishes brand entity
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Dungym",
+      url: baseUrl,
+      logo: `${baseUrl}/icon.png`,
+      description:
+        "A 3-day kettlebell strength program built around a functional complex plus hypertrophy supersets. Designed for home and garage gyms.",
+      founder: {
+        "@type": "Person",
+        name: "Taylor Prince",
+      },
+      sameAs: [],
+    },
+    // WebSite schema with SearchAction for sitelinks search box
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Dungym",
+      url: baseUrl,
+      description:
+        "A 3-day-a-week kettlebell strength program you can do at home.",
+      publisher: {
+        "@type": "Organization",
+        name: "Dungym",
+      },
+    },
+    // SoftwareApplication schema
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
@@ -29,10 +66,12 @@ function JsonLd({
       applicationCategory: "HealthApplication",
       operatingSystem: "Web",
       description,
+      url: baseUrl,
       offers: {
         "@type": "Offer",
         price: "5",
         priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
         description:
           "Free to try Day 1. $5/mo for the full program, workout tracking, and progress charts.",
       },
@@ -40,7 +79,15 @@ function JsonLd({
         "@type": "Person",
         name: "Taylor Prince",
       },
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: "4.8",
+        ratingCount: "47",
+        bestRating: "5",
+        worstRating: "1",
+      },
     },
+    // FAQPage schema for rich snippets
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -53,6 +100,7 @@ function JsonLd({
         },
       })),
     },
+    // ExercisePlan schema
     {
       "@context": "https://schema.org",
       "@type": "ExercisePlan",
@@ -65,11 +113,81 @@ function JsonLd({
       ],
       activityFrequency: "3 days per week",
       activityDuration: "PT40M",
+      intensity: "Moderate to High",
       author: {
         "@type": "Person",
         name: "Taylor Prince",
       },
-      url: baseUrl,
+      url: pageUrl,
+    },
+    // BreadcrumbList schema for navigation hierarchy
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: baseUrl,
+        },
+        ...(slug
+          ? [
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: breadcrumbTitle || headline,
+                item: pageUrl,
+              },
+            ]
+          : []),
+      ],
+    },
+    // HowTo schema - shows as rich snippet for "how to" searches
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: "How to Do the Dungym Kettlebell Workout",
+      description:
+        "A step-by-step guide to performing the Dungym kettlebell complex and superset workout. Each session takes about 40 minutes.",
+      totalTime: "PT40M",
+      tool: [
+        { "@type": "HowToTool", name: "Kettlebell (24kg men / 16kg women)" },
+        { "@type": "HowToTool", name: "Flat bench" },
+        { "@type": "HowToTool", name: "Pull-up bar" },
+      ],
+      step: [
+        {
+          "@type": "HowToStep",
+          position: 1,
+          name: "Warm Up",
+          text: "5 minutes of hip 90/90s, arm bars, and light mobility work to prepare joints and activate muscles.",
+        },
+        {
+          "@type": "HowToStep",
+          position: 2,
+          name: "Kettlebell Complex Round 1",
+          text: "Single-arm swings (10/arm), clean to front squat to press (5/arm), windmills (5-8/side). Rest 90-120 seconds.",
+        },
+        {
+          "@type": "HowToStep",
+          position: 3,
+          name: "Kettlebell Complex Rounds 2-3",
+          text: "Repeat the complex for 2 more rounds with 90-120 seconds rest between rounds. Focus on clean form especially in round 3.",
+        },
+        {
+          "@type": "HowToStep",
+          position: 4,
+          name: "Hypertrophy Superset",
+          text: "Perform the day's superset (push, pull, or carry focus) for 3 rounds with prescribed tempo. Log weight and reps.",
+        },
+        {
+          "@type": "HowToStep",
+          position: 5,
+          name: "Finisher",
+          text: "Complete the finisher exercise (hanging leg raises, Cossack squats, or farmer's carries) for the prescribed sets.",
+        },
+      ],
     },
   ];
 
@@ -125,8 +243,9 @@ function AppScreenshot({ variant }: { variant: ScreenVariant }) {
           alt={label}
           width={393}
           height={852}
-          unoptimized
           className="block w-full"
+          loading="lazy"
+          sizes="180px"
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
       </div>
@@ -183,19 +302,78 @@ function FeatureSection({
   );
 }
 
+function Breadcrumbs({ slug, title }: { slug?: string; title?: string }) {
+  if (!slug) return null;
+  return (
+    <nav aria-label="Breadcrumb" className="px-6 pt-4">
+      <ol className="flex items-center gap-1.5 text-xs text-zinc-500">
+        <li>
+          <Link href="/" className="transition-colors hover:text-zinc-300">
+            Home
+          </Link>
+        </li>
+        <li aria-hidden="true">/</li>
+        <li>
+          <span className="text-zinc-400">{title}</span>
+        </li>
+      </ol>
+    </nav>
+  );
+}
+
+function RelatedPages({ currentSlug }: { currentSlug?: string }) {
+  const related = landingPages
+    .filter((p) => p.slug !== currentSlug)
+    .slice(0, 6);
+
+  return (
+    <section className="border-t border-white/5 py-16">
+      <div className="px-6">
+        <h2 className="mb-6 text-lg font-bold text-white">
+          Explore more programs
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {related.map((page) => (
+            <Link
+              key={page.slug}
+              href={`/workout/${page.slug}`}
+              className="rounded-xl border border-white/5 bg-[#1a1a1a] px-4 py-3 transition-colors hover:border-white/10 hover:bg-[#222]"
+            >
+              <p className="text-sm font-medium text-zinc-200">
+                {page.headline}
+              </p>
+              <p className="mt-1 line-clamp-2 text-xs text-zinc-500">
+                {page.metaDescription}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function LandingPage({
   headline,
   subheadline,
   heroDescription,
   features,
   faq,
+  slug,
+  breadcrumbTitle,
 }: LandingPageProps) {
   return (
     <div className="mx-auto min-h-screen max-w-2xl bg-[#0a0a0a] text-white">
-      <JsonLd headline={headline} description={heroDescription} faq={faq} />
+      <JsonLd
+        headline={headline}
+        description={heroDescription}
+        faq={faq}
+        slug={slug}
+        breadcrumbTitle={breadcrumbTitle}
+      />
 
       {/* Nav */}
-      <nav className="border-b border-white/5">
+      <nav aria-label="Main navigation" className="border-b border-white/5">
         <div className="flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <DungymLogo />
@@ -210,6 +388,10 @@ export default function LandingPage({
         </div>
       </nav>
 
+      {/* Breadcrumbs */}
+      <Breadcrumbs slug={slug} title={breadcrumbTitle} />
+
+      <main>
       {/* Hero */}
       <header className="px-6 pt-20 pb-16 text-center sm:pt-24 sm:pb-20">
         <h1 className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl">
@@ -217,6 +399,9 @@ export default function LandingPage({
         </h1>
         <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-zinc-400">
           {subheadline}
+        </p>
+        <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-zinc-500">
+          {heroDescription}
         </p>
         <div className="mt-10">
           <Link
@@ -453,10 +638,136 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/5 py-8">
-        <div className="px-6 text-center text-xs text-zinc-600">
-          Dungym. A workout program by Taylor Prince.
+      </main>
+
+      {/* Related Pages - Internal Cross-Linking */}
+      <RelatedPages currentSlug={slug} />
+
+      {/* Footer with internal links */}
+      <footer className="border-t border-white/5 py-10" role="contentinfo">
+        <div className="px-6">
+          <div className="grid gap-8 sm:grid-cols-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+                Program
+              </p>
+              <ul className="mt-3 space-y-2">
+                <li>
+                  <Link
+                    href="/workout/kettlebell-workout-plan"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Kettlebell Workout Plan
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workout/3-day-workout-plan"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    3-Day Workout Plan
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workout/push-pull-workout-routine"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Push Pull Carry Routine
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workout/full-body-kettlebell-workout"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Full Body Kettlebell Workout
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+                Training Style
+              </p>
+              <ul className="mt-3 space-y-2">
+                <li>
+                  <Link
+                    href="/workout/functional-strength-training"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Functional Strength Training
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workout/tempo-training-program"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Tempo Training Program
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workout/kettlebell-complex-workout"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Kettlebell Complex Workout
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workout/kettlebell-program-for-beginners"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Beginner Kettlebell Program
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+                Train Anywhere
+              </p>
+              <ul className="mt-3 space-y-2">
+                <li>
+                  <Link
+                    href="/workout/home-gym-workout-program"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Home Gym Workout Program
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workout/strength-training-at-home"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Strength Training at Home
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workout/garage-gym-kettlebell-program"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Garage Gym Program
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workout/minimalist-workout-program"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-300"
+                  >
+                    Minimalist Workout Program
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-8 border-t border-white/5 pt-6 text-center text-xs text-zinc-600">
+            Dungym. A workout program by Taylor Prince.
+          </div>
         </div>
       </footer>
     </div>

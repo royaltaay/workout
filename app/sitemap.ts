@@ -11,6 +11,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.8,
+    images: [
+      `${BASE_URL}/og-image.jpg`,
+      `${BASE_URL}/screenshots/workout1.webp`,
+      `${BASE_URL}/screenshots/workout2withrest.webp`,
+      `${BASE_URL}/screenshots/stats1.webp`,
+    ],
   }));
 
   return [
@@ -19,6 +25,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
+      images: [
+        `${BASE_URL}/og-image.jpg`,
+        `${BASE_URL}/screenshots/workout1.webp`,
+        `${BASE_URL}/screenshots/workout2withrest.webp`,
+        `${BASE_URL}/screenshots/stats1.webp`,
+        `${BASE_URL}/screenshots/history.webp`,
+        `${BASE_URL}/screenshots/stats2.webp`,
+      ],
     },
     ...landingPages,
   ];

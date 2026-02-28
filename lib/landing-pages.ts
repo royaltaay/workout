@@ -448,6 +448,494 @@ export const landingPages: LandingPageData[] = [
       "kettlebell conditioning workout",
     ],
   },
+  {
+    slug: "strength-training-at-home",
+    title: "Strength Training at Home, No Gym Required | Dungym",
+    metaTitle: "Strength Training at Home, No Gym Required | Dungym",
+    metaDescription:
+      "Build real strength at home with a structured 3-day program. Kettlebell complexes plus compound lifts. No gym membership needed, just a kettlebell and 40 minutes.",
+    headline: "Build real strength without leaving your house.",
+    subheadline:
+      "A structured strength program designed for your living room, garage, or basement. Three days a week, 40 minutes, one kettlebell.",
+    heroDescription:
+      "You don't need a gym membership to get strong. Dungym was built for people who train at home. Every session uses a kettlebell complex for functional strength and conditioning, then compound movements (bench press, pull-ups, RDLs) for muscle. Prescribed tempo on every rep so you build strength through full ranges of motion. 40 minutes, three days a week. That's it.",
+    features: [
+      {
+        title: "No gym required",
+        description:
+          "Everything in the program can be done in a garage, basement, spare room, or backyard. No cables, no machines, no commute.",
+      },
+      {
+        title: "Compound movements only",
+        description:
+          "Kettlebell swings, bench press, pull-ups, RDLs, rows, farmer's carries. Multi-joint exercises that build strength efficiently with minimal equipment.",
+      },
+      {
+        title: "Strength and conditioning together",
+        description:
+          "The kettlebell complex builds your conditioning. The supersets build muscle. One session covers both. No separate cardio days needed.",
+      },
+      {
+        title: "Progressive overload at home",
+        description:
+          "Track your weights and reps in the app. Move up when the prescribed work feels controlled. Linear progression that works without a full weight rack.",
+      },
+      {
+        title: "Time-efficient sessions",
+        description:
+          "40 minutes from warm-up to finisher. No waiting for equipment, no walking across a gym floor. Start training the moment you're ready.",
+      },
+      {
+        title: "Sustainable long-term",
+        description:
+          "Three days a week with built-in rest. A program you can run for years without burnout, overtraining, or schedule conflicts.",
+      },
+    ],
+    faq: [
+      {
+        question: "Can I really build strength training at home?",
+        answer:
+          "Yes. Compound movements with progressive overload build strength regardless of location. A kettlebell, bench, and pull-up bar give you access to all the major movement patterns: hinge, squat, press, pull, and carry.",
+      },
+      {
+        question: "What if I only have a kettlebell?",
+        answer:
+          "You can start with just the kettlebell. The complex is the core of every session and only requires one bell. As you progress, a bench and pull-up bar unlock the full superset work.",
+      },
+      {
+        question: "How does this compare to going to a gym?",
+        answer:
+          "For building functional strength and lean muscle, home training with compound movements is equally effective. You trade machine isolation work for free-weight stability and save hours per week on commuting.",
+      },
+    ],
+    keywords: [
+      "strength training at home",
+      "home strength workout",
+      "at home strength program",
+      "home workout for strength",
+      "strength training without gym",
+      "build muscle at home",
+    ],
+  },
+  {
+    slug: "kettlebell-program-for-beginners",
+    title: "Kettlebell Program for Beginners, Start Here | Dungym",
+    metaTitle: "Kettlebell Program for Beginners, Start Here | Dungym",
+    metaDescription:
+      "A beginner-friendly kettlebell program with tempo guidance on every rep. Learn swings, cleans, presses, and windmills in a structured 3-day plan. Start with Day 1 free.",
+    headline: "New to kettlebells? Start here.",
+    subheadline:
+      "A structured program with tempo guidance on every rep. Learn the movements, build the habit, get strong.",
+    heroDescription:
+      "Dungym is built around fundamental kettlebell movements: swings, cleans, front squats, presses, and windmills. Every exercise has a prescribed tempo that teaches you proper control. Slow eccentrics, controlled concentrics. The app guides you through each session with rest timers and tempo cues. Start with a weight that feels moderate and let the program teach you the rest.",
+    features: [
+      {
+        title: "Tempo teaches technique",
+        description:
+          "Every rep has a prescribed tempo (e.g., 3-1-1-0). The slow eccentrics force you to control the weight. You learn proper form by slowing down, not by watching videos.",
+      },
+      {
+        title: "Five core movements",
+        description:
+          "Single-arm swings, cleans, front squats, presses, and windmills. Master these five and you have a complete training foundation.",
+      },
+      {
+        title: "Three days a week",
+        description:
+          "Monday, Wednesday, Friday. Enough frequency to build skill and strength, enough rest to recover. Perfect for building the training habit.",
+      },
+      {
+        title: "Start light, progress naturally",
+        description:
+          "Begin with a weight where round 3 is challenging but clean. When it feels controlled, move up. No complicated periodization, just simple progression.",
+      },
+      {
+        title: "Guided sessions",
+        description:
+          "The app tells you what to do, how many reps, what tempo, and when to rest. No guesswork, no decision fatigue.",
+      },
+      {
+        title: "Try Day 1 free",
+        description:
+          "See the full Day 1 workout before committing. No sign-up required. If it clicks, subscribe for $5/mo to unlock the full program.",
+      },
+    ],
+    faq: [
+      {
+        question: "I've never used a kettlebell. Can I do this program?",
+        answer:
+          "If you can safely swing a kettlebell, you can start this program. The tempo prescriptions will teach you control. Start with a lighter weight and focus on form. If you're completely new, practice basic swings for a week first.",
+      },
+      {
+        question: "What weight kettlebell should a beginner use?",
+        answer:
+          "Most men should start with a 16kg kettlebell, most women with a 12kg. The key is that round 3 of the complex should feel challenging but your form should stay clean. Go lighter if needed.",
+      },
+      {
+        question: "How long before I see results?",
+        answer:
+          "Most people notice improved grip strength and conditioning within 2-3 weeks. Visible muscle changes typically appear at 6-8 weeks. The tempo work accelerates results because every rep is maximally effective.",
+      },
+      {
+        question: "What if an exercise is too hard?",
+        answer:
+          "Use a lighter kettlebell or reduce reps. The windmill is usually the hardest movement for beginners. Start with no weight on windmills and add the bell once you have the pattern. The program adapts to your level.",
+      },
+    ],
+    keywords: [
+      "kettlebell program for beginners",
+      "beginner kettlebell workout",
+      "kettlebell training for beginners",
+      "starting kettlebell program",
+      "learn kettlebell exercises",
+      "kettlebell workout plan beginner",
+    ],
+  },
+  {
+    slug: "push-pull-workout-routine",
+    title: "Push Pull Carry Workout Routine, 3 Days a Week | Dungym",
+    metaTitle: "Push Pull Carry Workout Routine, 3 Days a Week | Dungym",
+    metaDescription:
+      "A push/pull/carry workout split built around kettlebell complexes. Monday push, Wednesday pull, Friday carry. Complete program with tempo and tracking.",
+    headline: "Push. Pull. Carry. Repeat.",
+    subheadline:
+      "A clean 3-day split. Every session starts with the kettlebell complex, then focuses on one movement pattern.",
+    heroDescription:
+      "The Dungym program uses a push/pull/carry split across three days. Monday is bench press, rows, and anti-extension. Wednesday is pull-ups, Pallof press, and anti-rotation. Friday is RDLs, dead bugs, and farmer's carries. Every session opens with the same kettlebell complex for conditioning. This split covers every movement pattern with enough volume to grow and enough rest to recover.",
+    features: [
+      {
+        title: "Monday: Push + Anti-Extension",
+        description:
+          "Bench press and barbell rows paired in a superset. Hanging leg raises as finisher. Upper body horizontal pressing with core stability.",
+      },
+      {
+        title: "Wednesday: Pull + Anti-Rotation",
+        description:
+          "Pull-ups and Pallof press paired in a superset. Cossack squats as finisher. Vertical pulling with rotational stability.",
+      },
+      {
+        title: "Friday: Carry + Total Body",
+        description:
+          "RDLs and dead bugs paired in a superset. Farmer's carries as finisher. Posterior chain strength with loaded carries.",
+      },
+      {
+        title: "Same complex, different focus",
+        description:
+          "The kettlebell complex (swings, cleans, squats, presses, windmills) opens every session. Then the superset targets a specific pattern for focused volume.",
+      },
+      {
+        title: "Balanced programming",
+        description:
+          "Push and pull are balanced. Horizontal and vertical movements are balanced. Anterior and posterior chain work is balanced. No imbalances, no weak links.",
+      },
+      {
+        title: "Recovery built in",
+        description:
+          "Each movement pattern gets trained once per week directly, with indirect work from the daily complex. Four rest days per week for full recovery.",
+      },
+    ],
+    faq: [
+      {
+        question: "What is a push/pull/carry split?",
+        answer:
+          "A training split that organizes workouts by movement pattern. Push day focuses on pressing movements (bench press). Pull day focuses on pulling movements (pull-ups). Carry day focuses on hip hinge and loaded carries (RDLs, farmer's carries).",
+      },
+      {
+        question: "Why push/pull/carry instead of push/pull/legs?",
+        answer:
+          "The kettlebell complex already trains legs every session (front squats, swings). The carry day adds RDLs for posterior chain and farmer's carries for total body strength. This avoids redundancy and covers patterns a traditional PPL misses.",
+      },
+      {
+        question: "Is one day per movement pattern enough volume?",
+        answer:
+          "Yes, because the kettlebell complex provides indirect volume for every pattern every session. Your legs, shoulders, and core get trained three times per week through the complex. The superset adds focused volume on top.",
+      },
+    ],
+    keywords: [
+      "push pull workout routine",
+      "push pull carry split",
+      "push pull workout plan",
+      "3 day push pull routine",
+      "push pull workout schedule",
+      "push pull carry program",
+    ],
+  },
+  {
+    slug: "full-body-kettlebell-workout",
+    title: "Full Body Kettlebell Workout, 40 Minutes | Dungym",
+    metaTitle: "Full Body Kettlebell Workout, 40 Minutes | Dungym",
+    metaDescription:
+      "A full body kettlebell workout you can do in 40 minutes. Swings, cleans, squats, presses, windmills plus compound supersets. Complete program with tracking.",
+    headline: "Full body. One kettlebell. 40 minutes.",
+    subheadline:
+      "Every session trains your entire body through a kettlebell complex and compound supersets. No muscle left behind.",
+    heroDescription:
+      "Every Dungym session is a full-body workout. The kettlebell complex trains your legs (swings, squats), upper body (cleans, presses), and core (windmills) in one continuous flow. Then the superset adds focused compound work: bench press, pull-ups, RDLs, rows, and carries. 40 minutes, three times a week. Every major muscle group gets hit every session.",
+    features: [
+      {
+        title: "Total body in every session",
+        description:
+          "The complex alone trains hips, quads, shoulders, back, and core. The superset adds focused work for chest, lats, hamstrings, and grip. Nothing is skipped.",
+      },
+      {
+        title: "40-minute sessions",
+        description:
+          "Warm-up (5 min), complex (15 min), superset (15 min), finisher (5 min). Dense, efficient training that respects your time.",
+      },
+      {
+        title: "One kettlebell starts it all",
+        description:
+          "The entire complex requires one kettlebell. Add a bench and pull-up bar for the supersets and you have a complete training setup.",
+      },
+      {
+        title: "Conditioning built in",
+        description:
+          "Three rounds of the kettlebell complex with 90-120 second rests builds serious work capacity. You don't need separate cardio sessions.",
+      },
+      {
+        title: "Compound movements only",
+        description:
+          "No isolation exercises. Every movement is multi-joint: swings, squats, presses, pull-ups, RDLs. More muscle recruited per rep, more efficiency per session.",
+      },
+      {
+        title: "Train three, rest four",
+        description:
+          "Three full-body sessions per week gives you frequency and volume. Four rest days gives you recovery. The balance that builds muscle without breaking you down.",
+      },
+    ],
+    faq: [
+      {
+        question: "Can a full body workout build muscle?",
+        answer:
+          "Yes. Full body training 3 times per week provides optimal training frequency for hypertrophy. Each muscle group gets trained 3 times per week (through the complex) plus targeted work through the supersets. Research supports this frequency for muscle growth.",
+      },
+      {
+        question: "Will 40 minutes be enough?",
+        answer:
+          "Yes, because every minute is productive. Tempo-controlled reps with compound movements provide more stimulus per rep than fast, sloppy training. The supersets eliminate wasted rest time. Quality over quantity.",
+      },
+      {
+        question: "Can I add more exercises?",
+        answer:
+          "The program is intentionally minimal. Adding exercises extends sessions and reduces recovery. If you want more work, add light mobility on rest days or increase your kettlebell weight before adding volume.",
+      },
+    ],
+    keywords: [
+      "full body kettlebell workout",
+      "total body kettlebell training",
+      "full body workout with kettlebell",
+      "kettlebell full body routine",
+      "40 minute full body workout",
+      "complete kettlebell workout",
+    ],
+  },
+  {
+    slug: "tempo-training-program",
+    title: "Tempo Training Program, Controlled Reps for Real Strength | Dungym",
+    metaTitle: "Tempo Training Program, Controlled Reps for Real Strength | Dungym",
+    metaDescription:
+      "A strength program with prescribed tempo on every exercise. Slow eccentrics, controlled concentrics. Build real strength and muscle with time under tension.",
+    headline: "Slow down. Get stronger.",
+    subheadline:
+      "Every rep has a prescribed tempo. Slow eccentrics build real strength. No bouncing, no momentum, no wasted reps.",
+    heroDescription:
+      "Tempo training prescribes how fast you perform each phase of a rep: eccentric (lowering), pause at bottom, concentric (lifting), pause at top. For example, a 3-1-1-0 tempo means 3 seconds down, 1 second pause, 1 second up, no pause at top. Dungym prescribes tempo on every exercise, from explosive swings (X-0-X-0) to slow windmills (3-1-3-1). This builds strength through full ranges, improves muscle control, and eliminates wasted reps.",
+    features: [
+      {
+        title: "Prescribed tempo on every movement",
+        description:
+          "Every exercise in the program has a specific tempo prescription. The app displays it so you know exactly how to perform each rep.",
+      },
+      {
+        title: "Slow eccentrics for strength",
+        description:
+          "3-second eccentrics create more time under tension and more muscle damage (the good kind). This is how you build strength through full ranges of motion.",
+      },
+      {
+        title: "Explosive where it matters",
+        description:
+          "Kettlebell swings use an explosive tempo (X-0-X-0). Windmills use a slow tempo (3-1-3-1). Each movement gets the tempo it needs for maximum benefit.",
+      },
+      {
+        title: "No wasted reps",
+        description:
+          "When you control the tempo, every rep counts. No bouncing off your chest on bench press, no kipping on pull-ups, no rushing through RDLs.",
+      },
+      {
+        title: "Built-in timer guidance",
+        description:
+          "The app includes tempo cues so you can internalize the rhythm of each exercise. Over time, proper tempo becomes automatic.",
+      },
+      {
+        title: "Better results in less time",
+        description:
+          "Tempo-controlled reps provide more stimulus per rep than fast, uncontrolled reps. You get more from 3 sets of 8 with tempo than 5 sets of 12 without.",
+      },
+    ],
+    faq: [
+      {
+        question: "What is tempo training?",
+        answer:
+          "Tempo training prescribes the speed of each phase of a repetition, typically written as four numbers: eccentric-pause-concentric-pause. A tempo of 3-1-1-0 means 3 seconds lowering, 1 second pause, 1 second lifting, 0 seconds at top. 'X' means explosive.",
+      },
+      {
+        question: "Will I need to use lighter weights?",
+        answer:
+          "Initially, yes. Tempo-controlled reps are harder than uncontrolled reps. Most people drop 10-20% from their normal weights when they start. The strength gains come faster because every rep is more effective.",
+      },
+      {
+        question: "Does tempo training build more muscle?",
+        answer:
+          "Research shows that increased time under tension, particularly during the eccentric phase, is a primary driver of hypertrophy. Tempo training maximizes time under tension per rep, making each set more effective for muscle growth.",
+      },
+    ],
+    keywords: [
+      "tempo training program",
+      "tempo training workout",
+      "time under tension workout",
+      "slow eccentric training",
+      "controlled rep training",
+      "tempo strength program",
+    ],
+  },
+  {
+    slug: "minimalist-workout-program",
+    title: "Minimalist Workout Program, Maximum Results | Dungym",
+    metaTitle: "Minimalist Workout Program, Maximum Results | Dungym",
+    metaDescription:
+      "A minimalist workout program that gets maximum results from minimum equipment and time. One kettlebell, 3 days, 40 minutes. No fluff, just compound movements.",
+    headline: "Less equipment. Less time. More results.",
+    subheadline:
+      "One kettlebell. Three days a week. 40 minutes. A program stripped to what actually works.",
+    heroDescription:
+      "Most programs have too many exercises, too many days, and too much equipment. Dungym is the opposite. One kettlebell complex, one superset, one finisher. Three days a week. About 40 minutes. Every exercise is a compound movement that recruits multiple muscle groups. No isolation, no machines, no fluff. Just the movements that build the most strength with the least complexity.",
+    features: [
+      {
+        title: "One kettlebell to start",
+        description:
+          "The entire kettlebell complex requires one bell. That's the core of every session. A bench and pull-up bar unlock the supersets when you're ready.",
+      },
+      {
+        title: "Three sessions, four rest days",
+        description:
+          "Monday, Wednesday, Friday. That's your training. The other four days are for recovery, life, and whatever else matters to you.",
+      },
+      {
+        title: "Compound movements only",
+        description:
+          "Swings, cleans, squats, presses, bench, pull-ups, RDLs, carries. Every exercise trains multiple joints and muscle groups. Maximum return per movement.",
+      },
+      {
+        title: "No decision fatigue",
+        description:
+          "The program tells you exactly what to do every session: exercises, sets, reps, tempo, rest. Open the app, start training.",
+      },
+      {
+        title: "No fluff, no filler",
+        description:
+          "No tricep kickbacks, no cable flyes, no leg extensions. Every exercise in the program earns its spot by training fundamental movement patterns.",
+      },
+      {
+        title: "$5 per month",
+        description:
+          "No annual contracts, no upsells, no premium tiers. One price for the complete program, tracking, and progress charts. Cancel anytime.",
+      },
+    ],
+    faq: [
+      {
+        question: "Can a minimalist program really build muscle?",
+        answer:
+          "Yes. Compound movements with progressive overload and controlled tempo are the primary drivers of muscle growth. The kettlebell complex plus supersets provide sufficient volume for all major muscle groups. Most programs include unnecessary exercises.",
+      },
+      {
+        question: "What if I want to do more?",
+        answer:
+          "If you consistently complete all three sessions and the weights are going up, the program is working. Adding more training risks overtraining and reduces recovery. If you have extra energy, increase your kettlebell weight.",
+      },
+      {
+        question: "Is this enough volume for each muscle group?",
+        answer:
+          "Each muscle group gets trained 2-3 times per week through the combination of the daily complex and rotating supersets. Research shows this frequency is optimal for hypertrophy. Volume per session is moderate, but frequency makes up for it.",
+      },
+    ],
+    keywords: [
+      "minimalist workout program",
+      "minimal equipment workout plan",
+      "simple workout program",
+      "essentialist training program",
+      "minimalist strength training",
+      "no gym workout program",
+    ],
+  },
+  {
+    slug: "garage-gym-kettlebell-program",
+    title: "Garage Gym Kettlebell Program, Built for Small Spaces | Dungym",
+    metaTitle: "Garage Gym Kettlebell Program, Built for Small Spaces | Dungym",
+    metaDescription:
+      "A kettlebell program designed for garage gyms. Needs just 8x8 feet of space, one kettlebell, and 40 minutes. The program that was built in a garage.",
+    headline: "Built in a garage. Built for yours.",
+    subheadline:
+      "Dungym was designed and tested in a single-car garage. A kettlebell, a bench, a pull-up bar, and 8x8 feet of space.",
+    heroDescription:
+      "The name Dungym comes from training in a garage: the dungeon. This program was built there, tested there, and refined there. Every exercise fits in a small space. Every session uses equipment that fits against a wall when you're done. If you have a garage, a shed, a basement, or even a covered patio, you have a gym.",
+    features: [
+      {
+        title: "8x8 feet is all you need",
+        description:
+          "Enough space to swing a kettlebell overhead and lie flat on a bench. A single garage bay has room to spare. No squat rack, no barbell, no plate tree.",
+      },
+      {
+        title: "Equipment that stores flat",
+        description:
+          "A kettlebell, a flat bench, and a doorway or ceiling-mounted pull-up bar. Everything stacks against the wall when you're done. Your garage stays a garage.",
+      },
+      {
+        title: "No neighbors disturbed",
+        description:
+          "No dropped barbells, no slamming plates, no loud machines. Kettlebell work and controlled compound lifts are garage-friendly training.",
+      },
+      {
+        title: "Train on your schedule",
+        description:
+          "Your gym is 10 steps away. No drive, no parking, no waiting. Early morning, lunch break, late night. Train whenever works for you.",
+      },
+      {
+        title: "Weather doesn't matter",
+        description:
+          "Rain, snow, heat wave. Your garage gym is climate-adjacent, maybe, but always open. No gym closures, no holiday hours.",
+      },
+      {
+        title: "One-time equipment investment",
+        description:
+          "A kettlebell ($40-80), a flat bench ($80-150), and a pull-up bar ($25-40). That's $145-270 total, less than 3 months of most gym memberships.",
+      },
+    ],
+    faq: [
+      {
+        question: "What's the ideal garage gym setup for this program?",
+        answer:
+          "One kettlebell (24kg for most men, 16kg for most women), a flat bench, and a pull-up bar. Optional additions: a second lighter kettlebell for windmills, a pair of dumbbells for RDLs and carries, and a rubber mat for floor work.",
+      },
+      {
+        question: "Can I do this in an apartment?",
+        answer:
+          "Most of it, yes. The kettlebell swings may be too loud for downstairs neighbors. You could substitute with deadlifts or hip thrusts on swing days. Everything else works in an apartment with enough ceiling height for overhead presses.",
+      },
+      {
+        question: "How much does a garage gym cost to set up?",
+        answer:
+          "The minimum setup (one kettlebell, flat bench, pull-up bar) costs $145-270 depending on quality. That's less than 3 months of a typical gym membership, and the equipment lasts decades. Add a rubber mat ($30-50) to protect your floor.",
+      },
+    ],
+    keywords: [
+      "garage gym kettlebell program",
+      "garage gym workout",
+      "garage gym setup kettlebell",
+      "small space workout program",
+      "garage gym training plan",
+      "home garage gym workout",
+    ],
+  },
 ];
 
 export function getLandingPage(slug: string): LandingPageData | undefined {

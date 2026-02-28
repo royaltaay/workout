@@ -11,19 +11,19 @@ import ProgressChart from "./progress-chart";
 // ---------------------------------------------------------------------------
 
 /** Normalize an ISO date string to YYYY-MM-DD in local time */
-function toDateKey(iso: string): string {
+export function toDateKey(iso: string): string {
   const d = new Date(iso);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 /** Days between two YYYY-MM-DD keys */
-function daysBetween(a: string, b: string): number {
+export function daysBetween(a: string, b: string): number {
   const da = new Date(a + "T00:00:00");
   const db = new Date(b + "T00:00:00");
   return Math.round(Math.abs(da.getTime() - db.getTime()) / 86_400_000);
 }
 
-function computeStreaks(sessions: WorkoutSession[]): {
+export function computeStreaks(sessions: WorkoutSession[]): {
   current: number;
   longest: number;
   thisWeek: number;
@@ -74,7 +74,7 @@ function computeStreaks(sessions: WorkoutSession[]): {
   return { current, longest, thisWeek };
 }
 
-function computePersonalRecords(sessions: WorkoutSession[]): Array<{
+export function computePersonalRecords(sessions: WorkoutSession[]): Array<{
   exercise: string;
   weight: number;
   reps: string;
@@ -98,19 +98,19 @@ function computePersonalRecords(sessions: WorkoutSession[]): Array<{
     .sort((a, b) => b.weight - a.weight);
 }
 
-function formatDate(iso: string): string {
+export function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function formatDuration(seconds: number): string {
+export function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   if (m < 60) return `${m}m`;
   const h = Math.floor(m / 60);
   return `${h}h ${m % 60}m`;
 }
 
-function formatVolume(vol: number): string {
+export function formatVolume(vol: number): string {
   if (vol >= 1_000_000) return `${Math.round(vol / 1_000).toLocaleString()} lb`;
   return `${vol.toLocaleString()} lb`;
 }

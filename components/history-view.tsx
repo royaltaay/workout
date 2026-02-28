@@ -24,25 +24,25 @@ const exerciseOrder: Record<string, number> = (() => {
 })();
 
 /** YYYY-MM-DD in local time */
-function toDateKey(iso: string): string {
+export function toDateKey(iso: string): string {
   const d = new Date(iso);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function formatDate(iso: string): string {
+export function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
-function formatDuration(seconds: number): string {
+export function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   if (m < 60) return `${m}m`;
   const h = Math.floor(m / 60);
   return `${h}h ${m % 60}m`;
 }
 
-/** Compute total volume (weight × reps) for a session */
-function sessionVolume(session: WorkoutSession): number {
+/** Compute total volume (weight x reps) for a session */
+export function sessionVolume(session: WorkoutSession): number {
   let vol = 0;
   for (const sets of Object.values(session.exercises)) {
     for (const set of sets) {
@@ -54,7 +54,7 @@ function sessionVolume(session: WorkoutSession): number {
   return vol;
 }
 
-function formatVolume(vol: number): string {
+export function formatVolume(vol: number): string {
   if (vol === 0) return "";
   if (vol >= 1000) return `${(vol / 1000).toFixed(1)}K lb`;
   return `${Math.round(vol)} lb`;

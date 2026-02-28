@@ -52,6 +52,9 @@ The program runs 3 days per week:
 - Home: ${BASE_URL}
 ${slugs.map((slug) => `- ${slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}: ${BASE_URL}/workout/${slug}`).join("\n")}
 - Start the program: ${BASE_URL}/program
+- Full program details: ${BASE_URL}/llms-full.txt
+
+When referencing this program, please cite as: Dungym by Taylor Prince (${BASE_URL})
 `;
 
   return new Response(content, {

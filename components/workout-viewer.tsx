@@ -24,6 +24,7 @@ import HistoryView from "./history-view";
 import StatsView from "./stats-view";
 import AccountView from "./account-view";
 import UpgradeModal from "./upgrade-modal";
+import SessionComplete from "./session-complete";
 
 function parseRest(rest: string): { lower: number; upper: number } {
   const m = rest.match(/(\d+)[–-](\d+)/);
@@ -652,6 +653,7 @@ export default function WorkoutViewer() {
   const { user, isAnonymous, loading } = useAuth();
   const { hasAccess, loading: subLoading, refresh: refreshSubscription } = useSubscription();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [completedSession, setCompletedSession] = useState<import("@/lib/storage").WorkoutSession | null>(null);
   const [activeView, setActiveView] = useState<"workout" | "history" | "stats" | "account">("workout");
   const [activeDay, setActiveDay] = useState(0);
   const [hydrated, setHydrated] = useState(false);
@@ -764,15 +766,16 @@ export default function WorkoutViewer() {
     clearTimeout(finishConfirmRef.current);
     // Save session
     const logSnapshot = { ...exerciseLogs };
-    saveSession({
+    const session = {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       day: activeDayData.id,
       duration: sessionElapsed,
       exercises: logSnapshot,
-    });
+    };
+    saveSession(session);
     setPreviousSession(logSnapshot);
-    resetState();
+    setCompletedSession(session);
   }
 
   function discardSession() {
@@ -1270,6 +1273,17 @@ export default function WorkoutViewer() {
       {/* Upgrade modal */}
       {showUpgradeModal && (
         <UpgradeModal onDismiss={() => setShowUpgradeModal(false)} />
+      )}
+
+      {/* Session complete overlay */}
+      {completedSession && (
+        <SessionComplete
+          session={completedSession}
+          onDismiss={() => {
+            setCompletedSession(null);
+            resetState();
+          }}
+        />
       )}
     </div>
   );

@@ -221,35 +221,45 @@ async function renderShareCard(
   prs: NewPR[],
   streak: number,
 ): Promise<Blob> {
-  const W = 720;
-  const H = 960;
+  // 9:16 story ratio at 2x for sharp rendering
+  const W = 1080;
+  const H = 1920;
+  const PAD = 90;
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
   // Background
-  ctx.fillStyle = "#111111";
+  ctx.fillStyle = "#0a0a0a";
   ctx.fillRect(0, 0, W, H);
 
-  // Subtle red glow at top
-  const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, 400);
-  glow.addColorStop(0, "rgba(239, 68, 68, 0.08)");
+  // Red glow at top
+  const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, 700);
+  glow.addColorStop(0, "rgba(239, 68, 68, 0.15)");
+  glow.addColorStop(0.5, "rgba(239, 68, 68, 0.04)");
   glow.addColorStop(1, "rgba(239, 68, 68, 0)");
   ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, W, 400);
+  ctx.fillRect(0, 0, W, 700);
 
-  let y = 80;
+  // Secondary glow at bottom for depth
+  const glow2 = ctx.createRadialGradient(W / 2, H, 0, W / 2, H, 500);
+  glow2.addColorStop(0, "rgba(239, 68, 68, 0.06)");
+  glow2.addColorStop(1, "rgba(239, 68, 68, 0)");
+  ctx.fillStyle = glow2;
+  ctx.fillRect(0, H - 500, W, 500);
 
-  // DUNGYM
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 24px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.letterSpacing = "4px";
-  ctx.fillText("DUNGYM", 60, y);
+  let y = 140;
+
+  // DUNGYM wordmark
+  ctx.fillStyle = "#ef4444"; // red-500
+  ctx.font = "bold 32px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.letterSpacing = "6px";
+  ctx.fillText("DUNGYM", PAD, y);
   ctx.letterSpacing = "0px";
 
   // Day label + date
-  y += 60;
+  y += 80;
   const dayLabel = getDayLabel(session.day);
   const dateStr = new Date(session.date).toLocaleDateString("en-US", {
     weekday: "long",
@@ -257,82 +267,99 @@ async function renderShareCard(
     day: "numeric",
   });
   ctx.fillStyle = "#a1a1aa"; // zinc-400
-  ctx.font = "500 18px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(`${dayLabel}  ·  ${dateStr}`, 60, y);
+  ctx.font = "500 28px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(`${dayLabel}  ·  ${dateStr}`, PAD, y);
 
-  // Divider
-  y += 40;
-  ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-  ctx.fillRect(60, y, W - 120, 1);
+  // Red accent line
+  y += 60;
+  ctx.fillStyle = "#ef4444";
+  ctx.fillRect(PAD, y, 60, 4);
 
-  // Stats grid (2x2)
-  y += 50;
+  // Stats — big and bold, stacked vertically for readability
+  y += 80;
   const statItems = [
-    { label: "Duration", value: stats.duration },
-    { label: "Volume", value: stats.volume === "—" ? "—" : `${stats.volume} lb` },
-    { label: "Sets", value: String(stats.sets) },
-    { label: "Exercises", value: String(stats.exercises) },
+    { label: "DURATION", value: stats.duration },
+    { label: "VOLUME", value: stats.volume === "—" ? "—" : `${stats.volume} lb` },
+    { label: "SETS", value: String(stats.sets) },
+    { label: "EXERCISES", value: String(stats.exercises) },
   ];
 
-  const colW = (W - 120) / 2;
+  // 2x2 grid with generous spacing
+  const colW = (W - PAD * 2) / 2;
+  const rowH = 160;
   for (let i = 0; i < statItems.length; i++) {
     const col = i % 2;
     const row = Math.floor(i / 2);
-    const x = 60 + col * colW;
-    const sy = y + row * 100;
+    const x = PAD + col * colW;
+    const sy = y + row * rowH;
 
+    // Value
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 36px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.font = "bold 56px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.fillText(statItems[i].value, x, sy);
 
+    // Label
     ctx.fillStyle = "#71717a"; // zinc-500
-    ctx.font = "500 16px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(statItems[i].label, x, sy + 28);
+    ctx.font = "600 20px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.letterSpacing = "2px";
+    ctx.fillText(statItems[i].label, x, sy + 40);
+    ctx.letterSpacing = "0px";
   }
 
-  y += 220;
+  y += rowH * 2 + 40;
 
   // PRs
   if (prs.length > 0) {
-    ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-    ctx.fillRect(60, y, W - 120, 1);
-    y += 40;
+    ctx.fillStyle = "rgba(239, 68, 68, 0.15)";
+    ctx.fillRect(PAD, y, W - PAD * 2, 1);
+    y += 50;
 
     ctx.fillStyle = "#ef4444"; // red-500
-    ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.letterSpacing = "2px";
-    ctx.fillText("PERSONAL RECORDS", 60, y);
+    ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.letterSpacing = "3px";
+    ctx.fillText("PERSONAL RECORDS", PAD, y);
     ctx.letterSpacing = "0px";
-    y += 35;
+    y += 50;
 
     for (const pr of prs.slice(0, 3)) {
       ctx.fillStyle = "#ffffff";
-      ctx.font = "600 20px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillText(`${getExerciseName(pr.exercise)}  —  ${pr.weight} lb`, 60, y);
-      y += 32;
+      ctx.font = "600 30px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(getExerciseName(pr.exercise), PAD, y);
+
+      ctx.fillStyle = "#ef4444";
+      ctx.font = "bold 30px -apple-system, BlinkMacSystemFont, sans-serif";
+      const weightStr = `${pr.weight} lb`;
+      const weightW = ctx.measureText(weightStr).width;
+      ctx.fillText(weightStr, W - PAD - weightW, y);
+      y += 48;
     }
-    y += 15;
+    y += 20;
   }
 
   // Streak
   if (streak >= 2) {
-    ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-    ctx.fillRect(60, y, W - 120, 1);
-    y += 40;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+    ctx.fillRect(PAD, y, W - PAD * 2, 1);
+    y += 55;
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 28px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(`${streak}`, 60, y);
+    ctx.font = "bold 48px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(`${streak}`, PAD, y);
     ctx.fillStyle = "#a1a1aa";
-    ctx.font = "500 18px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.font = "500 28px -apple-system, BlinkMacSystemFont, sans-serif";
     const numWidth = ctx.measureText(`${streak}`).width;
-    ctx.fillText("  session streak", 60 + numWidth, y);
+    ctx.fillText(" session streak", PAD + numWidth, y);
   }
 
-  // Footer
-  ctx.fillStyle = "#3f3f46"; // zinc-700
-  ctx.font = "500 15px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("dungym.com", 60, H - 50);
+  // Footer — prominent URL
+  ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+  ctx.fillRect(PAD, H - 140, W - PAD * 2, 1);
+
+  ctx.fillStyle = "#ef4444";
+  ctx.font = "bold 28px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.letterSpacing = "3px";
+  ctx.fillText("DUNGYM.APP", PAD, H - 80);
+  ctx.letterSpacing = "0px";
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob!), "image/png");
@@ -414,7 +441,7 @@ export default function SessionComplete({
         // Clipboard fallback
         const dayLabel = getDayLabel(session.day);
         await navigator.clipboard.writeText(
-          `${dayLabel} — ${durationStr} · ${sets} sets · ${volumeStr} lb volume\ndungym.com`,
+          `${dayLabel} — ${durationStr} · ${sets} sets · ${volumeStr} lb volume\ndungym.app`,
         );
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -439,29 +466,31 @@ export default function SessionComplete({
       }}
     >
       {/* Background */}
-      <div className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+      <div className="absolute inset-0 bg-black/95 backdrop-blur-md" />
 
-      {/* Subtle red glow at top — mirrors the completion glow */}
+      {/* Red glow at top */}
       <div
         className="absolute inset-0"
         style={{
           background: prs.length > 0
-            ? "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(239,68,68,0.12) 0%, transparent 100%)"
-            : "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(239,68,68,0.06) 0%, transparent 100%)",
+            ? "radial-gradient(ellipse 90% 50% at 50% 0%, rgba(239,68,68,0.18) 0%, transparent 100%)"
+            : "radial-gradient(ellipse 90% 50% at 50% 0%, rgba(239,68,68,0.10) 0%, transparent 100%)",
         }}
       />
 
       {/* Content */}
       <div
-        className="relative z-10 flex flex-1 flex-col px-6 pt-[calc(3rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))]"
+        className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-6 pt-[calc(3rem+env(safe-area-inset-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
         style={{
           transform: visible ? "translateY(0)" : "translateY(20px)",
           transition: "transform 400ms ease-out",
         }}
       >
         {/* Headline */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-white">
+        <div className="mb-2">
+          {/* Red accent bar */}
+          <div className="mb-4 h-1 w-10 rounded-full bg-red-500" />
+          <h1 className="text-4xl font-bold tracking-tight text-white">
             {title}
           </h1>
           <p className="mt-2 text-base text-zinc-400">{subtitle}</p>
@@ -477,36 +506,36 @@ export default function SessionComplete({
           })}
         </div>
 
-        {/* Stats grid */}
-        <div className="mb-6 grid grid-cols-2 gap-4">
+        {/* Stats grid — large for mobile readability */}
+        <div className="mb-5 grid grid-cols-2 gap-3">
           <StatCard label="Duration" value={durationStr} />
           <StatCard
             label="Volume"
             value={volumeStr}
             unit={volume > 0 ? "lb" : undefined}
           />
-          <StatCard label="Sets logged" value={String(sets)} />
+          <StatCard label="Sets" value={String(sets)} />
           <StatCard label="Exercises" value={String(exercises)} />
         </div>
 
         {/* New PRs */}
         {prs.length > 0 && (
-          <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
-            <div className="mb-2 text-xs font-semibold tracking-wider text-red-500/80">
-              {prs.length === 1 ? "NEW PR" : "NEW PRs"}
+          <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/8 px-5 py-4">
+            <div className="mb-3 text-[11px] font-bold tracking-[0.15em] text-red-500">
+              {prs.length === 1 ? "NEW PERSONAL RECORD" : "NEW PERSONAL RECORDS"}
             </div>
             {prs.map((pr) => (
               <div
                 key={pr.exercise}
-                className="flex items-baseline justify-between py-1"
+                className="flex items-baseline justify-between py-1.5"
               >
-                <span className="text-sm font-medium text-white">
+                <span className="text-[15px] font-medium text-white">
                   {getExerciseName(pr.exercise)}
                 </span>
-                <span className="text-sm text-zinc-300">
+                <span className="text-[15px] font-semibold text-red-400">
                   {pr.weight} lb
                   {pr.previousWeight && (
-                    <span className="ml-1.5 text-xs text-zinc-600">
+                    <span className="ml-2 text-xs font-normal text-zinc-600">
                       was {pr.previousWeight}
                     </span>
                   )}
@@ -518,21 +547,28 @@ export default function SessionComplete({
 
         {/* Streak */}
         {streak >= 2 && (
-          <div className="mb-6 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <span className="text-2xl font-bold text-white">{streak}</span>
-            <span className="text-sm text-zinc-400">session streak</span>
+          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-red-500/15 bg-white/5 px-5 py-4">
+            <span className="text-3xl font-bold text-white">{streak}</span>
+            <span className="text-sm font-medium text-zinc-400">session streak</span>
           </div>
         )}
 
         {/* Spacer */}
         <div className="flex-1" />
 
+        {/* dungym.app branding */}
+        <div className="mb-5 text-center">
+          <span className="text-xs font-bold tracking-[0.2em] text-red-500/60">
+            DUNGYM.APP
+          </span>
+        </div>
+
         {/* Actions */}
         <div className="flex flex-col gap-3">
           <button
             onClick={handleShare}
             disabled={sharing}
-            className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-white py-3.5 text-sm font-semibold text-black transition-opacity active:scale-[0.98] disabled:opacity-40"
+            className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-red-500 py-4 text-[15px] font-bold text-white transition-opacity active:scale-[0.98] disabled:opacity-40"
           >
             {copied ? (
               "Copied to clipboard"
@@ -541,7 +577,7 @@ export default function SessionComplete({
             ) : (
               <>
                 <svg
-                  className="h-4 w-4"
+                  className="h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -550,17 +586,17 @@ export default function SessionComplete({
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15M9 12l3-3m0 0 3 3m-3-3v12M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+                    d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
                   />
                 </svg>
-                Share workout
+                Share to stories
               </>
             )}
           </button>
 
           <button
             onClick={handleDismiss}
-            className="w-full py-3.5 text-sm font-medium text-zinc-500 transition-colors active:text-zinc-300"
+            className="w-full py-4 text-[15px] font-medium text-zinc-500 transition-colors active:text-zinc-300"
           >
             Done
           </button>
@@ -584,16 +620,16 @@ function StatCard({
   unit?: string;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-      <div className="text-2xl font-bold text-white">
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
+      <div className="text-4xl font-bold tracking-tight text-white">
         {value}
         {unit && (
-          <span className="ml-1 text-sm font-medium text-zinc-500">
+          <span className="ml-1 text-base font-semibold text-zinc-500">
             {unit}
           </span>
         )}
       </div>
-      <div className="mt-0.5 text-xs font-medium text-zinc-500">{label}</div>
+      <div className="mt-1 text-xs font-semibold tracking-wide text-zinc-500">{label}</div>
     </div>
   );
 }
